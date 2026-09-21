@@ -90,6 +90,14 @@ class UpdateManager(
         else -> if (checking) Failure.CheckNetwork else Failure.DownloadNetwork
     }
 
+    private val updateClient by lazy {
+        client.newBuilder()
+            .protocols(listOf(Protocol.HTTP_2, Protocol.HTTP_1_1))
+            .retryOnConnectionFailure(true)
+            .followRedirects(true)
+            .build()
+    }
+
     val currentVersion: String = CoreBuildInfo.versionName
 
     /** Queries GitHub's latest release; moves to Available / UpToDate / a semantic failure. */
@@ -98,41 +106,72 @@ class UpdateManager(
         _state.value = State.Checking
         scope.launch {
             runCatching {
-                val request = Request.Builder()
-                    .url("https://api.github.com/repos/${CoreBuildInfo.releaseRepo}/releases/latest")
-                    .header("Accept", "application/vnd.github+json")
-                    .header("User-Agent", "HanTV")
-                    .build()
-                client.newCall(request).execute().use { resp ->
-                    if (!resp.isSuccessful) throw CheckHttpException(resp.code)
-                    val body = resp.body.string()
-                    if (body.isBlank()) throw InvalidReleaseResponseException()
-                    val o = runCatching { JSONObject(body) }.getOrElse { throw InvalidReleaseResponseException() }
-                    val version = o.optString("tag_name").removePrefix("v").takeIf { it.isNotBlank() }
-                        ?: throw InvalidReleaseResponseException()
-                    val notes = o.optString("body").take(16_000)
-                    val assets = o.optJSONArray("assets") ?: throw InvalidReleaseResponseException()
-                    // Releases carry one APK per ABI flavor or a universal APK.
-                    val wantX86 = android.os.Build.SUPPORTED_ABIS.firstOrNull()?.contains("x86") == true
-                    val apkAssets = (0 until assets.length())
-                        .asSequence()
-                        .mapNotNull { assets.optJSONObject(it) }
-                        .mapNotNull { asset ->
-                            val name = asset.optString("name")
-                            val url = asset.optString("browser_download_url")
-                            if (name.endsWith(".apk") && url.isNotBlank()) name to url else null
+                var updateInfo: UpdateInfo? = null
+
+                // 1. Try GitHub REST API
+                val apiResult = runCatching {
+                    val request = Request.Builder()
+                        .url("https://api.github.com/repos/${CoreBuildInfo.releaseRepo}/releases/latest")
+                        .header("Accept", "application/vnd.github+json")
+                        .header("User-Agent", "HanTV/${CoreBuildInfo.versionName}")
+                        .build()
+                    updateClient.newCall(request).execute().use { resp ->
+                        if (!resp.isSuccessful) return@runCatching null
+                        val body = resp.body.string()
+                        if (body.isBlank()) return@runCatching null
+                        val o = JSONObject(body)
+                        val version = o.optString("tag_name").removePrefix("v").takeIf { it.isNotBlank() }
+                            ?: return@runCatching null
+                        val notes = o.optString("body").take(16_000)
+                        val assets = o.optJSONArray("assets") ?: return@runCatching null
+                        val wantX86 = android.os.Build.SUPPORTED_ABIS.firstOrNull()?.contains("x86") == true
+                        val apkAssets = (0 until assets.length())
+                            .asSequence()
+                            .mapNotNull { assets.optJSONObject(it) }
+                            .mapNotNull { asset ->
+                                val name = asset.optString("name")
+                                val url = asset.optString("browser_download_url")
+                                if (name.endsWith(".apk") && url.isNotBlank()) name to url else null
+                            }
+                            .toList()
+
+                        val apkUrl = apkAssets.firstOrNull { (name, _) ->
+                            val isX86 = name.contains("x86_64", ignoreCase = true) || name.contains("x86", ignoreCase = true)
+                            isX86 == wantX86
+                        }?.second ?: apkAssets.firstOrNull()?.second ?: return@runCatching null
+
+                        UpdateInfo(version, notes, apkUrl)
+                    }
+                }.getOrNull()
+
+                if (apiResult != null) {
+                    updateInfo = apiResult
+                } else {
+                    // 2. Fallback: GitHub Releases Web Endpoint (bypasses unauthenticated 403 API rate limits)
+                    val webRequest = Request.Builder()
+                        .url("https://github.com/${CoreBuildInfo.releaseRepo}/releases/latest")
+                        .header("User-Agent", "Mozilla/5.0 (Linux; Android 10) AppleWebKit/537.36")
+                        .build()
+                    updateClient.newCall(webRequest).execute().use { webResp ->
+                        val finalUrl = webResp.request.url.toString()
+                        val tag = finalUrl.substringAfterLast("/tag/").takeIf { it.isNotBlank() && it != finalUrl }
+                        if (tag != null) {
+                            val version = tag.removePrefix("v")
+                            val isMobile = CoreBuildInfo.releaseRepo.contains("Mobile", ignoreCase = true)
+                            val apkName = if (isMobile) "HanTV-Mobile.apk" else "HanTV-TV.apk"
+                            val apkUrl = "https://github.com/${CoreBuildInfo.releaseRepo}/releases/download/$tag/$apkName"
+                            updateInfo = UpdateInfo(version, "", apkUrl)
+                        } else if (!webResp.isSuccessful) {
+                            throw CheckHttpException(webResp.code)
+                        } else {
+                            throw InvalidReleaseResponseException()
                         }
-                        .toList()
-
-                    val apkUrl = apkAssets.firstOrNull { (name, _) ->
-                        val isX86 = name.contains("x86_64", ignoreCase = true) || name.contains("x86", ignoreCase = true)
-                        isX86 == wantX86
-                    }?.second ?: apkAssets.firstOrNull()?.second ?: throw NoCompatibleApkException()
-
-                    val info = UpdateInfo(version, notes, apkUrl)
-                    if (isNewer(version, currentVersion)) _state.value = State.Available(info)
-                    else _state.value = State.UpToDate
+                    }
                 }
+
+                val info = updateInfo ?: throw InvalidReleaseResponseException()
+                if (isNewer(info.version, currentVersion)) _state.value = State.Available(info)
+                else _state.value = State.UpToDate
             }.onFailure { error ->
                 Log.w(TAG, "update check failed: ${error.message}", error)
                 _state.value = State.Failed(failureFor(error, checking = true))
@@ -151,7 +190,7 @@ class UpdateManager(
                 out.delete() // never build on top of a previous half-download
                 val request = Request.Builder().url(info.apkUrl).header("User-Agent", "HanTV").build()
                 try {
-                    client.newCall(request).execute().use { resp ->
+                    updateClient.newCall(request).execute().use { resp ->
                         if (!resp.isSuccessful) throw DownloadHttpException(resp.code)
                         val body = resp.body
                         val total = body.contentLength()

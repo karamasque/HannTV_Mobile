@@ -1,4 +1,4 @@
-# OwnTV Mobile — App Changelog (minimal)
+# HanTV Mobil — App Changelog (minimal)
 
 > Short release notes for the GitHub release page: two parts per version — New features (by name)
 > and Fixes. The full, detailed changelog is [CHANGELOG.md](CHANGELOG.md). Hand-maintained — edit
