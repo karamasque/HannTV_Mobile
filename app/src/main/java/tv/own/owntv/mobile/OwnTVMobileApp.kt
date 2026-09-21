@@ -28,11 +28,11 @@ import tv.own.owntv.mobile.di.shellModule
 import tv.own.owntv.mobile.ui.theme.subtitleFontResource
 
 /**
- * The mobile shell's Application. Deliberately a near-copy of the TV app's `OwnTVApp` for the parts
+ * The mobile shell's Application. Deliberately a near-copy of the TV app's `HanTVApp` for the parts
  * that core depends on — the hooks below are core's only way to learn things a library cannot know
  * about the app compiled around it, and core reads them from its very first line.
  */
-class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
+class HanTVMobileApp : Application(), androidx.work.Configuration.Provider {
 
     override val workManagerConfiguration: androidx.work.Configuration
         get() = androidx.work.Configuration.Builder()
@@ -98,7 +98,7 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
         tv.own.owntv.player.SubtitleFontAssets.resourceOf = { it.subtitleFontResource }
         startKoin {
             androidLogger(if (BuildConfig.DEBUG) Level.ERROR else Level.NONE)
-            androidContext(this@OwnTVMobileApp)
+            androidContext(this@HanTVMobileApp)
             modules(
                 coreModule, databaseModule, dataModule, playerModule, shellModule,
                 liveModule, libraryModule, guideModule, homeModule, searchModule,
@@ -107,3 +107,6 @@ class OwnTVMobileApp : Application(), androidx.work.Configuration.Provider {
         }
     }
 }
+
+typealias OwnTVMobileApp = HanTVMobileApp
+

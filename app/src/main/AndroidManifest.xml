@@ -48,7 +48,7 @@
     <uses-feature android:name="android.hardware.camera" android:required="false" />
 
     <application
-        android:name=".OwnTVMobileApp"
+        android:name=".HanTVMobileApp"
         android:allowBackup="false"
         android:dataExtractionRules="@xml/data_extraction_rules"
         android:enableOnBackInvokedCallback="true"
@@ -57,7 +57,7 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.OwnTVMobile"
+        android:theme="@style/Theme.HanTVMobile"
         android:usesCleartextTraffic="true"
         tools:targetApi="26">
 

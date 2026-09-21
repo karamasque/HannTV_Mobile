@@ -9,6 +9,7 @@ import androidx.compose.ui.graphics.Color
 import tv.own.owntv.mobile.R
 import tv.own.owntv.core.theme.AccentColor
 import tv.own.owntv.core.theme.AccentRoleValues
+import tv.own.owntv.core.theme.HanTVPalette
 import tv.own.owntv.core.theme.OwnTVPalette
 import tv.own.owntv.core.theme.accentRolesFromSeed
 import tv.own.owntv.core.theme.parseAccentHex
@@ -99,28 +100,28 @@ fun mobileColorScheme(
             onPrimary = Color(roles.onPrimary),
             primaryContainer = Color(roles.primaryContainer),
             onPrimaryContainer = Color(roles.onPrimaryContainer),
-            secondary = Color(OwnTVPalette.DarkSecondary),
-            onSecondary = Color(OwnTVPalette.DarkOnSecondary),
-            secondaryContainer = Color(OwnTVPalette.DarkSecondaryContainer),
-            onSecondaryContainer = Color(OwnTVPalette.DarkOnSecondaryContainer),
-            tertiary = Color(OwnTVPalette.DarkTertiary),
-            onTertiary = Color(OwnTVPalette.DarkOnTertiary),
-            tertiaryContainer = Color(OwnTVPalette.DarkTertiaryContainer),
-            onTertiaryContainer = Color(OwnTVPalette.DarkOnTertiaryContainer),
-            background = Color(OwnTVPalette.DarkBackground),
-            onBackground = Color(OwnTVPalette.DarkOnSurface),
-            surface = Color(OwnTVPalette.DarkSurface),
-            onSurface = Color(OwnTVPalette.DarkOnSurface),
-            surfaceVariant = Color(OwnTVPalette.DarkSurfaceContainerHigh),
-            onSurfaceVariant = Color(OwnTVPalette.DarkOnSurfaceVariant),
-            surfaceContainerLowest = Color(OwnTVPalette.DarkSurfaceContainerLowest),
-            surfaceContainerLow = Color(OwnTVPalette.DarkSurfaceContainerLow),
-            surfaceContainer = Color(OwnTVPalette.DarkSurfaceContainer),
-            surfaceContainerHigh = Color(OwnTVPalette.DarkSurfaceContainerHigh),
-            surfaceContainerHighest = Color(OwnTVPalette.DarkSurfaceContainerHighest),
-            outline = Color(OwnTVPalette.DarkOutline),
-            outlineVariant = Color(OwnTVPalette.DarkOutlineVariant),
-            error = Color(OwnTVPalette.DarkError),
+            secondary = Color(HanTVPalette.DarkSecondary),
+            onSecondary = Color(HanTVPalette.DarkOnSecondary),
+            secondaryContainer = Color(HanTVPalette.DarkSecondaryContainer),
+            onSecondaryContainer = Color(HanTVPalette.DarkOnSecondaryContainer),
+            tertiary = Color(HanTVPalette.DarkTertiary),
+            onTertiary = Color(HanTVPalette.DarkOnTertiary),
+            tertiaryContainer = Color(HanTVPalette.DarkTertiaryContainer),
+            onTertiaryContainer = Color(HanTVPalette.DarkOnTertiaryContainer),
+            background = Color(HanTVPalette.DarkBackground),
+            onBackground = Color(HanTVPalette.DarkOnSurface),
+            surface = Color(HanTVPalette.DarkSurface),
+            onSurface = Color(HanTVPalette.DarkOnSurface),
+            surfaceVariant = Color(HanTVPalette.DarkSurfaceContainerHigh),
+            onSurfaceVariant = Color(HanTVPalette.DarkOnSurfaceVariant),
+            surfaceContainerLowest = Color(HanTVPalette.DarkSurfaceContainerLowest),
+            surfaceContainerLow = Color(HanTVPalette.DarkSurfaceContainerLow),
+            surfaceContainer = Color(HanTVPalette.DarkSurfaceContainer),
+            surfaceContainerHigh = Color(HanTVPalette.DarkSurfaceContainerHigh),
+            surfaceContainerHighest = Color(HanTVPalette.DarkSurfaceContainerHighest),
+            outline = Color(HanTVPalette.DarkOutline),
+            outlineVariant = Color(HanTVPalette.DarkOutlineVariant),
+            error = Color(HanTVPalette.DarkError),
         )
     } else {
         lightColorScheme(
