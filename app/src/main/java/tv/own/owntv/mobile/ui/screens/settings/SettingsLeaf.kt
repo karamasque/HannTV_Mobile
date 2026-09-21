@@ -47,6 +47,12 @@ enum class SettingsLeaf(
         MobileIcons.CalendarMonth,
     ),
 
+    GLASS(
+        SettingsGroup.APPEARANCE, "glass",
+        R.string.settings_glass_effect_title, R.string.settings_search_keywords_glass,
+        R.string.settings_glass_screen_description,
+        MobileIcons.AutoAwesome,
+    ),
     FONTS(
         SettingsGroup.APPEARANCE, "fonts",
         R.string.settings_font_customization, R.string.settings_search_keywords_fonts,

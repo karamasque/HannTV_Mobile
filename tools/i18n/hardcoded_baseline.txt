@@ -6,6 +6,7 @@
 
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	theme_preset
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	glass
 2	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Girdiğiniz metinden geçerli bir bağlantı veya hesap çıkarılamadı.
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Hesap
