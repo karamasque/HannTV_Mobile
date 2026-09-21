@@ -33,7 +33,7 @@ val libraryModule = module {
             liveTuner = get(),
             dataSaver = get(),
             cast = get(),
-            player = get(),
+            player = get<tv.own.owntv.player.OwnTVPlayer>(),
             watchSession = get(),
         )
     }

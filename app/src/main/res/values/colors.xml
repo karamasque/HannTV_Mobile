@@ -4,5 +4,5 @@
          product on a device that has both installed. -->
     <color name="owntv_window_bg">#040e0b</color>
     <!-- Adaptive launcher icon background. -->
-    <color name="owntv_icon_bg">#050914</color>
+    <color name="owntv_icon_bg">#000000</color>
 </resources>

@@ -47,7 +47,7 @@ android {
     }
 
     defaultConfig {
-        applicationId = "tv.own.owntv.mobile"
+        applicationId = "tv.han.hantv.mobile"
         minSdk = 26
         targetSdk = 36
         // CI injects these from the git tag, exactly as in the TV app. The fallbacks are only used
@@ -306,10 +306,8 @@ tasks.named("preBuild") { dependsOn(verifyI18nLiterals) }
 dependencies {
     // The shared engine, from its own repository — https://github.com/ahXN00/OwnTV_Core. Set
     // owntv.corePath in ~/.gradle/gradle.properties to build against its source instead of the pin.
-    implementation(libs.owntv.core)
-    // The shared playback engine. It renders nothing itself, which is exactly why the same engine
-    // serves the TV HUD and this app's touch controls. Always on core's version.
-    implementation(libs.owntv.player.core)
+    implementation(project(":core"))
+    implementation(project(":player-core"))
     // libmpv is NOT declared here. `:player-core` exposes it as `api`, so it arrives on this app's
     // compile classpath with core — which it must, because `OwnTVPlayer`'s supertype is
     // `MPVLib.EventObserver`. It was declared explicitly while the pin was older than `1.0.6`, where

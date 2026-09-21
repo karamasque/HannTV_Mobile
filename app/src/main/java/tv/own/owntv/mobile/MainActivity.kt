@@ -18,6 +18,8 @@ import android.view.WindowManager
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
@@ -121,6 +123,7 @@ class MainActivity : FragmentActivity() {
         keepScreenOnWhileThereIsAPicture()
         setContent {
             MobileTheme {
+                var showSplashIntro by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
                 // The wallpaper and its blurred copy sit outside the shell, so the frost every glass
                 // panel samples is one image for the whole app rather than one per panel.
                 GlassBackdropRoot {
@@ -132,6 +135,12 @@ class MainActivity : FragmentActivity() {
                         // rotation and resize.
                         MobileShell(windowWidthDp = LocalConfiguration.current.screenWidthDp)
                     }
+                }
+
+                if (showSplashIntro) {
+                    tv.own.owntv.mobile.ui.components.HanSplashIntro(
+                        onSplashFinished = { showSplashIntro = false }
+                    )
                 }
             }
         }

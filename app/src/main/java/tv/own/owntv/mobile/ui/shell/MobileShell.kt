@@ -401,17 +401,25 @@ fun MobileShell(
                         .glassSurface(GlassSurface.TOPBAR, MobileTopBarShape)
                         .clip(MobileTopBarShape),
                     title = {
-                        Text(
-                            // Search belongs to no tab, so it names itself rather than inheriting Home's.
-                            // A settings page names itself too, and that name is what "back" leaves.
-                            text = stringResource(
-                                settingsTitle
-                                    ?: if (currentRoute == SEARCH_ROUTE_PATTERN) tv.own.owntv.mobile.R.string.search_title
-                                    else current?.labelRes ?: offBarTitle ?: MobileDestination.HOME.labelRes,
-                            ),
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                        )
+                        if (currentRoute == MobileDestination.HOME.route && settingsTitle == null) {
+                            androidx.compose.foundation.Image(
+                                painter = androidx.compose.ui.res.painterResource(id = tv.own.owntv.mobile.R.drawable.hantv_wordmark),
+                                contentDescription = null,
+                                modifier = Modifier.height(26.dp),
+                            )
+                        } else {
+                            Text(
+                                // Search belongs to no tab, so it names itself rather than inheriting Home's.
+                                // A settings page names itself too, and that name is what "back" leaves.
+                                text = stringResource(
+                                    settingsTitle
+                                        ?: if (currentRoute == SEARCH_ROUTE_PATTERN) tv.own.owntv.mobile.R.string.search_title
+                                        else current?.labelRes ?: offBarTitle ?: MobileDestination.HOME.labelRes,
+                                ),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
                     },
                     navigationIcon = {
                         // Anything that was opened on top of a tab — a film, a settings page, search —

@@ -71,6 +71,13 @@ fun ProfileGate(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
+        androidx.compose.foundation.Image(
+            painter = androidx.compose.ui.res.painterResource(id = R.drawable.hantv_splash_logo),
+            contentDescription = null,
+            modifier = Modifier
+                .size(76.dp)
+                .padding(bottom = MobileDimens.GapMedium),
+        )
         Text(
             text = stringResource(R.string.profiles_gate_title),
             style = MaterialTheme.typography.headlineMedium,

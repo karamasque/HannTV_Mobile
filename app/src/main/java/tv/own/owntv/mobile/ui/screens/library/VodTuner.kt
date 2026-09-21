@@ -225,7 +225,6 @@ class VodTuner(
                 userAgent = source?.userAgent,
                 httpHeaders = movie.httpHeaders,
                 drmConfig = movie.drmConfig,
-                manifestType = movie.manifestType,
                 contentKey = enginePinKey(movie.sourceId, "MOVIE", movie.remoteId),
                 reconnectProvider = reconnectFor(source, movie.streamUrl),
             )
@@ -303,7 +302,6 @@ class VodTuner(
                     },
                     httpHeaders = ep.httpHeaders,
                     drmConfig = ep.drmConfig,
-                    manifestType = ep.manifestType,
                 )
             },
             startIndex = startIndex,

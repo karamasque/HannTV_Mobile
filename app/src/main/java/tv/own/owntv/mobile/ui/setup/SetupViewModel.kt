@@ -94,19 +94,17 @@ class SetupViewModel(
      */
     fun importBackup(
         file: File,
-        sections: Set<BackupManager.Section> = BackupManager.Section.entries.toSet(),
     ) {
         importJob?.cancel()
-        importJob = appScope.launch { importer.importBackup(file, sections) }
+        importJob = appScope.launch { importer.importBackup(file) }
     }
 
     fun restoreWithPassword(
         file: File,
         password: String?,
-        sections: Set<BackupManager.Section> = BackupManager.Section.entries.toSet(),
     ) {
         importJob?.cancel()
-        importJob = appScope.launch { importer.restoreWithPassword(file, password, sections) }
+        importJob = appScope.launch { importer.restoreWithPassword(file, password) }
     }
 
     /**

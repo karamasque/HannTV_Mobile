@@ -251,7 +251,7 @@ fun SetupFlow(
                     // The same choice the sheet took, carried across the password question: a sealed
                     // file is chosen from before it can be opened, so the answer has to outlive it.
                     onPassword = { file, password ->
-                        vm.restoreWithPassword(file, password, restoreSections ?: allSections)
+                        vm.restoreWithPassword(file, password)
                     },
                     onContinue = { vm.finish(onDone) },
                     onPickAgain = { vm.reset(); restoreFile = null; restoreSections = null; pickBackup() },
@@ -263,7 +263,7 @@ fun SetupFlow(
                     RestoreSectionsSheet(
                         onConfirm = { sections ->
                             restoreSections = sections
-                            vm.importBackup(picked, sections)
+                            vm.importBackup(picked)
                         },
                         onDismiss = {
                             vm.reset()

@@ -1,6 +1,7 @@
 package tv.own.owntv.mobile.ui.screens.settings
 
 import android.content.Context
+import tv.own.owntv.player.OwnTVPlayer
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.Dispatchers
