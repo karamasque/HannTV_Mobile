@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.2
+
+### New features
+
+- **🚀 Yerel Derleme & Sürüm Güncellemesi:** Sürüm 1.1.2 yerel imzalı APK yayını
+
 ## v1.1.1
 
 ### New features
