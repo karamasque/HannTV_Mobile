@@ -13,6 +13,13 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.1
+
+### New features
+
+- **🚀 Logolar ve Başlık Görünümü:** Mobil açılış ve üst bar logo boyutu ve başlıkları güncellendi
+- **🔒 Keystore Eşitlemesi:** Otomatik güncellemeler için imza sertifikası eşitlemesi yapıldı
+
 ## v1.0.6
 
 ### New features
