@@ -37,7 +37,6 @@ fun SettingsLeafPage(leaf: SettingsLeaf, onOpenRoute: (String) -> Unit, onAddSou
     when (leaf) {
         SettingsLeaf.PLAYLISTS -> SettingsPlaylistsPage(onAddSource = onAddSource)
         SettingsLeaf.EPG_SOURCES -> SettingsEpgSourcesPage()
-        SettingsLeaf.GLASS_EFFECT -> SettingsGlassPage()
         SettingsLeaf.FONTS -> SettingsFontsPage()
         SettingsLeaf.WEATHER -> SettingsWeatherPage()
         SettingsLeaf.CUSTOMIZE -> SettingsCustomizePage()
