@@ -1,11 +1,26 @@
 package tv.own.owntv.mobile.ui.setup
 
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,10 +32,19 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
@@ -204,7 +228,148 @@ fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
     }
 }
 
-/** Step 3 — what the app is not: it ships no channels, and the user brings their own sources. */
+/** Step 3 — Choose visual theme: wallpapers and glass accent colors. */
+@Composable
+fun ThemeSetupStep(onNext: () -> Unit, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val settings: SettingsRepository = koinInject()
+    var selectedId by remember { mutableStateOf(tv.own.owntv.core.theme.HanTVThemePresetId.MACOS_GLASS) }
+
+    SetupPage {
+        Text(
+            text = stringResource(R.string.theme_setup_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+        )
+        Text(
+            text = stringResource(R.string.theme_setup_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Spacer(Modifier.height(MobileDimens.GapSmall))
+
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().height(150.dp),
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 4.dp)
+        ) {
+            items(tv.own.owntv.core.theme.HanTVThemePresets.ALL, key = { it.id.name }) { preset ->
+                val isSelected = preset.id == selectedId
+                val resId = remember(preset.wallpaperDrawableName) {
+                    context.resources.getIdentifier(preset.wallpaperDrawableName, "drawable", context.packageName)
+                }
+                val accentColor = remember(preset.accentColorHex) {
+                    try {
+                        Color(android.graphics.Color.parseColor(preset.accentColorHex))
+                    } catch (_: Exception) {
+                        Color(0xFF22D3EE)
+                    }
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(135.dp)
+                        .fillMaxHeight()
+                        .clip(RoundedCornerShape(14.dp))
+                        .background(Color(0xFF161B22))
+                        .then(
+                            if (isSelected) Modifier.border(
+                                2.dp,
+                                accentColor,
+                                RoundedCornerShape(14.dp)
+                            ) else Modifier.border(
+                                1.dp,
+                                MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.3f),
+                                RoundedCornerShape(14.dp)
+                            )
+                        )
+                        .clickable {
+                            selectedId = preset.id
+                            scope.launch { preset.applyTheme(context, settings) }
+                        }
+                ) {
+                    if (resId != 0) {
+                        Image(
+                            painter = painterResource(resId),
+                            contentDescription = stringResource(preset.titleRes),
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.matchParentSize()
+                        )
+                    }
+
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color(0xDD000000)
+                                    ),
+                                    startY = 30f
+                                )
+                            )
+                    )
+
+                    if (isSelected) {
+                        Box(
+                            modifier = Modifier
+                                .padding(6.dp)
+                                .size(18.dp)
+                                .clip(RoundedCornerShape(9.dp))
+                                .background(accentColor)
+                                .align(Alignment.TopEnd),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("✓", color = Color.Black, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth()
+                    ) {
+                        Column(
+                            Modifier.padding(horizontal = 8.dp, vertical = 4.dp)
+                        ) {
+                            Text(
+                                text = stringResource(preset.titleRes),
+                                style = MaterialTheme.typography.labelMedium,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.White,
+                                maxLines = 1,
+                            )
+                            Text(
+                                text = stringResource(preset.subtitleRes),
+                                style = MaterialTheme.typography.labelSmall.copy(fontSize = 9.sp),
+                                color = Color(0xFFCBD5E1),
+                                maxLines = 1,
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(3.dp)
+                                .background(accentColor)
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(MobileDimens.GapSmall))
+        MobileButton(text = stringResource(R.string.setup_continue), onClick = onNext)
+        MobileButton(
+            text = stringResource(R.string.common_back),
+            onClick = onBack,
+            style = MobileButtonStyle.TEXT,
+        )
+    }
+}
+
+/** Step 4 — what the app is not: it ships no channels, and the user brings their own sources. */
 @Composable
 fun DisclaimerStep(onAgree: () -> Unit, onBack: () -> Unit) {
     SetupPage {

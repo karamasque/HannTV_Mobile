@@ -62,6 +62,22 @@ import tv.own.owntv.mobile.ui.screens.settings.SheetButtons
 import tv.own.owntv.mobile.ui.screens.settings.descriptionRes
 import tv.own.owntv.mobile.ui.screens.settings.labelRes
 import tv.own.owntv.mobile.ui.screens.settings.SetupLocalSyncStep
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+import org.koin.compose.koinInject
+import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.theme.HanTVThemePreset
+import tv.own.owntv.core.theme.HanTVThemePresetId
+import tv.own.owntv.core.theme.HanTVThemePresets
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 
 /**
@@ -69,7 +85,7 @@ import tv.own.owntv.mobile.ui.theme.MobileDimens
  * "chooser" steps have no counterpart here.
  */
 private enum class Step {
-    WELCOME, DISPLAY_SIZE, DISCLAIMER, CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, EXISTING, FORM, IMPORTING, RESTORE
+    WELCOME, DISPLAY_SIZE, THEME, DISCLAIMER, CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, EXISTING, FORM, IMPORTING, RESTORE
 }
 
 /**
@@ -110,17 +126,9 @@ fun SetupFlow(
 
     // The picked file, and what the user chose to take out of it. Both `null` until each is
     // answered, which is what drives the sheet below: a file with no choice yet is the question.
-    //
-    // Setup used to restore everything, full stop — the tick-list existed in Settings → Backup &
-    // Restore and in the local-sync step, and only the one screen where a restore is most likely
-    // took the whole file without asking. "My playlists but not that device's settings" was not
-    // expressible here.
     var restoreFile by remember { mutableStateOf<java.io.File?>(null) }
     var restoreSections by remember { mutableStateOf<Set<BackupManager.Section>?>(null) }
 
-    // The name field is optional, and the television has always filled a blank one in rather than
-    // storing an empty string. Without this the playlist has no name anywhere it is shown — the top
-    // bar's selector renders as a bare pill, and the playlist picker offers a row with no label.
     val defaultProfileName = stringResource(R.string.setup_default_profile)
     val defaultIptvName = stringResource(R.string.setup_default_iptv)
     val defaultPlaylistName = stringResource(R.string.setup_name_default_playlist)
@@ -128,7 +136,6 @@ fun SetupFlow(
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    // Picking the file no longer starts the restore — it asks what to take out of it first.
     val pickBackup = rememberBackupFilePicker { uri ->
         scope.launch {
             copyPickedFile(context, uri, context.cacheDir)?.let {
@@ -138,42 +145,38 @@ fun SetupFlow(
         }
     }
 
-    // Back walks the wizard backwards rather than out of the app. From the very first step there is
-    // nowhere to go unless the caller gave us somewhere, and an install with no playlist has nothing
-    // behind it at all.
     val atStart = step == (if (firstRun) Step.WELCOME else Step.ADD_CONTENT)
     BackHandler(enabled = !atStart || onCancel != null) {
         when (step) {
             Step.WELCOME -> onCancel?.invoke()
             Step.DISPLAY_SIZE -> step = Step.WELCOME
-            Step.DISCLAIMER -> step = Step.DISPLAY_SIZE
+            Step.THEME -> step = Step.DISPLAY_SIZE
+            Step.DISCLAIMER -> step = Step.THEME
             Step.CHOICE -> step = Step.DISCLAIMER
-            // The step owns its own Back: it has sheets to dismiss first, and once the data has
-            // landed there is nothing to go back to.
             Step.SYNC_DEVICE -> Unit
             Step.CREATE_PROFILE -> step = Step.CHOICE
-            // Not `onCancel?.invoke()`: `firstRun` IS `onCancel == null`, so this branch is only
-            // reached when there is one, and the compiler knows it.
             Step.ADD_CONTENT -> if (firstRun) step = Step.CREATE_PROFILE else onCancel()
             Step.EXISTING -> step = Step.ADD_CONTENT
             Step.FORM -> { vm.reset(); step = Step.ADD_CONTENT }
             Step.RESTORE -> { vm.reset(); step = backupOrigin }
-            Step.IMPORTING -> Unit // the buttons on that screen decide; a stray swipe must not abandon a sync
+            Step.IMPORTING -> Unit
         }
     }
 
     Box(modifier = modifier.fillMaxSize()) {
         when (step) {
             Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE })
-            // Before the disclaimer, which is the first screen that is mostly words: if the text is
-            // too small to read, that is the screen it first hurts on (#179).
             Step.DISPLAY_SIZE -> DisplaySizeStep(
-                onNext = { step = Step.DISCLAIMER },
+                onNext = { step = Step.THEME },
                 onBack = { step = Step.WELCOME },
+            )
+            Step.THEME -> ThemeSetupStep(
+                onNext = { step = Step.DISCLAIMER },
+                onBack = { step = Step.DISPLAY_SIZE },
             )
             Step.DISCLAIMER -> DisclaimerStep(
                 onAgree = { step = Step.CHOICE },
-                onBack = { step = Step.DISPLAY_SIZE },
+                onBack = { step = Step.THEME },
             )
             // The first decision: start fresh, or bring everything back. Restoring first is why the
             // profile step comes after this one — a restore brings its own profiles, and creating one
@@ -605,3 +608,5 @@ private fun Detail(text: String) {
         modifier = Modifier.fillMaxWidth(),
     )
 }
+
+
