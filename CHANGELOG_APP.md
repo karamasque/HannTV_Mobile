@@ -13,6 +13,14 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.0.6
+
+### New features
+
+- **🚀 Marka Standardizasyonu:** HanTV Mobil marka ve isimlendirmesi tüm uygulama genelinde uyarlandı
+- **🔄 Güncelleyici İyileştirmesi:** GitHub API limit (HTTP 403) ve web fallback güncelleyici desteği
+- **⚡ Performans ve Kararlılık:** Otomatik IPTV tarama ve liste yükleme hızlandırıldı
+
 ## v1.0.5
 
 ### New features
