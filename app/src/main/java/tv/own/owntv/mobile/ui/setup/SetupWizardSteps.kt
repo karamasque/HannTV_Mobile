@@ -242,7 +242,10 @@ fun ThemeStep(onNext: () -> Unit, onBack: () -> Unit) {
     val context = LocalContext.current
     val settings: SettingsRepository = koinInject()
     val scope = rememberCoroutineScope()
-    var selectedThemeId by remember { mutableStateOf(HanTVThemePresetId.MACOS_GLASS) }
+    val bgImagePath by settings.bgImagePath.collectAsStateWithLifecycle("")
+    val activePreset = remember(bgImagePath) {
+        HanTVThemePresets.ALL.firstOrNull { bgImagePath.contains(it.id.name.lowercase()) } ?: HanTVThemePresets.ALL.first()
+    }
 
     SetupPage {
         Text(
@@ -265,7 +268,7 @@ fun ThemeStep(onNext: () -> Unit, onBack: () -> Unit) {
             contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
         ) {
             items(HanTVThemePresets.ALL, key = { it.id }) { preset ->
-                val isSelected = selectedThemeId == preset.id
+                val isSelected = preset.id == activePreset.id
                 val parsedAccent = remember(preset.accentColorHex) {
                     runCatching { Color(android.graphics.Color.parseColor(preset.accentColorHex)) }
                         .getOrDefault(Color(0xFF64D2FF))
@@ -290,7 +293,6 @@ fun ThemeStep(onNext: () -> Unit, onBack: () -> Unit) {
                         )
                         .background(Color(0xFF141A24))
                         .clickable {
-                            selectedThemeId = preset.id
                             scope.launch(Dispatchers.IO) { preset.applyTheme(context, settings) }
                         },
                 ) {
