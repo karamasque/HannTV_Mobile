@@ -346,9 +346,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: HanTV Mobil ${{ github.ref_name }}
-          files: |
-            dist/${{ env.APK_OUT }}
-            dist/HanTV-Mobile.apk
-            dist/HanTV-Mobile-x86_64-v${{ steps.ver.outputs.name }}.apk
+          files: dist/*.apk
           body_path: dist/RELEASE_NOTES.md
           generate_release_notes: false
