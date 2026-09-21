@@ -145,9 +145,9 @@ fun SetupFlow(
     BackHandler(enabled = !atStart || onCancel != null) {
         when (step) {
             Step.WELCOME -> onCancel?.invoke()
-            Step.DISPLAY_SIZE -> step = Step.WELCOME
-            Step.THEME -> step = Step.DISPLAY_SIZE
-            Step.DISCLAIMER -> step = Step.THEME
+            Step.THEME -> step = Step.WELCOME
+            Step.DISPLAY_SIZE -> step = Step.THEME
+            Step.DISCLAIMER -> step = Step.DISPLAY_SIZE
             Step.CHOICE -> step = Step.DISCLAIMER
             // The step owns its own Back: it has sheets to dismiss first, and once the data has
             // landed there is nothing to go back to.
@@ -165,20 +165,18 @@ fun SetupFlow(
 
     Box(modifier = modifier.fillMaxSize()) {
         when (step) {
-            Step.WELCOME -> WelcomeStep(onNext = { step = Step.DISPLAY_SIZE })
-            // Before the disclaimer, which is the first screen that is mostly words: if the text is
-            // too small to read, that is the screen it first hurts on (#179).
-            Step.DISPLAY_SIZE -> DisplaySizeStep(
-                onNext = { step = Step.THEME },
+            Step.WELCOME -> WelcomeStep(onNext = { step = Step.THEME })
+            Step.THEME -> ThemeStep(
+                onNext = { step = Step.DISPLAY_SIZE },
                 onBack = { step = Step.WELCOME },
             )
-            Step.THEME -> ThemeStep(
+            Step.DISPLAY_SIZE -> DisplaySizeStep(
                 onNext = { step = Step.DISCLAIMER },
-                onBack = { step = Step.DISPLAY_SIZE },
+                onBack = { step = Step.THEME },
             )
             Step.DISCLAIMER -> DisclaimerStep(
                 onAgree = { step = Step.CHOICE },
-                onBack = { step = Step.THEME },
+                onBack = { step = Step.DISPLAY_SIZE },
             )
             // The first decision: start fresh, or bring everything back. Restoring first is why the
             // profile step comes after this one — a restore brings its own profiles, and creating one

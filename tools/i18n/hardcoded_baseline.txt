@@ -14,4 +14,10 @@
 2	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	⚡
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	⚡ Xtream bağlantısı algılandı ve dolduruldu.
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	✨
-1	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupWizardSteps.kt	\0
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/RaySetupScaffold.kt	\0
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/RaySetupScaffold.kt	$stepTitle ($stepIndex/$totalSteps)
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/RaySetupScaffold.kt	accent
+2	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupWizardSteps.kt	\0
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupWizardSteps.kt	$zoom%
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupWizardSteps.kt	${fonts.sizePercent}%
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupWizardSteps.kt	lang_accent

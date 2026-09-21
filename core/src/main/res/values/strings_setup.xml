@@ -58,6 +58,14 @@
     <!-- Translators: Subtitle on the first-run welcome screen, below the HanTV brand lockup. -->
     <string name="setup_welcome_to">WELCOME TO</string>
     <string name="setup_welcome_tagline">Your own IPTV player.</string>
+    <string name="setup_welcome_tagline_short">Welcome</string>
+    <string name="setup_next">Next</string>
+    <string name="setup_back">Back</string>
+    <string name="setup_finish">Finish setup</string>
+    <string name="setup_step_language">Language</string>
+    <string name="setup_step_theme">Appearance</string>
+    <string name="setup_step_display">Size</string>
+    <string name="setup_step_source">Playlist</string>
     <!-- Translators: Primary action button on the first-run welcome screen. -->
     <string name="setup_get_started">Get Started</string>
     <!-- Translators: Heading on the first-run step where the user sets interface and text size before the rest of setup. -->
