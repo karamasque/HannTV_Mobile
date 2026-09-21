@@ -362,10 +362,9 @@ fun GlassBackdropRoot(content: @Composable () -> Unit) {
     val settings: SettingsRepository = koinInject()
     val bgImagePath by settings.bgImagePath.collectAsStateWithLifecycle("")
     val glass = LocalGlass.current
-    // The wallpaper belongs to the Glass Effect, so it goes away with it: switching glass off and
-    // being left with a picture the panels no longer sample is the wrong half of the feature.
-    val hasImage = bgImagePath.isNotBlank() && glass.enabled
-    val frosted = hasImage && supportsBackdropBlur && glass.blurStrength > 0f
+    // The wallpaper renders whenever a background path is set, providing a gorgeous branded canvas.
+    val hasImage = bgImagePath.isNotBlank()
+    val frosted = hasImage && supportsBackdropBlur && glass.blurStrength > 0f && glass.enabled
 
     // Ten full-screen textures is real memory even though only the rungs actually drawn are ever
     // rasterized, so a low-RAM phone gets half the rungs — a coarser ladder over the same range,
@@ -435,6 +434,19 @@ fun GlassBackdropRoot(content: @Composable () -> Unit) {
                             }
                         }
                     },
+            )
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(
+                                Color(0x800A0E18),
+                                Color(0x9E080C14),
+                                Color(0xB8060A10),
+                            )
+                        )
+                    )
             )
         }
         CompositionLocalProvider(

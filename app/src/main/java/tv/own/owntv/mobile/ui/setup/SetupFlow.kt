@@ -69,7 +69,7 @@ import tv.own.owntv.mobile.ui.theme.MobileDimens
  * "chooser" steps have no counterpart here.
  */
 private enum class Step {
-    WELCOME, DISPLAY_SIZE, DISCLAIMER, CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, EXISTING, FORM, IMPORTING, RESTORE
+    WELCOME, DISPLAY_SIZE, THEME, DISCLAIMER, CHOICE, SYNC_DEVICE, CREATE_PROFILE, ADD_CONTENT, EXISTING, FORM, IMPORTING, RESTORE
 }
 
 /**
@@ -146,7 +146,8 @@ fun SetupFlow(
         when (step) {
             Step.WELCOME -> onCancel?.invoke()
             Step.DISPLAY_SIZE -> step = Step.WELCOME
-            Step.DISCLAIMER -> step = Step.DISPLAY_SIZE
+            Step.THEME -> step = Step.DISPLAY_SIZE
+            Step.DISCLAIMER -> step = Step.THEME
             Step.CHOICE -> step = Step.DISCLAIMER
             // The step owns its own Back: it has sheets to dismiss first, and once the data has
             // landed there is nothing to go back to.
@@ -168,12 +169,16 @@ fun SetupFlow(
             // Before the disclaimer, which is the first screen that is mostly words: if the text is
             // too small to read, that is the screen it first hurts on (#179).
             Step.DISPLAY_SIZE -> DisplaySizeStep(
-                onNext = { step = Step.DISCLAIMER },
+                onNext = { step = Step.THEME },
                 onBack = { step = Step.WELCOME },
+            )
+            Step.THEME -> ThemeStep(
+                onNext = { step = Step.DISCLAIMER },
+                onBack = { step = Step.DISPLAY_SIZE },
             )
             Step.DISCLAIMER -> DisclaimerStep(
                 onAgree = { step = Step.CHOICE },
-                onBack = { step = Step.DISPLAY_SIZE },
+                onBack = { step = Step.THEME },
             )
             // The first decision: start fresh, or bring everything back. Restoring first is why the
             // profile step comes after this one — a restore brings its own profiles, and creating one

@@ -2475,4 +2475,39 @@ Resync and remove missing titles also allows removing titles the provider no lon
     <string name="settings_multiview_keep_two">Keep 2</string>
     <!-- Translators: Action that accepts the warning. "count" is 3 or 4. -->
     <string name="settings_multiview_use_anyway">Use anyway</string>
+    <!-- Theme Presets -->
+    <string name="theme_preset_title">Theme &amp; Wallpaper</string>
+    <string name="theme_preset_desc">Glass background and accent color preset themes</string>
+    <string name="theme_preset_dialog_title">Theme &amp; Wallpaper</string>
+    <string name="theme_preset_dialog_desc">Select a theme to instantly apply background wallpaper and accent style.</string>
+    <string name="theme_setup_title">Interface Theme</string>
+    <string name="theme_setup_desc">Choose an elegant wallpaper and glass accent theme for HanTV.</string>
+    <string name="theme_chip_count">13 Themes</string>
+
+    <string name="theme_glass_gri">Glass Grey</string>
+    <string name="theme_glass_gri_desc">Frosted slate grey, neutral focus</string>
+    <string name="theme_macos_glass">macOS Glass</string>
+    <string name="theme_macos_glass_desc">Transparent glass, cyan glow</string>
+    <string name="theme_os27">OS27</string>
+    <string name="theme_os27_desc">iOS fluid glass, system blue</string>
+    <string name="theme_mac_tema">Mac Theme</string>
+    <string name="theme_mac_tema_desc">macOS Tahoe, Apple blue</string>
+    <string name="theme_glassmorphism">Glassmorphism</string>
+    <string name="theme_glassmorphism_desc">Blue-focused frosted glass</string>
+    <string name="theme_mint">Mint</string>
+    <string name="theme_mint_desc">Linux Mint green, translucent</string>
+    <string name="theme_macos_tv">macOS TV</string>
+    <string name="theme_macos_tv_desc">Matte glass, 0% blur, Sequoia blue</string>
+    <string name="theme_koyu_cam">Dark Glass</string>
+    <string name="theme_koyu_cam_desc">Dark frosted glass, cyan accent</string>
+    <string name="theme_amoled_black">Amoled Black</string>
+    <string name="theme_amoled_black_desc">Pure OLED black, cyan accent</string>
+    <string name="theme_fly_ui">Fly UI</string>
+    <string name="theme_fly_ui_desc">Flyme frosted glass, teal cyan</string>
+    <string name="theme_semc">SEMC Theme</string>
+    <string name="theme_semc_desc">Xperia green accent, dark glass</string>
+    <string name="theme_dark_flat">Dark Flat</string>
+    <string name="theme_dark_flat_desc">Charcoal surface, cyan accent</string>
+    <string name="theme_acik_cam">Light Glass</string>
+    <string name="theme_acik_cam_desc">Light frosted glass panels</string>
 </resources>

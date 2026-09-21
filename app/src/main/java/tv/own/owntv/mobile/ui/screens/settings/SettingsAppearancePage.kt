@@ -1,28 +1,54 @@
 package tv.own.owntv.mobile.ui.screens.settings
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import tv.own.owntv.mobile.ui.components.MobileIcons
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.core.theme.AccentColor
 import tv.own.owntv.core.theme.AnimationLevel
@@ -30,6 +56,9 @@ import tv.own.owntv.core.theme.AppFontFamily
 import tv.own.owntv.core.theme.GlassConfig
 import tv.own.owntv.core.theme.GlassPreset
 import tv.own.owntv.core.theme.GlassSurface
+import tv.own.owntv.core.theme.HanTVThemePreset
+import tv.own.owntv.core.theme.HanTVThemePresetId
+import tv.own.owntv.core.theme.HanTVThemePresets
 import tv.own.owntv.core.theme.ThemeMode
 import tv.own.owntv.core.theme.UiZoom
 import tv.own.owntv.core.theme.roles
@@ -73,6 +102,15 @@ fun SettingsAppearancePage(
         item(key = "preview") { AppearancePreview() }
         settingsLeafRows(SettingsGroup.APPEARANCE, onOpenLeaf)
 
+
+        settingsGroup(key = "theme_preset") {
+            SettingRow(
+                title = stringResource(R.string.theme_preset_title),
+                subtitle = stringResource(R.string.theme_preset_desc),
+                value = stringResource(R.string.theme_chip_count),
+                onClick = { sheet = AppearanceSheet.THEME_PRESET },
+            )
+        }
 
         settingsGroup(key = "highlight") {
             SettingRow(
@@ -164,6 +202,10 @@ fun SettingsAppearancePage(
             onOpenPicker = { sheet = null; picker = ColorTarget.HIGHLIGHT },
             onDismiss = { sheet = null },
         )
+        AppearanceSheet.THEME_PRESET -> ThemePresetSheet(
+            vm = vm,
+            onDismiss = { sheet = null },
+        )
         null -> Unit
     }
 
@@ -224,7 +266,7 @@ fun SettingsAppearancePage(
     }
 }
 
-private enum class AppearanceSheet { THEME, ACCENT, HIGHLIGHT }
+private enum class AppearanceSheet { THEME, ACCENT, HIGHLIGHT, THEME_PRESET }
 
 /** A slider's stops, so it lands on core's step size instead of anywhere between two of them. */
 internal fun stepsFor(min: Int, max: Int, step: Int): Int = ((max - min) / step) - 1
@@ -376,6 +418,137 @@ private fun HighlightSheet(vm: SettingsViewModel, onOpenPicker: () -> Unit, onDi
             value = current.ifBlank { stringResource(R.string.settings_subtitle_default) },
             onClick = onOpenPicker,
         )
+    }
+}
+
+/** Ray IPTV style theme & wallpaper preset sheet. */
+@Composable
+private fun ThemePresetSheet(vm: SettingsViewModel, onDismiss: () -> Unit) {
+    val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val bgPath = vm.settings.bgImagePath.pref("")
+
+    MobileBottomSheet(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.theme_preset_dialog_title),
+    ) {
+        Text(
+            text = stringResource(R.string.theme_preset_dialog_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(bottom = 12.dp),
+        )
+
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().height(175.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+        ) {
+            items(HanTVThemePresets.ALL, key = { it.id }) { preset ->
+                val isSelected = bgPath.contains(preset.id.name.lowercase())
+                val parsedAccent = remember(preset.accentColorHex) {
+                    runCatching { Color(android.graphics.Color.parseColor(preset.accentColorHex)) }
+                        .getOrDefault(Color(0xFF64D2FF))
+                }
+                val imageRequest = remember(preset.wallpaperResId) {
+                    ImageRequest.Builder(context)
+                        .data(preset.wallpaperResId)
+                        .size(260, 180)
+                        .crossfade(true)
+                        .build()
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(170.dp)
+                        .height(150.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(
+                            width = if (isSelected) 2.5.dp else 1.dp,
+                            color = if (isSelected) parsedAccent else Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(16.dp),
+                        )
+                        .background(Color(0xFF141A24))
+                        .clickable {
+                            scope.launch(Dispatchers.IO) { preset.applyTheme(context, vm.settings) }
+                        },
+                ) {
+                    AsyncImage(
+                        model = imageRequest,
+                        contentDescription = stringResource(preset.titleRes),
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+
+                    // Scrim gradient
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color(0xAA000000),
+                                        Color(0xEE000000),
+                                    ),
+                                    startY = 40f,
+                                ),
+                            ),
+                    )
+
+                    // Selection Checkmark badge
+                    if (isSelected) {
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(parsedAccent)
+                                .align(Alignment.TopEnd),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = MobileIcons.Check,
+                                contentDescription = null,
+                                tint = if (preset.isDark) Color.Black else Color.White,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+
+                    // Bottom info & Accent Stripe
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth(),
+                    ) {
+                        Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                            Text(
+                                text = stringResource(preset.titleRes),
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = stringResource(preset.subtitleRes),
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.5.sp),
+                                color = Color(0xFFD0D6E0),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .background(parsedAccent),
+                        )
+                    }
+                }
+            }
+        }
+        Spacer(Modifier.height(16.dp))
     }
 }
 

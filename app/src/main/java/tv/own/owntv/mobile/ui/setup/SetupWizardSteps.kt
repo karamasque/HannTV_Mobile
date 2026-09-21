@@ -1,11 +1,26 @@
 package tv.own.owntv.mobile.ui.setup
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -17,11 +32,25 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import coil3.compose.AsyncImage
+import coil3.request.ImageRequest
+import coil3.request.crossfade
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
 import tv.own.owntv.core.database.entity.SourceEntity
@@ -29,6 +58,9 @@ import tv.own.owntv.core.i18n.LocaleStore
 import tv.own.owntv.core.i18n.SupportedLocales
 import tv.own.owntv.core.settings.SettingsRepository
 import tv.own.owntv.core.theme.FontCustomization
+import tv.own.owntv.core.theme.HanTVThemePreset
+import tv.own.owntv.core.theme.HanTVThemePresetId
+import tv.own.owntv.core.theme.HanTVThemePresets
 import tv.own.owntv.core.theme.UiFontScale
 import tv.own.owntv.core.theme.UiZoom
 import tv.own.owntv.mobile.R
@@ -200,6 +232,150 @@ fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
                     Text(stringResource(R.string.common_cancel))
                 }
             },
+        )
+    }
+}
+
+/** Step 2a — Interface Theme & Wallpaper presets (Ray IPTV style live customizer). */
+@Composable
+fun ThemeStep(onNext: () -> Unit, onBack: () -> Unit) {
+    val context = LocalContext.current
+    val settings: SettingsRepository = koinInject()
+    val scope = rememberCoroutineScope()
+    var selectedThemeId by remember { mutableStateOf(HanTVThemePresetId.MACOS_GLASS) }
+
+    SetupPage {
+        Text(
+            text = stringResource(R.string.theme_setup_title),
+            style = MaterialTheme.typography.headlineSmall,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.Center,
+        )
+        Text(
+            text = stringResource(R.string.theme_setup_desc),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            textAlign = TextAlign.Center,
+        )
+        Spacer(Modifier.height(MobileDimens.GapSmall))
+
+        LazyRow(
+            modifier = Modifier.fillMaxWidth().height(175.dp),
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+            contentPadding = PaddingValues(horizontal = 4.dp, vertical = 6.dp),
+        ) {
+            items(HanTVThemePresets.ALL, key = { it.id }) { preset ->
+                val isSelected = selectedThemeId == preset.id
+                val parsedAccent = remember(preset.accentColorHex) {
+                    runCatching { Color(android.graphics.Color.parseColor(preset.accentColorHex)) }
+                        .getOrDefault(Color(0xFF64D2FF))
+                }
+                val imageRequest = remember(preset.wallpaperResId) {
+                    ImageRequest.Builder(context)
+                        .data(preset.wallpaperResId)
+                        .size(260, 180)
+                        .crossfade(true)
+                        .build()
+                }
+
+                Box(
+                    modifier = Modifier
+                        .width(170.dp)
+                        .height(150.dp)
+                        .clip(RoundedCornerShape(16.dp))
+                        .border(
+                            width = if (isSelected) 2.5.dp else 1.dp,
+                            color = if (isSelected) parsedAccent else Color.White.copy(alpha = 0.15f),
+                            shape = RoundedCornerShape(16.dp),
+                        )
+                        .background(Color(0xFF141A24))
+                        .clickable {
+                            selectedThemeId = preset.id
+                            scope.launch(Dispatchers.IO) { preset.applyTheme(context, settings) }
+                        },
+                ) {
+                    AsyncImage(
+                        model = imageRequest,
+                        contentDescription = stringResource(preset.titleRes),
+                        modifier = Modifier.fillMaxSize(),
+                        contentScale = ContentScale.Crop,
+                    )
+
+                    // Scrim gradient
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(
+                                Brush.verticalGradient(
+                                    colors = listOf(
+                                        Color.Transparent,
+                                        Color(0xAA000000),
+                                        Color(0xEE000000),
+                                    ),
+                                    startY = 40f,
+                                ),
+                            ),
+                    )
+
+                    // Selection Checkmark badge
+                    if (isSelected) {
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(24.dp)
+                                .clip(CircleShape)
+                                .background(parsedAccent)
+                                .align(Alignment.TopEnd),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            Icon(
+                                imageVector = MobileIcons.Check,
+                                contentDescription = null,
+                                tint = if (preset.isDark) Color.Black else Color.White,
+                                modifier = Modifier.size(16.dp),
+                            )
+                        }
+                    }
+
+                    // Bottom info & Accent Stripe
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomStart)
+                            .fillMaxWidth(),
+                    ) {
+                        Column(Modifier.padding(horizontal = 10.dp, vertical = 6.dp)) {
+                            Text(
+                                text = stringResource(preset.titleRes),
+                                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                                color = Color.White,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                            Text(
+                                text = stringResource(preset.subtitleRes),
+                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 10.5.sp),
+                                color = Color(0xFFD0D6E0),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                            )
+                        }
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .height(4.dp)
+                                .background(parsedAccent),
+                        )
+                    }
+                }
+            }
+        }
+
+        Spacer(Modifier.height(MobileDimens.GapSmall))
+        MobileButton(text = stringResource(R.string.setup_continue), onClick = onNext)
+        MobileButton(
+            text = stringResource(R.string.common_back),
+            onClick = onBack,
+            style = MobileButtonStyle.TEXT,
         )
     }
 }
