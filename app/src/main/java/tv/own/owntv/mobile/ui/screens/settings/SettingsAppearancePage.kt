@@ -62,7 +62,6 @@ fun SettingsAppearancePage(
     val customAccent = vm.settings.customAccent.pref("")
 
     var sheet by remember { mutableStateOf<AppearanceSheet?>(null) }
-    var showThemePresetChooser by remember { mutableStateOf(false) }
     // The colour picker is opened from the page rather than from inside another sheet, so the
     // two never stack: the highlight sheet closes and hands over.
     var picker by remember { mutableStateOf<ColorTarget?>(null) }
@@ -75,13 +74,6 @@ fun SettingsAppearancePage(
         settingsLeafRows(SettingsGroup.APPEARANCE, onOpenLeaf)
 
         settingsGroup(key = "theme") {
-            SettingRow(
-                title = "Tema",
-                subtitle = "Duvar kâğıdı ve vurgu rengi seçince hemen uygulanır.",
-                value = "13 Özel Tema",
-                onClick = { showThemePresetChooser = true },
-            )
-
             SettingRow(
                 title = stringResource(R.string.settings_theme),
                 subtitle = stringResource(R.string.settings_theme_description),
@@ -213,13 +205,6 @@ fun SettingsAppearancePage(
                 onDismiss = { picker = null },
             )
         }
-    }
-
-    if (showThemePresetChooser) {
-        tv.own.owntv.mobile.ui.theme.ThemeChooserSheet(
-            settings = vm.settings,
-            onDismissRequest = { showThemePresetChooser = false },
-        )
     }
 
     pendingLowZoom?.let { target ->

@@ -1370,40 +1370,4 @@
     <string name="settings_multiview_warning_description">Üç veya dört karo, sağlayıcınızdan üç veya dört bağlantı ister ve bir TV cihazı aynı anda ancak belirli sayıda kanalı çözebilir. Bir karo açılmazsa nedenini söyler, diğerleri oynamaya devam eder.</string>
     <string name="settings_multiview_keep_two">2 kalsın</string>
     <string name="settings_multiview_use_anyway">Yine de kullan</string>
-
-    <!-- Theme Presets -->
-    <string name="theme_preset_title">Tema &amp; Duvar Kâğıdı</string>
-    <string name="theme_preset_desc">Cam efektli arka plan ve vurgu rengi hazır temaları</string>
-    <string name="theme_preset_dialog_title">Tema ve Duvar Kâğıdı</string>
-    <string name="theme_preset_dialog_desc">Bir tema seçtiğinizde duvar kâğıdı ve cam efekti vurgu rengi anında uygulanır.</string>
-    <string name="theme_setup_title">Arayüz Teması</string>
-    <string name="theme_setup_desc">HanTV için şık bir duvar kâğıdı ve cam efekti vurgu rengi seçin.</string>
-    <string name="theme_chip_count">13 Tema</string>
-
-    <string name="theme_glass_gri">Glass Gri</string>
-    <string name="theme_glass_gri_desc">Buzlu slate gri, nötr odak</string>
-    <string name="theme_macos_glass">macOS Glass</string>
-    <string name="theme_macos_glass_desc">Şeffaf cam, cyan ışıma</string>
-    <string name="theme_os27">OS27</string>
-    <string name="theme_os27_desc">iOS damla cam, sistem mavisi</string>
-    <string name="theme_mac_tema">Mac Tema</string>
-    <string name="theme_mac_tema_desc">macOS Tahoe, Apple mavisi</string>
-    <string name="theme_glassmorphism">Glassmorphism</string>
-    <string name="theme_glassmorphism_desc">Mavi odaklı buzlu cam</string>
-    <string name="theme_mint">Mint</string>
-    <string name="theme_mint_desc">Linux Mint yeşil, yarı saydam</string>
-    <string name="theme_macos_tv">macOS TV</string>
-    <string name="theme_macos_tv_desc">Mat cam, %0 blur, Sequoia mavisi</string>
-    <string name="theme_koyu_cam">Koyu Cam</string>
-    <string name="theme_koyu_cam_desc">Koyu buzlu cam, cyan vurgu</string>
-    <string name="theme_amoled_black">Amoled Black</string>
-    <string name="theme_amoled_black_desc">Saf siyah, camgöbeği vurgu</string>
-    <string name="theme_fly_ui">Fly UI</string>
-    <string name="theme_fly_ui_desc">Flyme buzlu cam, mavi-camgöbeği</string>
-    <string name="theme_semc">SEMC Theme</string>
-    <string name="theme_semc_desc">Xperia yeşil vurgu, koyu cam</string>
-    <string name="theme_dark_flat">Dark Flat</string>
-    <string name="theme_dark_flat_desc">Kömür yüzey, camgöbeği vurgu</string>
-    <string name="theme_acik_cam">Açık Cam</string>
-    <string name="theme_acik_cam_desc">Açık buzlu cam paneller</string>
 </resources>

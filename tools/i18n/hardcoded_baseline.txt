@@ -4,9 +4,6 @@
 # Phase 1 deletes occurrences until this file is empty; the CI guard then becomes absolute.
 # Format: <count>\t<relative path>\t<content with \t/\n escaped>
 
-1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	13 Özel Tema
-1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	Duvar kâğıdı ve vurgu rengi seçince hemen uygulanır.
-1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	Tema
 2	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Girdiğiniz metinden geçerli bir bağlantı veya hesap çıkarılamadı.
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Hesap
@@ -15,7 +12,3 @@
 2	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	⚡
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	⚡ Xtream bağlantısı algılandı ve dolduruldu.
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	✨
-1	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupWizardSteps.kt	drawable
-1	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupWizardSteps.kt	✓
-1	app/src/main/java/tv/own/owntv/mobile/ui/theme/ThemeChooserSheet.kt	Selected
-1	app/src/main/java/tv/own/owntv/mobile/ui/theme/ThemeChooserSheet.kt	drawable
