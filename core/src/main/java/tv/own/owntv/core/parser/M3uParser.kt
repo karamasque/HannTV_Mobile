@@ -35,11 +35,53 @@ data class M3uEntry(
     val drm: tv.own.owntv.core.drm.DrmConfig? = null,
 ) {
     /** Tagged as series content — per-episode entries like "Show S01E05" grouped into shows. */
-    val isSeries: Boolean get() = type == "series" || tvgType == "series"
+    val isSeries: Boolean get() =
+        type.equals("series", ignoreCase = true) ||
+        tvgType.equals("series", ignoreCase = true) ||
+        streamUrl.contains("/series/", ignoreCase = true) ||
+        isSeriesEpisodeName(name) ||
+        isSeriesGroup(groupTitle)
 
     /** True when the entry is explicitly tagged as VOD (movie or series), not a live channel. */
     val isVod: Boolean get() =
-        isSeries || type == "vod" || type == "movie" || tvgType == "vod" || tvgType == "movie"
+        isSeries ||
+        type.equals("vod", ignoreCase = true) ||
+        type.equals("movie", ignoreCase = true) ||
+        tvgType.equals("vod", ignoreCase = true) ||
+        tvgType.equals("movie", ignoreCase = true) ||
+        streamUrl.contains("/movie/", ignoreCase = true) ||
+        streamUrl.contains("/vod/", ignoreCase = true) ||
+        isVodExtension(streamUrl) ||
+        isVodGroup(groupTitle)
+
+    companion object {
+        private val SERIES_EPISODE_REGEX = Regex("""(?i)(?:[sS]\d+[\s\.\-_]*[eE]\d+|\b\d+x\d+\b|Season\s*\d+|Sezon\s*\d+)""")
+        private val VOD_EXTENSIONS = setOf("mp4", "mkv", "avi", "mov", "flv", "wmv", "m4v")
+
+        fun isSeriesEpisodeName(name: String): Boolean =
+            SERIES_EPISODE_REGEX.containsMatchIn(name)
+
+        fun isSeriesGroup(group: String?): Boolean {
+            if (group.isNullOrBlank()) return false
+            val g = group.lowercase()
+            return (g.contains("dizi") || g.contains("series") || g.contains("seri") || g.contains("season")) &&
+                !g.contains("canli") && !g.contains("canlı") && !g.contains("live")
+        }
+
+        fun isVodExtension(url: String): Boolean {
+            val path = url.substringBefore('?').substringBefore('#')
+            val ext = path.substringAfterLast('.', "").lowercase()
+            return ext in VOD_EXTENSIONS
+        }
+
+        fun isVodGroup(group: String?): Boolean {
+            if (group.isNullOrBlank()) return false
+            val g = group.lowercase()
+            return (g.contains("vod") || g.contains("sinema") || g.contains("cinema") ||
+                g.contains("film") || g.contains("movie")) &&
+                !g.contains("canli") && !g.contains("canlı") && !g.contains("live")
+        }
+    }
 }
 
 /** Header info from the `#EXTM3U` line (notably the `url-tvg` EPG URL). */
@@ -77,7 +119,7 @@ class M3uParser {
 
         input.bufferedReader().forEachLineSafe { raw ->
             val parseStart = if (debug) SystemClock.elapsedRealtime() else 0L
-            val line = raw.trim()
+            val line = raw.trim().removePrefix("\uFEFF").trim()
             var callbackHandled = false
             when {
                 line.isEmpty() -> Unit

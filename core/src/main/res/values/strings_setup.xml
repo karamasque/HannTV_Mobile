@@ -217,6 +217,14 @@
     <string name="setup_m3u">M3U / M3U8</string>
     <!-- Translators: KindChip label for the Stalker portal source type selector. "Stalker" is a brand name that must not be translated. Only shown when Stalker support is enabled. Shown on the TV form and the companion web page. -->
     <string name="setup_stalker_mac">Stalker (MAC)</string>
+    <string name="setup_smart_analysis">Smart Analysis</string>
+    <string name="setup_smart_analysis_btn">⚡ Smart Analysis (Auto Detect)</string>
+    <string name="setup_smart_analysis_desc">Paste your provider message or M3U link to automatically extract Server URL, Username, and Password.</string>
+    <string name="setup_smart_analysis_paste_hint">Paste M3U URL or provider message here (e.g. http://server:8080/get.php?username=...)</string>
+    <string name="setup_smart_analysis_analyze">Analyze &amp; Fill</string>
+    <string name="setup_smart_analysis_success">Credentials extracted successfully!</string>
+    <string name="setup_smart_analysis_failed">Could not parse credentials from the input.</string>
+    <string name="setup_smart_analysis_clear">Clear</string>
     <!-- Translators: Text-field label for the optional source name. Shown on the TV form and the companion web page. -->
     <string name="setup_source_name_optional">Name (optional)</string>
     <!-- Translators: Default source name placeholder for Xtream sources when the user leaves the name blank. Used as fallback on the TV form and companion web page. -->

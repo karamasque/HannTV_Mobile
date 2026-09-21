@@ -54,6 +54,14 @@
     <string name="setup_skip_for_now">Şimdilik atla</string>
     <string name="setup_use_existing_playlists">Mevcut oynatma listelerini kullan</string>
     <string name="setup_pick_playlists">Bu profil için eklenecek oynatma listelerini seçin.</string>
+    <string name="setup_smart_analysis">Akıllı Analiz</string>
+    <string name="setup_smart_analysis_btn">⚡ Akıllı Analiz (Otomatik Algılama)</string>
+    <string name="setup_smart_analysis_desc">M3U bağlantısını veya sağlayıcınızın mesajını yapıştırın — Sunucu, Kullanıcı Adı ve Şifre otomatik olarak ayrıştırılacaktır.</string>
+    <string name="setup_smart_analysis_paste_hint">M3U linkini veya sağlayıcınızın mesajını buraya yapıştırın (örn: http://server:8080/get.php?username=...)</string>
+    <string name="setup_smart_analysis_analyze">Ayrıştır ve Doldur</string>
+    <string name="setup_smart_analysis_success">Bilgiler başarıyla ayrıştırıldı!</string>
+    <string name="setup_smart_analysis_failed">Girdiğiniz metinden bilgi ayrıştırılamadı.</string>
+    <string name="setup_smart_analysis_clear">Temizle</string>
     <plurals name="setup_add_selected_playlists">
         <item quantity="one"><xliff:g id="count">%1$d</xliff:g> oynatma listesini ekle</item>
         <item quantity="other"><xliff:g id="count">%1$d</xliff:g> oynatma listesini ekle</item>

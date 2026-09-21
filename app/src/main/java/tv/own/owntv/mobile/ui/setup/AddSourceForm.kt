@@ -1,6 +1,10 @@
 package tv.own.owntv.mobile.ui.setup
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,6 +13,7 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -22,9 +27,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.settings.PlaylistAutoRefresh
 import tv.own.owntv.core.settings.PlaylistRefresh
@@ -174,6 +182,10 @@ fun AddSourceForm(
         preferHls = preferHls,
     )
 
+    var showSmartSheet by remember { mutableStateOf(false) }
+    var smartInput by remember { mutableStateOf("") }
+    var smartStatusMessage by remember { mutableStateOf<String?>(null) }
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -189,6 +201,57 @@ fun AddSourceForm(
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
+
+            // Smart Analysis Quick Action
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.08f))
+                    .border(
+                        width = 1.dp,
+                        color = MaterialTheme.colorScheme.primary.copy(alpha = 0.35f),
+                        shape = RoundedCornerShape(12.dp),
+                    )
+                    .clickable { showSmartSheet = true }
+                    .padding(14.dp),
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text("✨", style = MaterialTheme.typography.titleLarge)
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(R.string.setup_smart_analysis_btn),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = stringResource(R.string.setup_smart_analysis_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            if (smartStatusMessage != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF10B981).copy(alpha = 0.15f))
+                        .padding(12.dp),
+                ) {
+                    Text(
+                        text = smartStatusMessage!!,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = Color(0xFF34D399),
+                    )
+                }
+            }
+
             FilterChipRow(
                 labels = listOf(
                     stringResource(R.string.setup_xtream),
@@ -219,7 +282,18 @@ fun AddSourceForm(
             SourceKind.XTREAM -> {
                 MobileTextField(
                     value = server,
-                    onValueChange = { server = it },
+                    onValueChange = {
+                        val auto = tv.own.owntv.core.setup.SmartSourceAnalyzer.analyze(it)
+                        if (auto != null && auto.isXtream) {
+                            server = auto.serverUrl
+                            username = auto.username
+                            password = auto.password
+                            if (name.isBlank() && auto.suggestedName != null) name = auto.suggestedName.orEmpty()
+                            smartStatusMessage = "⚡ " + auto.suggestedName + " bilgileri ayrıştırıldı."
+                        } else {
+                            server = it
+                        }
+                    },
                     label = stringResource(R.string.setup_server_url),
                     placeholder = stringResource(R.string.setup_server_example),
                     keyboardType = KeyboardType.Uri,
@@ -250,7 +324,19 @@ fun AddSourceForm(
             SourceKind.M3U -> {
                 MobileTextField(
                     value = m3uUrl,
-                    onValueChange = { m3uUrl = it },
+                    onValueChange = {
+                        val auto = tv.own.owntv.core.setup.SmartSourceAnalyzer.analyze(it)
+                        if (auto != null && auto.isXtream) {
+                            kind = SourceKind.XTREAM
+                            server = auto.serverUrl
+                            username = auto.username
+                            password = auto.password
+                            if (name.isBlank() && auto.suggestedName != null) name = auto.suggestedName.orEmpty()
+                            smartStatusMessage = "⚡ Xtream bağlantısı algılandı ve dolduruldu."
+                        } else {
+                            m3uUrl = it
+                        }
+                    },
                     label = stringResource(R.string.setup_playlist_url_local_file),
                     placeholder = stringResource(R.string.setup_playlist_example),
                     keyboardType = KeyboardType.Uri,
@@ -427,6 +513,74 @@ fun AddSourceForm(
                     trailing = { RadioButton(selected = preset.userAgent == userAgent, onClick = null) },
                     onClick = { userAgent = preset.userAgent; showDeviceSheet = false },
                 )
+            }
+        }
+    }
+    if (showSmartSheet) {
+        val clearLabel = stringResource(R.string.setup_smart_analysis_clear)
+        val analyzeLabel = stringResource(R.string.setup_smart_analysis_analyze)
+        MobileBottomSheet(
+            onDismissRequest = { showSmartSheet = false },
+            title = stringResource(R.string.setup_smart_analysis),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = MobileDimens.ScreenPaddingH)
+                    .padding(bottom = 24.dp),
+                verticalArrangement = Arrangement.spacedBy(14.dp),
+            ) {
+                Text(
+                    text = stringResource(R.string.setup_smart_analysis_desc),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                MobileTextField(
+                    value = smartInput,
+                    onValueChange = { smartInput = it },
+                    label = stringResource(R.string.setup_smart_analysis),
+                    placeholder = stringResource(R.string.setup_smart_analysis_paste_hint),
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                ) {
+                    if (smartInput.isNotBlank()) {
+                        MobileButton(
+                            text = clearLabel,
+                            onClick = { smartInput = "" },
+                            style = MobileButtonStyle.SECONDARY,
+                            modifier = Modifier.weight(1f),
+                        )
+                    }
+                    MobileButton(
+                        text = analyzeLabel,
+                        onClick = {
+                            val analyzed = tv.own.owntv.core.setup.SmartSourceAnalyzer.analyze(smartInput)
+                            if (analyzed != null) {
+                                if (analyzed.isXtream) {
+                                    kind = SourceKind.XTREAM
+                                    server = analyzed.serverUrl
+                                    username = analyzed.username
+                                    password = analyzed.password
+                                } else {
+                                    kind = SourceKind.M3U
+                                    m3uUrl = analyzed.m3uUrl ?: analyzed.serverUrl
+                                }
+                                if (name.isBlank() && analyzed.suggestedName != null) {
+                                    name = analyzed.suggestedName.orEmpty()
+                                }
+                                smartStatusMessage = "⚡ " + (analyzed.suggestedName ?: "Hesap") + " bilgileri başarıyla ayrıştırıldı!"
+                                showSmartSheet = false
+                            } else {
+                                smartStatusMessage = "Girdiğiniz metinden geçerli bir bağlantı veya hesap çıkarılamadı."
+                            }
+                        },
+                        style = MobileButtonStyle.PRIMARY,
+                        modifier = Modifier.weight(1.5f),
+                    )
+                }
             }
         }
     }
