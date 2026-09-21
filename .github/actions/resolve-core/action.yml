@@ -39,6 +39,11 @@ runs:
       run: |
         set -euo pipefail
 
+        if [ -d "core" ]; then
+          echo "Core is a local module in this repository — skipping external resolution."
+          exit 0
+        fi
+
         if [ "$FORCE" != "true" ] && [ -n "${GPR_TOKEN:-}" ]; then
           echo "GPR_TOKEN is present — resolving core from GitHub Packages, as usual."
           exit 0
