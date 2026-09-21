@@ -62,7 +62,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.material3.Surface
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.PointerEventPass
@@ -402,11 +406,40 @@ fun MobileShell(
                         .clip(MobileTopBarShape),
                     title = {
                         if (currentRoute == MobileDestination.HOME.route && settingsTitle == null) {
-                            androidx.compose.foundation.Image(
-                                painter = androidx.compose.ui.res.painterResource(id = tv.own.owntv.mobile.R.drawable.hantv_wordmark),
-                                contentDescription = null,
-                                modifier = Modifier.height(26.dp),
-                            )
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                androidx.compose.foundation.Image(
+                                    painter = androidx.compose.ui.res.painterResource(id = tv.own.owntv.mobile.R.drawable.hantv_splash_logo),
+                                    contentDescription = "HanTV Logo",
+                                    modifier = Modifier
+                                        .height(34.dp)
+                                        .clip(RoundedCornerShape(8.dp)),
+                                )
+                                Text(
+                                    text = "HanTV",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface,
+                                )
+                                Surface(
+                                    shape = RoundedCornerShape(6.dp),
+                                    color = Color(0xFF38BDF8).copy(alpha = 0.18f),
+                                    border = BorderStroke(1.dp, Color(0xFF38BDF8).copy(alpha = 0.5f)),
+                                ) {
+                                    Text(
+                                        text = "ANDROID",
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp),
+                                        style = MaterialTheme.typography.labelSmall.copy(
+                                            fontSize = 10.sp,
+                                            fontWeight = FontWeight.Bold,
+                                            letterSpacing = 0.8.sp,
+                                        ),
+                                        color = Color(0xFF38BDF8),
+                                    )
+                                }
+                            }
                         } else {
                             Text(
                                 // Search belongs to no tab, so it names itself rather than inheriting Home's.
