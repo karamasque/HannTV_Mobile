@@ -537,4 +537,23 @@
     <string name="setup_hide_new_categories">Hide new categories by default</string>
     <!-- Translators: Description of the profile-wide new-category visibility toggle. Customize is the name of the customization screen. -->
     <string name="setup_hide_new_categories_description">Profile-wide: categories that appear on future syncs start hidden. See them anytime in Customize.</string>
+
+    <!-- Translators: Tab/Option for automatic IPTV scanning. -->
+    <string name="setup_auto_iptv">Auto IPTV</string>
+    <!-- Translators: Description for the automatic IPTV scanning feature. -->
+    <string name="setup_auto_iptv_description">Automatically scan and validate working IPTV accounts from current online sources, and add them with one click.</string>
+    <!-- Translators: Button to initiate automatic IPTV scanning. -->
+    <string name="setup_auto_iptv_start_scan">Start Auto Scan</string>
+    <!-- Translators: Status label while scanning. -->
+    <string name="setup_auto_iptv_scanning">Scanning…</string>
+    <!-- Translators: Header for found accounts in auto IPTV scan. -->
+    <string name="setup_auto_iptv_found_header">Active IPTV Accounts (<xliff:g id="count">%1$d</xliff:g>)</string>
+    <!-- Translators: Hint telling user to tap an account to add it. -->
+    <string name="setup_auto_iptv_select_hint">Tap an account to import it as an Xtream playlist.</string>
+    <!-- Translators: Status message when no accounts could be found or verified. -->
+    <string name="setup_auto_iptv_no_accounts">No active IPTV accounts found at this moment. Please try again later.</string>
+    <!-- Translators: Label for active status badge. -->
+    <string name="setup_auto_iptv_status_active">Active</string>
+    <!-- Translators: Label for unlimited expiry. -->
+    <string name="setup_auto_iptv_expiry_unlimited">Unlimited</string>
 </resources>

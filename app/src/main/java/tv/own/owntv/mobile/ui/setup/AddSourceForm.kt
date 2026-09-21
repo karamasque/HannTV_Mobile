@@ -47,10 +47,16 @@ import tv.own.owntv.mobile.ui.components.MobileButtonStyle
 import tv.own.owntv.mobile.ui.components.MobileListRow
 import tv.own.owntv.mobile.ui.components.MobileSwitch
 import tv.own.owntv.mobile.ui.components.MobileTextField
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import tv.own.owntv.core.scraper.ForumScraper
+import tv.own.owntv.core.scraper.ForumIPTVAccount
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 
 /** Which kind of provider the form is asking about. */
-enum class SourceKind { XTREAM, M3U, STALKER }
+enum class SourceKind { XTREAM, M3U, STALKER, AUTO }
 
 /**
  * Everything the form holds, so editing an existing playlist can fill it and take it back whole.
@@ -158,6 +164,7 @@ fun AddSourceForm(
             server.isNotBlank() && username.isNotBlank() && (password.isNotBlank() || editing) && hasAnySection
         SourceKind.M3U -> m3uUrl.isNotBlank()
         SourceKind.STALKER -> StalkerClient.isValidPortalUrl(portalUrl) && macValid && hasAnySection
+        SourceKind.AUTO -> false
     }
     fun values() = SourceFormValues(
         kind = kind,
@@ -166,6 +173,7 @@ fun AddSourceForm(
             SourceKind.XTREAM -> server
             SourceKind.M3U -> m3uUrl
             SourceKind.STALKER -> portalUrl
+            SourceKind.AUTO -> server
         },
         username = username,
         password = password,
@@ -185,6 +193,12 @@ fun AddSourceForm(
     var showSmartSheet by remember { mutableStateOf(false) }
     var smartInput by remember { mutableStateOf("") }
     var smartStatusMessage by remember { mutableStateOf<String?>(null) }
+
+    var isAutoScanning by rememberSaveable { mutableStateOf(false) }
+    var autoProgress by rememberSaveable { mutableFloatStateOf(0f) }
+    var autoStatusText by rememberSaveable { mutableStateOf("") }
+    var autoAccounts by rememberSaveable { mutableStateOf<List<ForumIPTVAccount>>(emptyList()) }
+    var autoErrorMessage by rememberSaveable { mutableStateOf<String?>(null) }
 
     Column(
         modifier = modifier
@@ -257,6 +271,7 @@ fun AddSourceForm(
                     stringResource(R.string.setup_xtream),
                     stringResource(R.string.setup_m3u),
                     stringResource(R.string.setup_stalker_mac),
+                    stringResource(R.string.setup_auto_iptv),
                 ),
                 selectedIndex = kind.ordinal,
                 onSelect = { index ->
@@ -270,15 +285,199 @@ fun AddSourceForm(
                 },
             )
         }
-        MobileTextField(
-            value = name,
-            onValueChange = { name = it },
-            label = stringResource(R.string.setup_source_name_optional),
-            placeholder = stringResource(R.string.setup_default_iptv),
-            modifier = Modifier.fillMaxWidth(),
-        )
+
+        if (kind != SourceKind.AUTO) {
+            MobileTextField(
+                value = name,
+                onValueChange = { name = it },
+                label = stringResource(R.string.setup_source_name_optional),
+                placeholder = stringResource(R.string.setup_default_iptv),
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
 
         when (kind) {
+            SourceKind.AUTO -> {
+                Text(
+                    text = stringResource(R.string.setup_auto_iptv_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+
+                if (isAutoScanning) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            .padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            Text(
+                                text = "🔍 " + stringResource(R.string.setup_auto_iptv_scanning),
+                                style = MaterialTheme.typography.titleSmall,
+                                color = MaterialTheme.colorScheme.primary,
+                            )
+                        }
+                        LinearProgressIndicator(
+                            progress = { autoProgress },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(4.dp)),
+                        )
+                        if (autoStatusText.isNotBlank()) {
+                            Text(
+                                text = autoStatusText,
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            )
+                        }
+                    }
+                } else {
+                    MobileButton(
+                        text = if (autoAccounts.isEmpty()) stringResource(R.string.setup_auto_iptv_start_scan) else "🔄 Taramayı Yenile",
+                        onClick = {
+                            scope.launch {
+                                isAutoScanning = true
+                                autoErrorMessage = null
+                                autoAccounts = emptyList()
+                                autoProgress = 0.05f
+                                autoStatusText = "Forum taranıyor..."
+                                val result = ForumScraper.scrapeAndValidate { progress: Float, status: String ->
+                                    autoProgress = progress
+                                    autoStatusText = status
+                                }
+                                isAutoScanning = false
+                                if (result.success && result.accounts.isNotEmpty()) {
+                                    autoAccounts = result.accounts
+                                } else {
+                                    autoErrorMessage = result.message
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+
+                if (autoErrorMessage != null) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f))
+                            .padding(12.dp),
+                    ) {
+                        Text(
+                            text = autoErrorMessage!!,
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onErrorContainer,
+                        )
+                    }
+                }
+
+                if (autoAccounts.isNotEmpty()) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            text = stringResource(R.string.setup_auto_iptv_found_header, autoAccounts.size),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                        Text(
+                            text = stringResource(R.string.setup_auto_iptv_select_hint),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+
+                        autoAccounts.forEach { acc ->
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clip(RoundedCornerShape(12.dp))
+                                    .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f))
+                                    .border(
+                                        width = 1.dp,
+                                        color = MaterialTheme.colorScheme.outline.copy(alpha = 0.2f),
+                                        shape = RoundedCornerShape(12.dp),
+                                    )
+                                    .clickable {
+                                        server = acc.host
+                                        username = acc.username
+                                        password = acc.password
+                                        name = "Auto IPTV (${acc.username})"
+                                        kind = SourceKind.XTREAM
+                                        smartStatusMessage = "⚡ Auto IPTV hesabı seçildi (${acc.username})."
+                                    }
+                                    .padding(14.dp),
+                            ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically,
+                                ) {
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        Text(
+                                            text = acc.host,
+                                            style = MaterialTheme.typography.titleSmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                        Text(
+                                            text = "👤 ${acc.username}",
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                            maxLines = 1,
+                                            overflow = TextOverflow.Ellipsis,
+                                        )
+                                    }
+                                    Column(
+                                        horizontalAlignment = Alignment.End,
+                                        verticalArrangement = Arrangement.spacedBy(4.dp),
+                                    ) {
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(Color(0xFF10B981).copy(alpha = 0.2f))
+                                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                                        ) {
+                                            Text(
+                                                text = acc.status,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = Color(0xFF10B981),
+                                                fontWeight = FontWeight.Bold,
+                                            )
+                                        }
+                                        Box(
+                                            modifier = Modifier
+                                                .clip(RoundedCornerShape(6.dp))
+                                                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.15f))
+                                                .padding(horizontal = 8.dp, vertical = 2.dp),
+                                        ) {
+                                            Text(
+                                                text = acc.expiry,
+                                                style = MaterialTheme.typography.labelSmall,
+                                                color = MaterialTheme.colorScheme.primary,
+                                                fontWeight = FontWeight.Medium,
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
             SourceKind.XTREAM -> {
                 MobileTextField(
                     value = server,
@@ -407,79 +606,82 @@ fun AddSourceForm(
             }
         }
 
-        MobileTextField(
-            value = userAgent,
-            onValueChange = { userAgent = it },
-            label = stringResource(R.string.setup_user_agent_optional),
-            placeholder = stringResource(R.string.setup_user_agent_example),
-            modifier = Modifier.fillMaxWidth(),
-        )
-        MobileListRow(
-            title = stringResource(R.string.setup_auto_refresh),
-            subtitle = stringResource(refreshMode.labelRes()),
-            onClick = { showRefreshSheet = true },
-        )
-        if (refreshMode == PlaylistAutoRefresh.MANUAL) {
+        if (kind != SourceKind.AUTO) {
             MobileTextField(
-                value = manualDays,
-                onValueChange = { manualDays = it.filter(Char::isDigit).take(3) },
-                label = stringResource(R.string.settings_sources_refresh_days_title),
-                supportingText = stringResource(R.string.settings_sources_refresh_days_hint),
-                keyboardType = KeyboardType.Number,
+                value = userAgent,
+                onValueChange = { userAgent = it },
+                label = stringResource(R.string.setup_user_agent_optional),
+                placeholder = stringResource(R.string.setup_user_agent_example),
+                modifier = Modifier.fillMaxWidth(),
+            )
+            MobileListRow(
+                title = stringResource(R.string.setup_auto_refresh),
+                subtitle = stringResource(refreshMode.labelRes()),
+                onClick = { showRefreshSheet = true },
+            )
+            if (refreshMode == PlaylistAutoRefresh.MANUAL) {
+                MobileTextField(
+                    value = manualDays,
+                    onValueChange = { manualDays = it.filter(Char::isDigit).take(3) },
+                    label = stringResource(R.string.settings_sources_refresh_days_title),
+                    supportingText = stringResource(R.string.settings_sources_refresh_days_hint),
+                    keyboardType = KeyboardType.Number,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+
+            if (kind != SourceKind.M3U) {
+                Text(
+                    text = stringResource(R.string.setup_what_to_sync),
+                    style = MaterialTheme.typography.titleSmall,
+                    color = MaterialTheme.colorScheme.onSurface,
+                )
+                Text(
+                    text = stringResource(R.string.setup_sync_choices),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                ScopeRow(
+                    label = stringResource(R.string.setup_live_tv),
+                    description = stringResource(R.string.setup_channels_categories),
+                    value = syncLive,
+                    onChange = { syncLive = it },
+                )
+                ScopeRow(
+                    label = stringResource(R.string.setup_movies),
+                    description = stringResource(R.string.setup_vod_movie_catalog),
+                    value = syncMovies,
+                    onChange = { syncMovies = it },
+                )
+                ScopeRow(
+                    label = stringResource(R.string.setup_series),
+                    description = stringResource(R.string.setup_tv_series_catalog),
+                    value = syncSeries,
+                    onChange = { syncSeries = it },
+                )
+            }
+
+            MobileButton(
+                text = stringResource(if (editing) R.string.common_save else R.string.setup_start_import),
+                onClick = {
+                    onSave?.let { save -> save(values()); return@MobileButton }
+                    when (kind) {
+                        SourceKind.XTREAM -> onStartXtream(
+                            name, server, username, password, userAgent, autoRefresh,
+                            syncLive, syncMovies, syncSeries, preferHls,
+                        )
+                        SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, autoRefresh)
+                        SourceKind.STALKER -> onStartStalker(
+                            name, portalUrl, mac, serialNumber, deviceId, deviceId2, signature,
+                            userAgent, autoRefresh, syncLive, syncMovies, syncSeries,
+                        )
+                        SourceKind.AUTO -> {}
+                    }
+                },
+                enabled = canStart,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
-
-        if (kind != SourceKind.M3U) {
-            Text(
-                text = stringResource(R.string.setup_what_to_sync),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface,
-            )
-            Text(
-                text = stringResource(R.string.setup_sync_choices),
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            ScopeRow(
-                label = stringResource(R.string.setup_live_tv),
-                description = stringResource(R.string.setup_channels_categories),
-                value = syncLive,
-                onChange = { syncLive = it },
-            )
-            ScopeRow(
-                label = stringResource(R.string.setup_movies),
-                description = stringResource(R.string.setup_vod_movie_catalog),
-                value = syncMovies,
-                onChange = { syncMovies = it },
-            )
-            ScopeRow(
-                label = stringResource(R.string.setup_series),
-                description = stringResource(R.string.setup_tv_series_catalog),
-                value = syncSeries,
-                onChange = { syncSeries = it },
-            )
-        }
-
-        MobileButton(
-            text = stringResource(if (editing) R.string.common_save else R.string.setup_start_import),
-            onClick = {
-                onSave?.let { save -> save(values()); return@MobileButton }
-                when (kind) {
-                    SourceKind.XTREAM -> onStartXtream(
-                        name, server, username, password, userAgent, autoRefresh,
-                        syncLive, syncMovies, syncSeries, preferHls,
-                    )
-                    SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, autoRefresh)
-                    SourceKind.STALKER -> onStartStalker(
-                        name, portalUrl, mac, serialNumber, deviceId, deviceId2, signature,
-                        userAgent, autoRefresh, syncLive, syncMovies, syncSeries,
-                    )
-                }
-            },
-            enabled = canStart,
-            modifier = Modifier.fillMaxWidth(),
-        )
     }
 
     if (showRefreshSheet) {

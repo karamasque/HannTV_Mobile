@@ -281,4 +281,13 @@
     <string name="companion_error_pair_failed">Bu cihazla eşleştirilemedi.</string>
     <string name="local_sync_browser_title">HanTV yerel eşitleme</string>
     <string name="local_sync_browser_body">Bu adres, diğer cihazınızdaki HanTV uygulaması içindir. Orada Yerel eşitlemeyi açın ve listeden bu cihazı seçin.</string>
+    <string name="setup_auto_iptv">Otomatik IPTV</string>
+    <string name="setup_auto_iptv_description">İnternetteki güncel kaynaklardan çalışan IPTV hesaplarını otomatik tarayın, doğrulayın ve tek tıkla ekleyin.</string>
+    <string name="setup_auto_iptv_start_scan">Otomatik Taramayı Başlat</string>
+    <string name="setup_auto_iptv_scanning">Taranıyor…</string>
+    <string name="setup_auto_iptv_found_header">Aktif IPTV Hesapları (<xliff:g id="count">%1$d</xliff:g>)</string>
+    <string name="setup_auto_iptv_select_hint">Eklemek istediğiniz IPTV hesabına tıklayın.</string>
+    <string name="setup_auto_iptv_no_accounts">Şu anda aktif IPTV hesabı bulunamadı. Lütfen daha sonra tekrar deneyin.</string>
+    <string name="setup_auto_iptv_status_active">Aktif</string>
+    <string name="setup_auto_iptv_expiry_unlimited">Limitsiz</string>
 </resources>

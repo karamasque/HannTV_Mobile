@@ -7,14 +7,20 @@
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	theme_preset
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	glass
-2	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
+3	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Auto IPTV (${acc.username})
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Forum taranıyor...
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Girdiğiniz metinden geçerli bir bağlantı veya hesap çıkarılamadı.
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Hesap
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	bilgileri ayrıştırıldı.
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	bilgileri başarıyla ayrıştırıldı!
 2	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	⚡
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	⚡ Auto IPTV hesabı seçildi (${acc.username}).
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	⚡ Xtream bağlantısı algılandı ve dolduruldu.
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	✨
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	👤 ${acc.username}
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	🔄 Taramayı Yenile
+1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	🔍
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/RaySetupScaffold.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/RaySetupScaffold.kt	$stepTitle ($stepIndex/$totalSteps)
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/RaySetupScaffold.kt	accent
