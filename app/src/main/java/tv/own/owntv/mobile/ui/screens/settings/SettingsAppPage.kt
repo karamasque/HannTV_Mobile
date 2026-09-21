@@ -366,8 +366,8 @@ private fun LogEntry(entry: PlaybackErrorLog.Entry, when_: String) {
     }
 }
 
-private const val GITHUB_REPO = "github.com/ahXN00/OwnTV"
-private const val TELEGRAM_LINK = "t.me/owntvplayer"
+private const val GITHUB_REPO = "github.com/karamasque/HannTV_Mobile"
+private const val TELEGRAM_LINK = "t.me/HanTVPlayer"
 
 /** The group's address as a code to point a camera at, with the line that says what to do with it. */
 @Composable

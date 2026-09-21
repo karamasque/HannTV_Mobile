@@ -1,10 +1,10 @@
 <p align="center">
-  <img src="extras/logo.png" alt="OwnTV Mobile" width="360">
+  <img src="extras/logo.png" alt="HanTV Mobil" width="360">
 </p>
 
 <p align="center">
-  <b>Your own IPTV player for Android phones and tablets</b><br>
-  <sub>Touch-first · the same engine as the television — bring your own M3U, Xtream or Stalker (MAC) sources</sub>
+  <b>Android telefon ve tabletler için yeni nesil IPTV oynatıcı</b><br>
+  <sub>Dokunmatik odaklı · TV sürümüyle aynı güçlü motor — M3U, Xtream veya Stalker (MAC) kaynaklarınızı ekleyin</sub>
 </p>
 
 <p align="center">
@@ -13,57 +13,25 @@
   <img alt="Compose" src="https://img.shields.io/badge/Jetpack%20Compose-Material%203-4285F4?logo=jetpackcompose&logoColor=white">
   <img alt="Player" src="https://img.shields.io/badge/engines-libmpv%20%2B%20ExoPlayer-FB8C00">
   <img alt="License" src="https://img.shields.io/badge/license-GPLv3-blue">
-  <img alt="Built with the help of AI" src="https://img.shields.io/badge/built%20with-the%20help%20of%20AI-8A2BE2">
-  <a href="https://hosted.weblate.org/engage/owntv/">
-    <img alt="Translation status" src="https://hosted.weblate.org/widget/owntv/svg-badge.svg">
-  </a>
-</p>
-
-<p align="center">
-  <a href="https://github.com/ahXN00/OwnTV_Mobile/actions/workflows/android.yml">
-    <img alt="Android CI" src="https://github.com/ahXN00/OwnTV_Mobile/actions/workflows/android.yml/badge.svg">
-  </a>
 </p>
 
 ---
 
-OwnTV Mobile is the phone and tablet member of the OwnTV family: a native Android IPTV **player**
-built with Kotlin and Jetpack Compose (Material 3), sharing its **entire engine** with
-[OwnTV for Android TV](https://github.com/ahXN00/OwnTV) through the
-[OwnTV core library](https://github.com/ahXN00/OwnTV_Core). Two interfaces, one database, one sync,
-one playback stack — a **dual playback engine** of **libmpv (FFmpeg)** for films and series and
-**ExoPlayer (Media3)** for near-instant Live TV.
+HanTV Mobil, Android telefon ve tabletler için özel olarak geliştirilmiş yerli ve modern bir IPTV oynatıcısıdır.
+Film ve diziler için **libmpv (FFmpeg)**, anında canlı TV geçişleri için **ExoPlayer (Media3)** çift oynatma motoruna sahiptir.
 
-It is a *player only* — you bring your own Xtream login, M3U playlist (by **URL or a local
-`.m3u`/`.m3u8` file** on the device), or **Stalker/Ministra portal (Portal URL + MAC, with optional
-Serial Number, Device IDs and Signature)**.
-
-> ⚠️ OwnTV does **not** provide any channels, playlists, subscriptions, streams, or media content.
-> You are responsible for adding your own legally accessible sources.
-
-This is an **open-source** project — the code is original (not derived from any other app) and was
-**built with the help of AI**.
-
-> ### 📖 New here? **[User Guide →](extras/USER_GUIDE.md)**
-> Every feature, where to find it, and the gestures — on one page.
-
-> ### 📱 Already using OwnTV on your television?
-> **Local sync** carries your playlists, profiles, favourites and watch history across your own
-> Wi-Fi, with no account and no cloud — offered on the very first setup screen, so a new phone is
-> furnished from the television without going near the menus. A **backup** made on the television
-> restores here too, encrypted ones included.
+> ⚠️ HanTV herhangi bir kanal, yayın veya içerik barındırmaz ve sağlamaz.
+> Kullanıcılar kendi yasal IPTV veya medya kaynaklarını ekler.
 
 ---
 
-## 💬 Community
+## 💬 Topluluk & Destek
 
-Questions, ideas, bug reports — or just want to follow along? **Join the OwnTV Telegram group:**
+Soru, öneri ve destek için **HanTV Telegram Grubumuza katılın:**
 
-### 👉 [t.me/owntvplayer](https://t.me/owntvplayer)
+### 👉 [t.me/HanTVPlayer](https://t.me/HanTVPlayer)
 
-Scan to join from your phone:
-
-<a href="https://t.me/owntvplayer"><img src="extras/telegram_qr_code.jpg" alt="Scan to join the OwnTV Telegram group" width="170"></a>
+<a href="https://t.me/HanTVPlayer"><img src="extras/telegram_qr_code.jpg" alt="HanTV Telegram Grubu" width="170"></a>
 
 ---
 
