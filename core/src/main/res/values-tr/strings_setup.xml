@@ -290,4 +290,5 @@
     <string name="setup_auto_iptv_no_accounts">Şu anda aktif IPTV hesabı bulunamadı. Lütfen daha sonra tekrar deneyin.</string>
     <string name="setup_auto_iptv_status_active">Aktif</string>
     <string name="setup_auto_iptv_expiry_unlimited">Limitsiz</string>
+    <string name="setup_auto_iptv_account_selected">⚡ %1$s hesabı seçildi.</string>
 </resources>

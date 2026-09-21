@@ -507,7 +507,7 @@ fun MobileShell(
                                 NavigationBarItem(
                                     selected = destination == current,
                                     onClick = { navController.onNavClick(destination, current, shellViewModel) },
-                                    icon = { NavIcon(destination) },
+                                    icon = { NavIcon(destination, selected = destination == current) },
                                     label = { NavLabel(destination) },
                                     modifier = Modifier.longPressResetsScroll(destination, shellViewModel),
                                 )
@@ -575,7 +575,7 @@ fun MobileShell(
                                 NavigationRailItem(
                                     selected = destination == current,
                                     onClick = { navController.onNavClick(destination, current, shellViewModel) },
-                                    icon = { NavIcon(destination) },
+                                    icon = { NavIcon(destination, selected = destination == current) },
                                     label = { NavLabel(destination) },
                                     modifier = Modifier.longPressResetsScroll(destination, shellViewModel),
                                 )
@@ -769,9 +769,27 @@ private fun PlaylistChip(
 /** Long enough for most playlist names, short enough that the bar's title still has room. */
 private val PlaylistChipMaxWidth = 132.dp
 
+/** Accent color per destination — makes the rail/bar feel lively rather than monochrome. */
+private val MobileDestination.accentColor: Color
+    get() = when (this) {
+        MobileDestination.HOME     -> Color(0xFF38BDF8) // sky blue
+        MobileDestination.LIVE     -> Color(0xFFEF4444) // red
+        MobileDestination.LIBRARY  -> Color(0xFFA78BFA) // violet
+        MobileDestination.GUIDE    -> Color(0xFF34D399) // emerald
+        MobileDestination.MORE     -> Color(0xFF94A3B8) // slate
+        MobileDestination.MOVIES   -> Color(0xFFFBBF24) // amber
+        MobileDestination.SERIES   -> Color(0xFFF472B6) // pink
+        MobileDestination.DOWNLOADS-> Color(0xFF22D3EE) // cyan
+        MobileDestination.SETTINGS -> Color(0xFF94A3B8) // slate
+    }
+
 @Composable
-private fun NavIcon(destination: MobileDestination) {
-    Icon(imageVector = destination.icon, contentDescription = null)
+private fun NavIcon(destination: MobileDestination, selected: Boolean = false) {
+    Icon(
+        imageVector = destination.icon,
+        contentDescription = null,
+        tint = if (selected) destination.accentColor else destination.accentColor.copy(alpha = 0.55f),
+    )
 }
 
 @Composable

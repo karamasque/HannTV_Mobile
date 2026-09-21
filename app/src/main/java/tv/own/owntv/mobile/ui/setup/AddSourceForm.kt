@@ -397,6 +397,7 @@ fun AddSourceForm(
                         )
 
                         autoAccounts.forEach { acc ->
+                            val accountSelectedMsg = stringResource(R.string.setup_auto_iptv_account_selected, acc.username)
                             Box(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -411,9 +412,9 @@ fun AddSourceForm(
                                         server = acc.host
                                         username = acc.username
                                         password = acc.password
-                                        name = "Auto IPTV (${acc.username})"
+                                        name = acc.username
                                         kind = SourceKind.XTREAM
-                                        smartStatusMessage = "⚡ Auto IPTV hesabı seçildi (${acc.username})."
+                                        smartStatusMessage = accountSelectedMsg
                                     }
                                     .padding(14.dp),
                             ) {

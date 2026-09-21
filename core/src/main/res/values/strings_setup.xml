@@ -556,4 +556,6 @@
     <string name="setup_auto_iptv_status_active">Active</string>
     <!-- Translators: Label for unlimited expiry. -->
     <string name="setup_auto_iptv_expiry_unlimited">Unlimited</string>
+    <!-- Translators: Status message shown after the user taps an auto-scanned account. %1$s is the account username. -->
+    <string name="setup_auto_iptv_account_selected">⚡ %1$s account selected.</string>
 </resources>
