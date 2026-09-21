@@ -63,6 +63,8 @@ data class HanTVThemePreset(
         settings.setAccent(accentColor)
         settings.setThemeMode(if (isDark) ThemeMode.DARK else ThemeMode.LIGHT)
         settings.setGlassAlphaPercent(glassAlphaPct, glassBlurPct)
+        val allSurfacesBitmask = GlassConfig(scope = GlassSurface.entries.toSet()).toBitmask()
+        settings.setGlassScopeBitmask(allSurfacesBitmask)
     }
 }
 
