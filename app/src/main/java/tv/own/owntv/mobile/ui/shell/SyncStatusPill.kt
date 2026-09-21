@@ -147,9 +147,8 @@ fun SyncStatusPill(
                 Row(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    // Only the download line goes anywhere: the pill is otherwise a notice, and the
-                    // sync lines have no screen of their own to open.
-                    modifier = if (line is SyncLine.Download) {
+                    // Downloads and recordings open their respective screen when tapped.
+                    modifier = if ((line is SyncLine.Download || line is SyncLine.Recording) && onOpenDownloads != null) {
                         Modifier.clickable(onClick = onOpenDownloads)
                     } else {
                         Modifier
