@@ -13,6 +13,14 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.0.5
+
+### New features
+
+- **🚀 Otomatik IPTV:** Otomatik forum tarama, çalışan ve süresi geçerli IPTV hesaplarını tek tıkla bulma
+- **🎨 Görünüm Ayarları:** Cam Efekti (Glass Effect) seçeneği geri getirildi
+- **✨ Ray IPTV Temalı Kurulum Sihirbazı:** 4 adımlı modern kurulum arayüzü
+
 ## v1.0.1 — unreleased
 
 ### New features
