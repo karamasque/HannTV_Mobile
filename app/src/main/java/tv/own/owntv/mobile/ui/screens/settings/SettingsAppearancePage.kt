@@ -73,22 +73,7 @@ fun SettingsAppearancePage(
         item(key = "preview") { AppearancePreview() }
         settingsLeafRows(SettingsGroup.APPEARANCE, onOpenLeaf)
 
-        settingsGroup(key = "theme") {
-            SettingRow(
-                title = stringResource(R.string.settings_theme),
-                subtitle = stringResource(R.string.settings_theme_description),
-                value = stringResource(themeMode.labelRes()),
-                onClick = { sheet = AppearanceSheet.THEME },
-            )
 
-            SettingRow(
-                title = stringResource(R.string.settings_accent),
-                subtitle = stringResource(R.string.settings_accent_description),
-                // A custom colour wins over the preset in the theme, so it is what the row reports.
-                value = customAccent.ifBlank { stringResource(accent.labelRes) },
-                onClick = { sheet = AppearanceSheet.ACCENT },
-            )
-        }
         settingsGroup(key = "highlight") {
             SettingRow(
                 title = stringResource(R.string.settings_selection_highlight),
