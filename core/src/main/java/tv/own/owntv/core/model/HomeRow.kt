@@ -8,12 +8,12 @@ import org.json.JSONObject
 enum class HomeRow {
     TRENDING,
     HERO,
-    RECENTLY_ADDED_MOVIES,
-    RECENTLY_UPDATED_SERIES,
     RECENT_CHANNELS,
     FAVORITE_CHANNELS,
     CONTINUE_MOVIES,
-    CONTINUE_SERIES;
+    CONTINUE_SERIES,
+    RECENTLY_ADDED_MOVIES,
+    RECENTLY_UPDATED_SERIES;
 
     val implemented: Boolean get() = true
 }

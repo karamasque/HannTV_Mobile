@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.8
+
+### Fixes
+
+- **📺 Ana Ekran Düzeni:** "Son Eklenen Filmler" ve "Son Güncellenen Diziler" satırları varsayılan olarak "Dizileri izlemeye devam et" satırının altına (en alta) taşındı.
+
 ## v1.1.7
 
 ### New features
