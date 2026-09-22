@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.3
+
+### Fixes
+
+- **📐 Kart Boyutları Optimizasyonu:** Yatay modda devasa duran Continue Watching / Hero kart boyutları 280dp olarak kompakt ve oranlı hale getirildi.
+
 ## v1.1.2
 
 ### New features

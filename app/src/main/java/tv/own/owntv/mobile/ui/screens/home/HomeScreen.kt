@@ -2,6 +2,7 @@ package tv.own.owntv.mobile.ui.screens.home
 
 import tv.own.owntv.mobile.ui.components.ChannelLogoImage
 import tv.own.owntv.mobile.ui.components.MobileIcons
+import android.content.res.Configuration
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -282,10 +283,16 @@ private fun HeroRow(
         // One card per screenful is right on a phone, where the card IS the screen. On a tablet the
         // same sum makes a 1250dp card that swallows Home whole and hides every row under it, so the
         // card stops growing and the row simply shows more than one — which is what the width is for.
-        val cardWidth = min(
-            LocalConfiguration.current.screenWidthDp.dp - MobileDimens.ScreenPaddingH * 2,
-            HeroCardMaxWidth,
-        )
+        val configuration = LocalConfiguration.current
+        val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+        val cardWidth = if (isLandscape) {
+            280.dp
+        } else {
+            min(
+                configuration.screenWidthDp.dp - MobileDimens.ScreenPaddingH * 2,
+                340.dp,
+            )
+        }
         LazyRow(
             state = state,
             flingBehavior = rememberSnapFlingBehavior(state),
@@ -318,6 +325,11 @@ private fun HeroCard(
     onLongClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val logoSize = if (isLandscape) 64.dp else 72.dp
+    val badgeSize = if (isLandscape) 16.dp else 20.dp
+
     val artwork = when (item) {
         is HeroItem.MovieHero -> item.movie.backdropUrl ?: item.movie.posterUrl
         is HeroItem.SeriesHero -> item.series.backdropUrl ?: item.series.posterUrl
@@ -333,12 +345,8 @@ private fun HeroCard(
         is HeroItem.SeriesHero -> item.item.subtitle
         is HeroItem.LiveHero -> null
     }
-    // A channel's logo is a small transparent picture, not a backdrop: it is centred at its own size
-    // rather than stretched across the card, which is the one place the three variants really differ.
     val live = item is HeroItem.LiveHero
 
-    // Plenty of channels have no logo and plenty of films no backdrop, and at this size a flat fill
-    // reads as a hole in the page rather than as a card. The lit corner gives the empty one a shape.
     val emptyFill = Brush.linearGradient(
         listOf(
             MaterialTheme.colorScheme.surfaceContainerHighest,
@@ -353,13 +361,11 @@ private fun HeroCard(
             .background(emptyFill)
             .combinedClickable(onClick = onPlay, onLongClick = onLongClick),
     ) {
-        // Underneath the picture, so a channel with no logo and a film with no backdrop are still a
-        // card with a subject rather than an empty rectangle — and so is one whose URL fails to load.
         Icon(
             imageVector = if (live) MobileIcons.LiveTv else MobileIcons.PlayArrow,
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.18f),
-            modifier = Modifier.align(Alignment.Center).size(HeroLogoSize),
+            modifier = Modifier.align(Alignment.Center).size(logoSize),
         )
         if (artwork != null) {
             AsyncImage(
@@ -367,7 +373,7 @@ private fun HeroCard(
                 contentDescription = null,
                 contentScale = if (live) ContentScale.Fit else ContentScale.Crop,
                 modifier = if (live) {
-                    Modifier.align(Alignment.Center).size(HeroLogoSize).padding(MobileDimens.GapMedium)
+                    Modifier.align(Alignment.Center).size(logoSize).padding(MobileDimens.GapSmall)
                 } else {
                     Modifier.fillMaxSize()
                 },
@@ -378,7 +384,7 @@ private fun HeroCard(
                 .align(Alignment.BottomStart)
                 .fillMaxWidth()
                 .background(
-                    Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.75f))),
+                    Brush.verticalGradient(listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f))),
                 )
                 .padding(MobileDimens.GapMedium),
         ) {
@@ -388,7 +394,7 @@ private fun HeroCard(
                         MobileIcons.LiveTv,
                         contentDescription = null,
                         tint = Color.White,
-                        modifier = Modifier.size(HeroBadgeSize).padding(end = MobileDimens.GapTiny),
+                        modifier = Modifier.size(badgeSize).padding(end = MobileDimens.GapTiny),
                     )
                 }
                 Text(
@@ -417,11 +423,22 @@ private fun HeroCard(
                         .height(MobileDimens.PosterProgressHeight),
                 )
             }
-            Button(onClick = onPlay, modifier = Modifier.padding(top = MobileDimens.GapSmall)) {
-                Icon(MobileIcons.PlayArrow, contentDescription = null)
+            Button(
+                onClick = onPlay,
+                modifier = Modifier
+                    .padding(top = MobileDimens.GapSmall)
+                    .height(32.dp),
+                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 0.dp),
+            ) {
+                Icon(
+                    MobileIcons.PlayArrow,
+                    contentDescription = null,
+                    modifier = Modifier.size(16.dp),
+                )
                 Text(
                     text = stringResource(item.actionLabel()),
-                    modifier = Modifier.padding(start = MobileDimens.GapSmall),
+                    style = MaterialTheme.typography.labelMedium,
+                    modifier = Modifier.padding(start = MobileDimens.GapTiny),
                 )
             }
         }
