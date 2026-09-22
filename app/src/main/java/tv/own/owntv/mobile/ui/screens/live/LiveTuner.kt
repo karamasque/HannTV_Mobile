@@ -1218,6 +1218,28 @@ class LiveTuner(
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
+    /** Recently watched channels for the player's history sheet overlay. */
+    suspend fun recentlyWatchedForPicker(limit: Int = 30): List<ChannelEntity> {
+        val c = ctx.value
+        if (c.profileId < 0) return emptyList()
+        val cust = custom.value
+        return withContext(Dispatchers.IO) {
+            channelDao.recentlyWatched(c.profileId, limit).first()
+        }
+            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems }
+            .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
+    }
+
+    /** Now playing EPG programme titles for a list of channels. */
+    suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, String> {
+        if (channels.isEmpty()) return emptyMap()
+        val offset = settings.epgOffsetMinutes.first()
+        val cust = custom.value
+        return withContext(Dispatchers.IO) {
+            epgReader.nowPlayingFor(channels, cust, offset)
+        }
+    }
+
     private suspend fun loadSiblings(channel: ChannelEntity) {
         val c = ctx.value
         if (c.profileId < 0) return

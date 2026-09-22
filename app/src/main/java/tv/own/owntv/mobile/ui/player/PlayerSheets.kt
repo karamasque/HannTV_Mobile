@@ -92,6 +92,7 @@ fun PlayerSheetHost(
         PlayerSheet.SPEED -> SpeedSheet(player, onDismiss)
         PlayerSheet.INFO -> StreamInfoSheet(player, onDismiss)
         PlayerSheet.CHANNELS -> ChannelSheet(channels, onTuneToNumber, onPickChannel, onDismiss)
+        PlayerSheet.HISTORY -> HistorySheet(channels, onPickChannel, onDismiss)
         PlayerSheet.CATCHUP -> catchup?.let { CatchupSheet(it, onDismiss) } ?: onDismiss()
     }
 }
@@ -424,6 +425,32 @@ private fun ChannelSheet(
                     subtitle = channel.number?.toString(),
                     onClick = { onPick(channel); onDismiss() },
                 )
+            }
+        }
+    }
+}
+
+@Composable
+private fun HistorySheet(
+    channels: List<ChannelEntity>,
+    onPick: (ChannelEntity) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    MobileBottomSheet(
+        onDismissRequest = onDismiss,
+        title = stringResource(R.string.content_history),
+    ) {
+        if (channels.isEmpty()) {
+            EmptyNote(stringResource(R.string.player_no_tracks))
+        } else {
+            LazyColumn(Modifier.heightIn(max = sheetListHeight())) {
+                items(channels, key = { it.id }) { channel ->
+                    MobileListRow(
+                        title = channel.name,
+                        subtitle = channel.number?.toString(),
+                        onClick = { onPick(channel); onDismiss() },
+                    )
+                }
             }
         }
     }

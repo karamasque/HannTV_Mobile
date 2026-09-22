@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.4
+
+### New features
+
+- **📺 Yan Panel İçi Kategori Listesi:** Soldan sağa sürükleme ile açılan kanal listesinde tekrar soldan sağa kaydırarak veya başlığa basarak aynı yan panel kartı içerisinde kategorilere erişim ve doğrudan kanal seçimi
+
 ## v1.1.3
 
 ### Fixes

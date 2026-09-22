@@ -175,6 +175,7 @@ fun PlayerScreen(
     var playerChannels by remember { mutableStateOf<List<ChannelEntity>>(emptyList()) }
     var playerCategories by remember { mutableStateOf<List<Pair<Long, String>>>(emptyList()) }
     var playerCategoriesLoaded by remember { mutableStateOf(false) }
+    var historyChannels by remember { mutableStateOf<List<ChannelEntity>>(emptyList()) }
     // Loaded when the picker opens, not when the player does: it is a database read nobody watching
     // a channel has asked for.
     LaunchedEffect(multiviewPickFor) {
@@ -279,8 +280,35 @@ fun PlayerScreen(
 
     var controlsVisible by remember { mutableStateOf(true) }
     var sheet by remember { mutableStateOf<PlayerSheet?>(null) }
-    // Closing the sheet forgets which category was open, so the next press starts at the categories.
-    LaunchedEffect(sheet) { if (sheet != PlayerSheet.CHANNELS) playerCategory = null }
+    var nowPlayingMap by remember { mutableStateOf<Map<Long, String>>(emptyMap()) }
+    LaunchedEffect(sheet, channel?.categoryId) {
+        if (sheet == PlayerSheet.CHANNELS) {
+            if (!playerCategoriesLoaded) {
+                playerCategories = tuner.liveCategoriesForPicker()
+                playerCategoriesLoaded = true
+            }
+            if (playerCategory == null) {
+                val catId = channel?.categoryId ?: playerCategories.firstOrNull()?.first
+                if (catId != null) {
+                    playerCategory = catId
+                    playerChannels = tuner.channelsInCategoryForPicker(catId)
+                }
+            }
+        }
+        if (sheet == PlayerSheet.HISTORY) {
+            historyChannels = tuner.recentlyWatchedForPicker()
+            nowPlayingMap = tuner.nowPlayingFor(historyChannels)
+        } else if (sheet == PlayerSheet.CHANNELS && playerChannels.isNotEmpty()) {
+            nowPlayingMap = tuner.nowPlayingFor(playerChannels)
+        }
+    }
+    LaunchedEffect(playerCategory) {
+        val catId = playerCategory
+        if (catId != null) {
+            playerChannels = tuner.channelsInCategoryForPicker(catId)
+            nowPlayingMap = tuner.nowPlayingFor(playerChannels)
+        }
+    }
     val recordWatchingEnabled by settings.recordWhatImWatching.collectAsStateWithLifecycle(initialValue = false)
     val playerRecording by tuner.playerRecording.collectAsStateWithLifecycle()
     var brightness by remember { mutableFloatStateOf(0.5f) }
@@ -486,7 +514,9 @@ fun PlayerScreen(
                     showHud(GestureFeedback.Zoom(mode))
                 },
                 onSwipeDown = onExit,
-                onSwipeUp = { if (isLive) sheet = PlayerSheet.CHANNELS },
+                onSwipeUp = {},
+                onSwipeRight = { if (isLive) sheet = PlayerSheet.CHANNELS },
+                onSwipeLeft = { if (isLive) sheet = PlayerSheet.HISTORY },
                 onSpeedHold = { held ->
                     if (isLive) return@playerGestures
                     if (held) {
@@ -773,40 +803,40 @@ fun PlayerScreen(
     // sheet used to open on one category's channels, so a channel in any *other* category — or any
     // other playlist — could not be reached from the player at all. The category the user is
     // watching is pre-selected, so the common case is still one tap.
-    if (sheet == PlayerSheet.CHANNELS && !inPip && multiview == null && playerCategory == null) {
-        LaunchedEffect(Unit) {
-            if (!playerCategoriesLoaded) {
-                playerCategories = tuner.liveCategoriesForPicker()
-                playerCategoriesLoaded = true
-            }
-        }
-    }
-    // Composed only once the list exists. A sheet is handed to the host as a lambda and drawn there,
-    // and the host went on drawing the lambda it was first given: opened while the categories were
-    // still being read, it showed its search field and an empty list for ever — until a rotation
-    // rebuilt everything. Waiting for the data costs one database read and cannot go stale.
-    if (sheet == PlayerSheet.CHANNELS && !inPip && multiview == null && playerCategory == null &&
-        playerCategoriesLoaded && playerCategories.isNotEmpty()
-    ) {
-        CategoryPickerSheet(
-            labels = playerCategories.map { it.second },
-            selectedIndex = playerCategories.indexOfFirst { it.first == channel?.categoryId },
-            onSelect = { index ->
-                playerCategories.getOrNull(index)?.first?.let { catId ->
-                    playerCategory = catId
-                    scope.launch { playerChannels = tuner.channelsInCategoryForPicker(catId) }
-                }
-            },
+    if (sheet == PlayerSheet.CHANNELS && !inPip && multiview == null) {
+        val catTitle = playerCategories.firstOrNull { it.first == playerCategory }?.second
+            ?: stringResource(R.string.content_channel_overlay_title)
+        ChannelOverlayPanel(
+            title = catTitle,
+            channels = playerChannels,
+            currentChannelId = channel?.id,
+            nowPlayingMap = nowPlayingMap,
+            alignEnd = false,
+            onSelectChannel = { tuner.switchTo(it) },
             onDismiss = { sheet = null },
-            dismissOnSelect = false,
+            categories = playerCategories,
+            selectedCategoryId = playerCategory,
+            onSelectCategory = { catId -> playerCategory = catId },
         )
     }
 
-    sheet.takeIf { !inPip && multiview == null && (it != PlayerSheet.CHANNELS || playerCategory != null) }?.let { open ->
+    if (sheet == PlayerSheet.HISTORY && !inPip && multiview == null) {
+        ChannelOverlayPanel(
+            title = stringResource(R.string.content_history),
+            channels = historyChannels,
+            currentChannelId = channel?.id,
+            nowPlayingMap = nowPlayingMap,
+            alignEnd = true,
+            onSelectChannel = { tuner.switchTo(it) },
+            onDismiss = { sheet = null },
+        )
+    }
+
+    sheet.takeIf { !inPip && multiview == null && it != PlayerSheet.CHANNELS && it != PlayerSheet.HISTORY }?.let { open ->
         PlayerSheetHost(
             sheet = open,
             player = activeEngine,
-            channels = if (open == PlayerSheet.CHANNELS) playerChannels else siblings,
+            channels = siblings,
             brightness = brightness,
             onBrightness = { setBrightness(it) },
             onPickChannel = { tuner.switchTo(it) },
@@ -819,7 +849,7 @@ fun PlayerScreen(
             onTuneToNumber = if (showChannelNumbers) tuner::tuneByNumber else null,
             catchup = catchup,
             // Back out of a channel list returns to the categories, not out of the player's sheets.
-            onDismiss = { if (open == PlayerSheet.CHANNELS) playerCategory = null else sheet = null },
+            onDismiss = { sheet = null },
         )
     }
 }

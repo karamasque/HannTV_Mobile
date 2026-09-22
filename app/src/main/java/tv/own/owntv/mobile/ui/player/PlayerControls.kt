@@ -56,7 +56,7 @@ import java.text.NumberFormat
 
 /** The pickers the tool bar opens. Each one is a sheet; each one also has a gesture. */
 enum class PlayerSheet {
-    VOLUME, BRIGHTNESS, SUBTITLES, SUBTITLE_SEARCH, AUDIO, ASPECT, SPEED, INFO, CHANNELS, CATCHUP,
+    VOLUME, BRIGHTNESS, SUBTITLES, SUBTITLE_SEARCH, AUDIO, ASPECT, SPEED, INFO, CHANNELS, HISTORY, CATCHUP,
 }
 
 /**

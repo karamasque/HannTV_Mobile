@@ -46,6 +46,8 @@ fun Modifier.playerGestures(
     onPinch: (zoomIn: Boolean) -> Unit,
     onSwipeDown: () -> Unit,
     onSwipeUp: () -> Unit,
+    onSwipeRight: () -> Unit = {},
+    onSwipeLeft: () -> Unit = {},
     onSpeedHold: (held: Boolean) -> Unit,
     onTwoFingerTap: () -> Unit,
     sensitivity: Float = 1f,
@@ -122,7 +124,12 @@ fun Modifier.playerGestures(
 
         when (mode) {
             Mode.HOLD -> onSpeedHold(false)
-            Mode.SCRUB -> onScrubEnd()
+            Mode.SCRUB -> {
+                onScrubEnd()
+                if (abs(travel.x) > size.width * SWIPE_FRACTION) {
+                    if (travel.x > 0) onSwipeRight() else onSwipeLeft()
+                }
+            }
             // A swipe has to be a real one. What classified this gesture was the system's touch slop
             // — about three millimetres — so *any* slip past it counted: reaching for the pause
             // button with a thumb that slid on the way shrank the player into the mini window, or
