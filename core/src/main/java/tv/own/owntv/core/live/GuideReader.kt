@@ -138,27 +138,37 @@ class GuideReader(
         val keyed = channels.mapNotNull { ch ->
             epgKeyOf(ch, cust)?.let { key -> Triple(ch.id, key, EpgShift.minutesFor(cust, ch, globalShiftMinutes)) }
         }
-        if (keyed.isEmpty()) return@withContext emptyMap()
         val startedAt = SystemClock.elapsedRealtime()
         var chunks = 0
         var rowsRead = 0
         val collected = HashMap<Long, List<EpgProgrammeEntity>>()
-        for ((shift, group) in keyed.groupBy { it.third }) {
-            val rowsByKey = group
-                .map { it.second }.distinct()
-                .chunked(KEY_CHUNK)
-                .flatMap { keys ->
-                    chunks++
-                    epgDao.programmeSummariesForChannels(
-                        keys,
-                        EpgShift.toStored(from, shift),
-                        EpgShift.toStored(to, shift),
-                    ).also { rowsRead += it.size }
+        if (keyed.isNotEmpty()) {
+            for ((shift, group) in keyed.groupBy { it.third }) {
+                val rowsByKey = group
+                    .map { it.second }.distinct()
+                    .chunked(KEY_CHUNK)
+                    .flatMap { keys ->
+                        chunks++
+                        epgDao.programmeSummariesForChannels(
+                            keys,
+                            EpgShift.toStored(from, shift),
+                            EpgShift.toStored(to, shift),
+                        ).also { rowsRead += it.size }
+                    }
+                    .groupBy { it.epgChannelId }
+                for ((channelId, epgKey, _) in group) {
+                    rowsByKey[epgKey]?.takeIf { it.isNotEmpty() }
+                        ?.let { collected[channelId] = EpgShift.apply(EpgDedupe.collapse(it), shift) }
                 }
-                .groupBy { it.epgChannelId }
-            for ((channelId, epgKey, _) in group) {
-                rowsByKey[epgKey]?.takeIf { it.isNotEmpty() }
-                    ?.let { collected[channelId] = EpgShift.apply(EpgDedupe.collapse(it), shift) }
+            }
+        }
+        for (channel in channels) {
+            if (collected[channel.id].isNullOrEmpty()) {
+                val providerRows = liveEpgReader.providerProgrammes(channel, cust, globalShiftMinutes)
+                    .filter { it.stopMs > from && it.startMs < to }
+                if (providerRows.isNotEmpty()) {
+                    collected[channel.id] = providerRows
+                }
             }
         }
         val ordered = LinkedHashMap<Long, List<EpgProgrammeEntity>>(collected.size)

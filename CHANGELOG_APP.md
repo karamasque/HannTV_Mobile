@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.6
+
+### Fixes
+
+- **📺 Ana Ekran Son Kanallar EPG Düzeltmesi:** EPG verisi bulunmasına rağmen "EPG yok" gösterilmesi hatası giderildi; sağlayıcı kısa EPG (Xtream API) desteği entegre edildi ve mod bağımsız EPG yüklemesi sağlandı.
+
 ## v1.1.5
 
 ### Fixes

@@ -239,14 +239,14 @@ class HomeFeedReader(
             val heroItems = buildHeroItems(items, liveWithTs, config)
             // The two guide slices read different channel sets and never depend on each other.
             val recentGuideAsync = async {
-                if (HomeRow.RECENT_CHANNELS in config.visibleOrder && config.recentLiveMode == HomeLiveRowMode.ON_NOW) {
+                if (HomeRow.RECENT_CHANNELS in config.visibleOrder) {
                     liveGuide(profileId, liveIds, live)
                 } else {
                     GuideSliceState()
                 }
             }
             val favoriteGuideAsync = async {
-                if (HomeRow.FAVORITE_CHANNELS in config.visibleOrder && config.favoriteLiveMode == HomeLiveRowMode.ON_NOW) {
+                if (HomeRow.FAVORITE_CHANNELS in config.visibleOrder) {
                     liveGuide(profileId, liveIds, favLive)
                 } else {
                     GuideSliceState()
