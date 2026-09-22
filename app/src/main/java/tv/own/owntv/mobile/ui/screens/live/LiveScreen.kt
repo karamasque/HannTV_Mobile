@@ -350,7 +350,7 @@ private fun ChannelRow(
 private fun ChannelLogo(channel: ChannelEntity, number: Int?) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         ChannelLogoImage(
-            url = channel.displayLogoUrl,
+            channel = channel,
             modifier = Modifier.size(LOGO_SIZE),
             fallback = {
                 Icon(

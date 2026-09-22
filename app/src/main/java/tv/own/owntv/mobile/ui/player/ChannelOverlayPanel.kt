@@ -46,6 +46,7 @@ import coil3.compose.AsyncImage
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.mobile.R
+import tv.own.owntv.mobile.ui.components.ChannelLogoImage
 import tv.own.owntv.mobile.ui.theme.LocalAccentOnVideo
 
 /**
@@ -322,24 +323,20 @@ private fun OverlayChannelRow(
                 .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(6.dp)),
             contentAlignment = Alignment.Center,
         ) {
-            val logoUrl = channel.displayLogoUrl
-            if (!logoUrl.isNullOrBlank()) {
-                AsyncImage(
-                    model = logoUrl,
-                    contentDescription = channel.name,
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .padding(2.dp),
-                )
-            } else {
-                Text(
-                    text = channel.name.take(2).uppercase(),
-                    style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
-                    color = Color.White.copy(alpha = 0.8f),
-                    fontWeight = FontWeight.Bold,
-                )
-            }
+            ChannelLogoImage(
+                channel = channel,
+                modifier = Modifier
+                    .size(28.dp)
+                    .padding(2.dp),
+                fallback = {
+                    Text(
+                        text = channel.name.take(2).uppercase(),
+                        style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
+                        color = Color.White.copy(alpha = 0.8f),
+                        fontWeight = FontWeight.Bold,
+                    )
+                },
+            )
         }
 
         Spacer(Modifier.width(6.dp))

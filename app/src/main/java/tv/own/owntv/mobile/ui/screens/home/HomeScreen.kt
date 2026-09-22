@@ -682,7 +682,7 @@ private fun ChannelLogo(channel: ChannelEntity, size: androidx.compose.ui.unit.D
         contentAlignment = Alignment.Center,
     ) {
         ChannelLogoImage(
-            url = channel.displayLogoUrl,
+            channel = channel,
             modifier = Modifier.fillMaxSize().padding(MobileDimens.GapTiny),
             fallback = {
                 Icon(

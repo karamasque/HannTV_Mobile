@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.5
+
+### Fixes
+
+- **🖼️ Canlı TV Logo İyileştirmesi:** Tek bir hatalı logo bağlantısının tüm kanal logolarını karartması (deadHosts kara listesi) engellendi; EPG ve Oynatma listesi logoları için kademeli yedekleme sağlandı.
+
 ## v1.1.4
 
 ### New features

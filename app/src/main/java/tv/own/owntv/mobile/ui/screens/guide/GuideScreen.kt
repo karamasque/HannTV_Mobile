@@ -360,7 +360,7 @@ private fun NowProgress(programme: EpgProgrammeEntity, nowMs: Long) {
 @Composable
 internal fun ChannelLogo(channel: ChannelEntity) {
     ChannelLogoImage(
-        url = channel.displayLogoUrl,
+        channel = channel,
         modifier = Modifier.size(LOGO_SIZE),
         fallback = {
             Icon(
