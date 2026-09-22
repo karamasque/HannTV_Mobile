@@ -1250,7 +1250,7 @@ class SettingsRepository(private val context: Context, private val localeStore: 
      */
     val liveEnginePreference: Flow<tv.own.owntv.core.player.EnginePreference> = prefsFlow { prefs ->
         prefs[Keys.LIVE_ENGINE]?.let { runCatching { tv.own.owntv.core.player.EnginePreference.valueOf(it) }.getOrNull() }
-            ?: tv.own.owntv.core.player.EnginePreference.EXO_FIRST
+            ?: tv.own.owntv.core.player.EnginePreference.EXO_ONLY
     }
 
     suspend fun setLiveEnginePreference(preference: tv.own.owntv.core.player.EnginePreference) {

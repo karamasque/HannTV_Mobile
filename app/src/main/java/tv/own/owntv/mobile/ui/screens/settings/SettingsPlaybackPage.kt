@@ -104,7 +104,7 @@ fun SettingsVideoPlayerPage(
     val savedVolume by vm.savedVolumeCount.collectAsStateWithLifecycle()
     val savedAudioDelay by vm.savedAudioDelayCount.collectAsStateWithLifecycle()
 
-    val liveEngine = s.liveEnginePreference.pref(EnginePreference.EXO_FIRST)
+    val liveEngine = s.liveEnginePreference.pref(EnginePreference.EXO_ONLY)
     val vodEngine = s.vodEnginePreference.pref(EnginePreference.MPV_FIRST)
     val autoFrameRate = s.autoFrameRate.pref(false)
     val zoom = s.defaultZoom.pref(ZoomMode.FIT.name)
