@@ -47,11 +47,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.min
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.core.database.entity.ChannelEntity
+import tv.own.owntv.core.database.entity.MovieEntity
+import tv.own.owntv.core.database.entity.SeriesEntity
 import tv.own.owntv.core.epg.displayLogoUrl
 import tv.own.owntv.core.home.GuideSliceState
 import tv.own.owntv.core.home.HeroItem
@@ -63,6 +69,7 @@ import tv.own.owntv.core.launcher.LauncherWatchNextType
 import tv.own.owntv.core.model.HomeRow
 import tv.own.owntv.core.model.HomeTrendingStyle
 import tv.own.owntv.core.model.MediaType
+import tv.own.owntv.core.theme.GlassSurface
 import tv.own.owntv.core.weather.WeatherInfo
 import tv.own.owntv.mobile.R
 import tv.own.owntv.core.home.TrendingHomeItem
@@ -77,6 +84,8 @@ import tv.own.owntv.mobile.ui.theme.MobileCardShape
 import tv.own.owntv.mobile.ui.player.rememberResumeGate
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 import tv.own.owntv.mobile.ui.theme.MobilePosterShape
+import tv.own.owntv.mobile.ui.theme.glassClickable
+import tv.own.owntv.mobile.ui.theme.glassSurface
 
 /**
  * Home, on a phone.
@@ -94,6 +103,8 @@ fun HomeScreen(
     onOpenSeries: (Long) -> Unit,
     onPlayerOpened: () -> Unit,
     onOpenSearch: (String) -> Unit,
+    onOpenMoviesSection: () -> Unit = {},
+    onOpenSeriesSection: () -> Unit = {},
     modifier: Modifier = Modifier,
     vm: HomeViewModel = koinViewModel(),
 ) {
@@ -224,6 +235,18 @@ fun HomeScreen(
                         },
                         onMenu = { menuFor = it },
                     )
+                    HomeRow.RECENTLY_ADDED_MOVIES -> RecentlyAddedMoviesRow(
+                        movies = state.recentlyAddedMovies,
+                        onOpenMovie = onOpenMovie,
+                        onViewAll = onOpenMoviesSection,
+                        onMenu = { menuFor = it },
+                    )
+                    HomeRow.RECENTLY_UPDATED_SERIES -> RecentlyUpdatedSeriesRow(
+                        series = state.recentlyUpdatedSeries,
+                        onOpenSeries = onOpenSeries,
+                        onViewAll = onOpenSeriesSection,
+                        onMenu = { menuFor = it },
+                    )
                 }
             }
         }
@@ -253,6 +276,8 @@ private fun HomeFeed.hasContent(row: HomeRow): Boolean = when (row) {
     // empty in that mode by design.
     HomeRow.TRENDING -> trendingItems.size >= TrendingDao.MIN_ELIGIBLE_ITEMS
     HomeRow.HERO -> heroItems.isNotEmpty()
+    HomeRow.RECENTLY_ADDED_MOVIES -> recentlyAddedMovies.isNotEmpty()
+    HomeRow.RECENTLY_UPDATED_SERIES -> recentlyUpdatedSeries.isNotEmpty()
     HomeRow.RECENT_CHANNELS -> when (config.recentLiveMode) {
         HomeLiveRowMode.CARDS -> recentLive.isNotEmpty()
         HomeLiveRowMode.ON_NOW -> recentGuide.hasContent
@@ -777,6 +802,199 @@ private fun HomeMessage(
     }
 }
 
+@Composable
+private fun RecentlyAddedMoviesRow(
+    movies: List<MovieEntity>,
+    onOpenMovie: (Long) -> Unit,
+    onViewAll: () -> Unit,
+    onMenu: (ContentTarget) -> Unit,
+) {
+    Column {
+        SectionHeader(
+            title = stringResource(R.string.home_row_recently_added_movies),
+            actionLabel = stringResource(R.string.home_view_all),
+            onAction = onViewAll,
+        )
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
+            contentPadding = PaddingValues(horizontal = MobileDimens.ScreenPaddingH),
+        ) {
+            items(movies.size, key = { movies[it].id }) { index ->
+                val movie = movies[index]
+                val displayYear = movie.year ?: movie.parsedYear
+                val titleWithYear = if (displayYear != null && displayYear > 1900) {
+                    stringResource(R.string.home_title_with_year, movie.name, displayYear)
+                } else movie.name
+                VodPosterCard(
+                    title = titleWithYear,
+                    imageUrl = movie.posterUrl,
+                    rating = movie.rating,
+                    dateText = null,
+                    onClick = { onOpenMovie(movie.id) },
+                    onLongClick = { onMenu(ContentTarget(MediaType.MOVIE, movie.id, movie.name)) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun RecentlyUpdatedSeriesRow(
+    series: List<SeriesEntity>,
+    onOpenSeries: (Long) -> Unit,
+    onViewAll: () -> Unit,
+    onMenu: (ContentTarget) -> Unit,
+) {
+    Column {
+        SectionHeader(
+            title = stringResource(R.string.home_row_recently_updated_series),
+            actionLabel = stringResource(R.string.home_view_all),
+            onAction = onViewAll,
+        )
+        LazyRow(
+            horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
+            contentPadding = PaddingValues(horizontal = MobileDimens.ScreenPaddingH),
+        ) {
+            items(series.size, key = { series[it].id }) { index ->
+                val show = series[index]
+                val displayYear = show.year ?: show.parsedYear
+                val titleWithYear = if (displayYear != null && displayYear > 1900) {
+                    stringResource(R.string.home_title_with_year, show.name, displayYear)
+                } else show.name
+                val dateStr = formatAddedDate(show.addedAt)
+                VodPosterCard(
+                    title = titleWithYear,
+                    imageUrl = show.posterUrl,
+                    rating = show.rating,
+                    dateText = dateStr,
+                    onClick = { onOpenSeries(show.id) },
+                    onLongClick = { onMenu(ContentTarget(MediaType.SERIES, show.id, show.name)) },
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun VodPosterCard(
+    title: String,
+    imageUrl: String?,
+    rating: Double?,
+    dateText: String?,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit,
+    modifier: Modifier = Modifier,
+) {
+    val press = remember { MutableInteractionSource() }
+    val width = MobileDimens.PosterWidthPortrait
+    Column(
+        modifier = modifier
+            .width(width)
+            .glassSurface(GlassSurface.CARDS, MobileCardShape, interactionSource = press)
+            .clip(MobileCardShape)
+            .glassClickable(press, onClick = onClick, onLongClick = onLongClick)
+            .padding(MobileDimens.PosterPadding),
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .aspectRatio(2f / 3f)
+                .clip(MobilePosterShape)
+                .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center,
+                maxLines = 3,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier
+                    .align(Alignment.Center)
+                    .padding(MobileDimens.GapSmall),
+            )
+            if (imageUrl != null) {
+                AsyncImage(
+                    model = imageUrl,
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                )
+            }
+            if (rating != null && rating > 0.0) {
+                val ratingFormatted = if (rating <= 10.0) {
+                    val formatted = String.format(java.util.Locale.US, FORMAT_RATING_FLOAT, rating).removeSuffix(SUFFIX_ZERO)
+                    stringResource(R.string.home_rating_slash_ten, formatted)
+                } else {
+                    String.format(java.util.Locale.US, FORMAT_RATING_FLOAT, rating).removeSuffix(SUFFIX_ZERO)
+                }
+                Row(
+                    modifier = Modifier
+                        .padding(6.dp)
+                        .align(Alignment.TopStart)
+                        .background(Color.Black.copy(alpha = 0.65f), RoundedCornerShape(4.dp))
+                        .padding(horizontal = 5.dp, vertical = 2.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(3.dp),
+                ) {
+                    Icon(
+                        imageVector = MobileIcons.Star,
+                        contentDescription = null,
+                        tint = Color(0xFFFFC107),
+                        modifier = Modifier.size(11.dp),
+                    )
+                    Text(
+                        text = ratingFormatted,
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontSize = 10.sp,
+                        fontWeight = FontWeight.Bold,
+                    )
+                }
+            }
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            colors = listOf(Color.Transparent, Color.Black.copy(alpha = 0.85f)),
+                        ),
+                    )
+                    .padding(horizontal = 6.dp, vertical = 6.dp),
+            ) {
+                Column {
+                    Text(
+                        text = title,
+                        color = Color.White,
+                        style = MaterialTheme.typography.labelSmall,
+                        fontWeight = FontWeight.SemiBold,
+                        maxLines = 2,
+                        overflow = TextOverflow.Ellipsis,
+                    )
+                    if (dateText != null) {
+                        Text(
+                            text = dateText,
+                            color = Color.LightGray.copy(alpha = 0.9f),
+                            style = MaterialTheme.typography.bodySmall,
+                            fontSize = 10.sp,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+private fun formatAddedDate(timestamp: Long?): String? {
+    if (timestamp == null || timestamp <= 0) return null
+    val ms = if (timestamp < 10_000_000_000L) timestamp * 1000L else timestamp
+    val sdf = java.text.SimpleDateFormat(FORMAT_DATE_ADDED, java.util.Locale.getDefault())
+    return runCatching { sdf.format(java.util.Date(ms)) }.getOrNull()
+}
+
 /** The feed still being read. A quiet spinner, not a blank screen that jumps into a full Home. */
 @Composable
 private fun HomeSkeleton(modifier: Modifier = Modifier) {
@@ -787,6 +1005,9 @@ private fun HomeSkeleton(modifier: Modifier = Modifier) {
 
 /** The route this screen answers a "scroll back to the top" tap for. */
 private const val MobileHomeRoute = "home"
+private const val FORMAT_RATING_FLOAT = "%.1f"
+private const val SUFFIX_ZERO = ".0"
+private const val FORMAT_DATE_ADDED = "yyyy-MM-dd"
 
 private val HeroLogoSize = 120.dp
 private val HeroBadgeSize = 20.dp

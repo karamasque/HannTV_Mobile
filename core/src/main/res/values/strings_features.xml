@@ -163,6 +163,13 @@
     <string name="home_row_continue_movies">Continue Watching Movies</string>
     <!-- Translators: Home row name in Settings for the "Continue Watching Series" row. -->
     <string name="home_row_continue_series">Continue Watching Series</string>
+    <string name="home_row_recently_added_movies">Recently Added Movies</string>
+    <string name="home_row_recently_updated_series">Recently Updated Series</string>
+    <string name="home_row_recently_added_movies_description">Movies recently added to your playlist</string>
+    <string name="home_row_recently_updated_series_description">Series recently updated in your playlist</string>
+    <string name="home_view_all">View All</string>
+    <string name="home_title_with_year"><xliff:g id="title">%1$s</xliff:g> (<xliff:g id="year">%2$d</xliff:g>)</string>
+    <string name="home_rating_slash_ten"><xliff:g id="rating">%1$s</xliff:g>/10</string>
     <!-- Translators: Home row name in Settings for the "Recent Channels" row. -->
     <string name="home_row_recent_channels">Recent Channels</string>
     <!-- Translators: Home row name in Settings for the "Favorite Channels" row. -->

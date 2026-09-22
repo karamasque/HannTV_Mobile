@@ -155,11 +155,14 @@
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/guide/GuideViewModel.kt	guide_stats programmes=$programmes guideChannels=$guideChannels
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/guide/GuideViewModel.kt	sources=${ids.size} cachedRows=${synchronized(rowCache) { rowCache.size }}
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/guide/GuideViewModel.kt	totalMs=${android.os.SystemClock.elapsedRealtime() - startedAt}
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	%.1f
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	.0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	c${channel.id}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	e${episode.id}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	home
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	m${movie.id}
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	weather
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/HomeScreen.kt	yyyy-MM-dd
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/TrendingHero.kt	#${activeIndex + 1}
 2	protocol	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/TrendingHero.kt	EN
 2	url	app/src/main/java/tv/own/owntv/mobile/ui/screens/home/TrendingHero.kt	w1280

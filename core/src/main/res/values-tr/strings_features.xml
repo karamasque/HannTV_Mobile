@@ -83,6 +83,13 @@
     <string name="home_row_keep_watching">İzlemeye devam et</string>
     <string name="home_row_continue_movies">Filmleri izlemeye devam et</string>
     <string name="home_row_continue_series">Dizileri izlemeye devam et</string>
+    <string name="home_row_recently_added_movies">Son Eklenen Filmler</string>
+    <string name="home_row_recently_updated_series">Son Güncellenen Diziler</string>
+    <string name="home_row_recently_added_movies_description">Oynatma listenize son eklenen filmler</string>
+    <string name="home_row_recently_updated_series_description">Oynatma listenizde son güncellenen diziler</string>
+    <string name="home_view_all">Tümünü Gör</string>
+    <string name="home_title_with_year"><xliff:g id="title">%1$s</xliff:g> (<xliff:g id="year">%2$d</xliff:g>)</string>
+    <string name="home_rating_slash_ten"><xliff:g id="rating">%1$s</xliff:g>/10</string>
     <string name="home_row_recent_channels">Son kanallar</string>
     <string name="home_row_favorite_channels">Favori kanallar</string>
     <string name="home_row_on_now">Şimdi yayında</string>

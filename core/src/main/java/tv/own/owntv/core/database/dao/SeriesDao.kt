@@ -150,6 +150,9 @@ interface SeriesDao {
     @Query("SELECT * FROM series WHERE sourceId IN (:sourceIds) ORDER BY addedAt DESC, sortOrder DESC, id DESC")
     fun pagingAllDateAdded(sourceIds: List<Long>): PagingSource<Int, SeriesEntity>
 
+    @Query("SELECT * FROM series WHERE sourceId IN (:sourceIds) ORDER BY addedAt DESC, sortOrder DESC, id DESC LIMIT :limit")
+    suspend fun getRecentlyUpdated(sourceIds: List<Long>, limit: Int = 20): List<SeriesEntity>
+
     @Query("SELECT * FROM series WHERE categoryId = :categoryId ORDER BY addedAt DESC, sortOrder DESC, id DESC")
     fun pagingByCategoryDateAdded(categoryId: Long): PagingSource<Int, SeriesEntity>
 

@@ -150,6 +150,8 @@ data class HomeFeed(
     val continueSeries: List<LauncherContinuationItem> = emptyList(),
     val recentLive: List<ChannelEntity> = emptyList(),
     val favoriteLive: List<ChannelEntity> = emptyList(),
+    val recentlyAddedMovies: List<MovieEntity> = emptyList(),
+    val recentlyUpdatedSeries: List<SeriesEntity> = emptyList(),
     val config: HomeConfig = HomeConfig(),
     val recentGuide: GuideSliceState = GuideSliceState(),
     val favoriteGuide: GuideSliceState = GuideSliceState(),
@@ -237,6 +239,22 @@ class HomeFeedReader(
                 .filter { c -> c.sourceId in liveIds }
                 .filterNot { isChannelHidden(it, hidden) }
             val heroItems = buildHeroItems(items, liveWithTs, config)
+            val recentlyAddedMoviesAsync = async {
+                if (HomeRow.RECENTLY_ADDED_MOVIES in config.visibleOrder && movieIds.isNotEmpty()) {
+                    movieDao.getRecentlyAdded(movieIds.toList(), limit = 20)
+                        .filterNot { CustomizeKeys.movie(it) in hidden.movie.hiddenItems || (it.categoryId != null && it.categoryId in hidden.movieCats) }
+                } else {
+                    emptyList()
+                }
+            }
+            val recentlyUpdatedSeriesAsync = async {
+                if (HomeRow.RECENTLY_UPDATED_SERIES in config.visibleOrder && seriesIds.isNotEmpty()) {
+                    seriesDao.getRecentlyUpdated(seriesIds.toList(), limit = 20)
+                        .filterNot { CustomizeKeys.series(it) in hidden.series.hiddenItems || (it.categoryId != null && it.categoryId in hidden.seriesCats) }
+                } else {
+                    emptyList()
+                }
+            }
             // The two guide slices read different channel sets and never depend on each other.
             val recentGuideAsync = async {
                 if (HomeRow.RECENT_CHANNELS in config.visibleOrder) {
@@ -262,6 +280,8 @@ class HomeFeedReader(
                 continueSeries = series,
                 recentLive = live,
                 favoriteLive = favLive,
+                recentlyAddedMovies = recentlyAddedMoviesAsync.await(),
+                recentlyUpdatedSeries = recentlyUpdatedSeriesAsync.await(),
                 config = config,
                 recentGuide = recentGuideAsync.await(),
                 favoriteGuide = favoriteGuideAsync.await(),

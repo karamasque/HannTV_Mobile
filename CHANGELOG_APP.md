@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.1.7
+
+### New features
+
+- **🎬 Son Eklenen Filmler & Son Güncellenen Diziler Satırları:** Ana ekrana TMDB/sağlayıcı puan rozeti, afiş üzeri gradient başlık/yıl ve dizi eklenme tarihi ile "Son Eklenen Filmler" ve "Son Güncellenen Diziler" satırları eklendi.
+
 ## v1.1.6
 
 ### Fixes

@@ -99,6 +99,8 @@ fun MobileNavHost(
                         },
                         onPlayerOpened = { navController.navigate(PLAYER_ROUTE) },
                         onOpenSearch = { query -> navController.navigate(searchRoute(query)) },
+                        onOpenMoviesSection = { navController.navigate(MobileDestination.MOVIES.route) { launchSingleTop = true } },
+                        onOpenSeriesSection = { navController.navigate(MobileDestination.SERIES.route) { launchSingleTop = true } },
                     )
                     MobileDestination.GUIDE -> GuideScreen(
                         scrollToTop = scrollToTop,
