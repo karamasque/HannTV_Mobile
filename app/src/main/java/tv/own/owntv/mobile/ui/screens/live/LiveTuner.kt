@@ -1231,7 +1231,7 @@ class LiveTuner(
     }
 
     /** Now playing EPG programme titles for a list of channels. */
-    suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, String> {
+    suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.live.ChannelNowPlaying> {
         if (channels.isEmpty()) return emptyMap()
         val offset = settings.epgOffsetMinutes.first()
         val cust = custom.value

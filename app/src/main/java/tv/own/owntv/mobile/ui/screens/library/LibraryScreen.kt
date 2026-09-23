@@ -149,149 +149,148 @@ fun LibraryScreen(
         tappedItem = null
     }
 
-    val listPane = @Composable {
-    // The column count comes from the width this pane actually got, not the window's: beside a
-    // detail pane, or next to the rail, the grid has less room than the screen is wide.
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-    // Roughly one poster per 110 dp of width, which is three on a small phone and eight on a tablet
-    // in landscape. The user's own number wins whenever they have set one.
-    val width = maxWidth.value.toInt()
-    val columns = chosenColumns.takeIf { it > 0 } ?: (width / COLUMN_WIDTH_DP).coerceIn(MIN_COLUMNS, MAX_COLUMNS)
-    // The gaps between the columns come out of the tiles, or the last one is pushed off the edge.
-    val gaps = MobileDimens.GridGap.value.toInt() * (columns - 1)
-    val posterWidth = ((width - GRID_PADDING_DP * 2 - gaps) / columns).dp
+    val categoryHeader = @Composable {
+        Column(Modifier.fillMaxWidth()) {
+            if (fixedTab == null) {
+                PrimaryTabRow(
+                    selectedTabIndex = tab.ordinal,
+                    containerColor = Color.Transparent,
+                ) {
+                    LibraryTab.entries.forEach { entry ->
+                        Tab(
+                            selected = entry == tab,
+                            onClick = { vm.select(entry) },
+                            text = { Text(stringResource(entry.labelRes())) },
+                        )
+                    }
+                }
+            }
+            if (lockedKey == null) Box(Modifier.fillMaxWidth()) {
+                FilterChipRow(
+                    labels = categories.map { it.label(tab) },
+                    selectedIndex = categories.indexOfFirst { it.key == selected },
+                    onSelect = { index -> categories.getOrNull(index)?.let { vm.select(it.key) } },
+                    modifier = Modifier.padding(end = MobileDimens.TouchTarget * 2 + 8.dp),
+                    onLongPress = { index ->
+                        categoryMenuFor = categories.getOrNull(index)?.takeIf { it.builtIn == null }
+                    },
+                    onLongPressLabel = stringResource(R.string.settings_customize_categories),
+                )
+                Row(Modifier.align(Alignment.CenterEnd)) {
+                    IconButton(onClick = { categoryPicker = true }) {
+                        Icon(MobileIcons.Search, stringResource(R.string.content_search_categories))
+                    }
+                    IconButton(onClick = { sheetOpen = true }) {
+                        Icon(MobileIcons.Tune, stringResource(R.string.content_sorting))
+                    }
+                }
+            }
+            val categoryLabel = categories.firstOrNull { it.key == selected }?.label(tab).orEmpty()
+            Text(
+                text = pluralStringResource(
+                    if (tab == LibraryTab.MOVIES) R.plurals.content_count_movies else R.plurals.content_count_series,
+                    count,
+                    categoryLabel,
+                    count,
+                ),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
+            )
+        }
+    }
 
-    Column(Modifier.fillMaxSize()) {
-        if (fixedTab == null) {
-            // Transparent, or Material's own opaque surface paints a square black band across the
-            // top of the page's rounded glass pane and squares off its two top corners.
-            PrimaryTabRow(
-                selectedTabIndex = tab.ordinal,
-                containerColor = Color.Transparent,
-            ) {
-                LibraryTab.entries.forEach { entry ->
-                    Tab(
-                        selected = entry == tab,
-                        onClick = { vm.select(entry) },
-                        text = { Text(stringResource(entry.labelRes())) },
-                    )
+    val gridContent = @Composable {
+        BoxWithConstraints(Modifier.fillMaxSize()) {
+            val width = maxWidth.value.toInt()
+            val columns = chosenColumns.takeIf { it > 0 } ?: (width / COLUMN_WIDTH_DP).coerceIn(MIN_COLUMNS, MAX_COLUMNS)
+            val gaps = MobileDimens.GridGap.value.toInt() * (columns - 1)
+            val posterWidth = ((width - GRID_PADDING_DP * 2 - gaps) / columns).dp
+
+            if (items.itemCount == 0 && items.loadState.refresh !is LoadState.Loading) {
+                EmptyLibrary(tab)
+            } else if (viewMode == SettingsRepository.VodViewMode.LIST) {
+                LazyColumn(state = listState, modifier = Modifier.fillMaxSize().mobileGroupPlate()) {
+                    items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
+                        items[index]?.let { item ->
+                            MobileListRow(
+                                title = item.name,
+                                subtitle = item.details(),
+                                onClick = {
+                                    if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
+                                },
+                                onLongClick = { menuFor = item },
+                            )
+                        }
+                    }
+                }
+            } else {
+                LazyVerticalGrid(
+                    columns = GridCells.Fixed(columns),
+                    state = gridState,
+                    contentPadding = PaddingValues(MobileDimens.GapSmall),
+                    horizontalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
+                    verticalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .pinchToResize(columns) { vm.setGridColumns(it) },
+                ) {
+                    items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
+                        items[index]?.let { item ->
+                            PosterCard(
+                                title = item.name,
+                                imageUrl = item.posterUrl,
+                                subtitle = item.details(),
+                                progress = progress[item.id]?.takeIf { tab == LibraryTab.MOVIES }
+                                    ?.let { it.positionMs.toFloat() / it.durationMs.coerceAtLeast(1) },
+                                width = posterWidth,
+                                sharedKey = posterKey(tab.name, item.id),
+                                onClick = {
+                                    if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
+                                },
+                                onLongClick = { menuFor = item },
+                            )
+                        }
+                    }
                 }
             }
         }
-        if (lockedKey == null) Box(Modifier.fillMaxWidth()) {
-            FilterChipRow(
-                labels = categories.map { it.label(tab) },
-                selectedIndex = categories.indexOfFirst { it.key == selected },
-                onSelect = { index -> categories.getOrNull(index)?.let { vm.select(it.key) } },
-                modifier = Modifier.padding(end = MobileDimens.TouchTarget * 2),
-                // All, Favorites and History are not folders: there is nothing to hide or move.
-                onLongPress = { index ->
-                    categoryMenuFor = categories.getOrNull(index)?.takeIf { it.builtIn == null }
-                },
-                onLongPressLabel = stringResource(R.string.settings_customize_categories),
-            )
-            Row(Modifier.align(Alignment.CenterEnd)) {
-                IconButton(onClick = { categoryPicker = true }) {
-                    Icon(MobileIcons.Search, stringResource(R.string.content_search_categories))
-                }
-                IconButton(onClick = { sheetOpen = true }) {
-                    Icon(MobileIcons.Tune, stringResource(R.string.content_sorting))
-                }
-            }
+    }
+
+    val listPane = @Composable {
+        Column(Modifier.fillMaxSize()) {
+            categoryHeader()
+            gridContent()
         }
-        if (categoryPicker) {
-            CategoryPickerSheet(
-                labels = categories.map { it.label(tab) },
-                selectedIndex = categories.indexOfFirst { it.key == selected },
-                onSelect = { index -> categories.getOrNull(index)?.let { vm.select(it.key) } },
-                onDismiss = { categoryPicker = false },
-            )
-        }
-        val categoryLabel = categories.firstOrNull { it.key == selected }?.label(tab).orEmpty()
-        Text(
-            // "Action (312 movies)" — core's own wording, so the count reads as it does on the TV.
-            text = pluralStringResource(
-                if (tab == LibraryTab.MOVIES) R.plurals.content_count_movies else R.plurals.content_count_series,
-                count,
-                categoryLabel,
-                count,
-            ),
-            style = MaterialTheme.typography.labelMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
+    }
+
+    if (categoryPicker) {
+        CategoryPickerSheet(
+            labels = categories.map { it.label(tab) },
+            selectedIndex = categories.indexOfFirst { it.key == selected },
+            onSelect = { index -> categories.getOrNull(index)?.let { vm.select(it.key) } },
+            onDismiss = { categoryPicker = false },
         )
-        // Empty only once the first page has actually come back — otherwise every category change
-        // flashes "No movies here" for as long as the query takes on a 170k-title catalogue.
-        if (items.itemCount == 0 && items.loadState.refresh !is LoadState.Loading) {
-            EmptyLibrary(tab)
-        } else if (viewMode == SettingsRepository.VodViewMode.LIST) {
-            LazyColumn(state = listState, modifier = Modifier.fillMaxSize().mobileGroupPlate()) {
-                items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
-                    items[index]?.let { item ->
-                        MobileListRow(
-                            title = item.name,
-                            subtitle = item.details(),
-                            // Beside the grid the title opens in the pane; on a phone it is a
-                            // screen of its own. The same screen, reached two ways.
-                            onClick = {
-                                if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
-                            },
-                            onLongClick = { menuFor = item },
-                        )
-                    }
-                }
-            }
-        } else {
-            LazyVerticalGrid(
-                columns = GridCells.Fixed(columns),
-                state = gridState,
-                contentPadding = PaddingValues(MobileDimens.GapSmall),
-                horizontalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
-                verticalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
-                modifier = Modifier
-                    .fillMaxSize()
-                    .pinchToResize(columns) { vm.setGridColumns(it) },
-            ) {
-                items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
-                    items[index]?.let { item ->
-                        PosterCard(
-                            title = item.name,
-                            imageUrl = item.posterUrl,
-                            subtitle = item.details(),
-                            progress = progress[item.id]?.takeIf { tab == LibraryTab.MOVIES }
-                                ?.let { it.positionMs.toFloat() / it.durationMs.coerceAtLeast(1) },
-                            width = posterWidth,
-                            sharedKey = posterKey(tab.name, item.id),
-                            // Beside the grid the title opens in the pane; on a phone it is a
-                            // screen of its own. The same screen, reached two ways.
-                            onClick = {
-                                if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
-                            },
-                            onLongClick = { menuFor = item },
-                        )
-                    }
-                }
-            }
-        }
     }
 
     if (sheetOpen) {
-        LibraryOptionsSheet(vm = vm, columns = columns, onDismiss = { sheetOpen = false })
-    }
-    }
+        LibraryOptionsSheet(vm = vm, columns = chosenColumns, onDismiss = { sheetOpen = false })
     }
 
     if (twoPane) {
-        TwoPane(
-            list = listPane,
-            detail = {
-                openItem?.let { id ->
-                    DetailScreen(tab = tab, itemId = id, onPlay = onPlay)
-                }
-            },
-            modifier = modifier,
-            listShare = GRID_LIST_SHARE,
-        )
+        Column(modifier.fillMaxSize()) {
+            categoryHeader()
+            TwoPane(
+                list = gridContent,
+                detail = {
+                    openItem?.let { id ->
+                        DetailScreen(tab = tab, itemId = id, onPlay = onPlay)
+                    }
+                },
+                modifier = modifier.weight(1f),
+                listShare = GRID_LIST_SHARE,
+            )
+        }
     } else {
         Box(modifier) { listPane() }
     }

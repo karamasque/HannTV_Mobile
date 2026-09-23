@@ -74,6 +74,7 @@ fun MobileListRow(
      * semantics, where TalkBack announces it as "selected".
      */
     selected: Boolean = false,
+    bottomContent: (@Composable () -> Unit)? = null,
 ) {
     val press = remember { MutableInteractionSource() }
     // The hairline that divides one row from the next, inset to where the title starts rather than
@@ -150,6 +151,9 @@ fun MobileListRow(
                     overflow = TextOverflow.Ellipsis,
                     modifier = Modifier.padding(top = 1.dp),
                 )
+            }
+            if (bottomContent != null) {
+                bottomContent()
             }
         }
         if (trailing != null) {

@@ -280,7 +280,7 @@ fun PlayerScreen(
 
     var controlsVisible by remember { mutableStateOf(true) }
     var sheet by remember { mutableStateOf<PlayerSheet?>(null) }
-    var nowPlayingMap by remember { mutableStateOf<Map<Long, String>>(emptyMap()) }
+    var nowPlayingMap by remember { mutableStateOf<Map<Long, tv.own.owntv.core.live.ChannelNowPlaying>>(emptyMap()) }
     LaunchedEffect(sheet, channel?.categoryId) {
         if (sheet == PlayerSheet.CHANNELS) {
             if (!playerCategoriesLoaded) {

@@ -12,7 +12,11 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,11 +26,27 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import tv.own.owntv.core.database.entity.ChannelEntity
+import tv.own.owntv.mobile.ui.components.ChannelLogoImage
+import tv.own.owntv.mobile.ui.components.MobileIcons
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import org.koin.androidx.compose.koinViewModel
 import org.koin.compose.koinInject
@@ -115,13 +135,34 @@ fun ChannelDetailScreen(
         // is the other way, and neither one restarts the stream.
         Box(
             Modifier
-                .fillMaxWidth()
+                .fillMaxWidth(0.70f)
                 .aspectRatio(VIDEO_ASPECT)
+                .align(Alignment.CenterHorizontally)
+                .clipToBounds()
+                .clip(RoundedCornerShape(12.dp))
                 .background(Color.Black)
                 .clickable(onClick = openFullscreen),
         ) {
             VideoStage(player = vm.player, modifier = Modifier.fillMaxSize())
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(8.dp)
+                    .size(28.dp)
+                    .clip(CircleShape)
+                    .background(Color.Black.copy(alpha = 0.6f))
+                    .clickable(onClick = openFullscreen),
+                contentAlignment = Alignment.Center,
+            ) {
+                Icon(
+                    imageVector = MobileIcons.OpenInFull,
+                    contentDescription = stringResource(R.string.multiview_tile_fullscreen),
+                    tint = Color.White,
+                    modifier = Modifier.size(14.dp),
+                )
+            }
         }
+        Spacer(Modifier.height(6.dp))
         FilterChipRow(
             labels = labels,
             selectedIndex = tab.ordinal,
@@ -130,8 +171,9 @@ fun ChannelDetailScreen(
                 if (index < DetailTab.entries.size) tab = DetailTab.entries[index] else catchupOpen = true
             },
         )
+        Spacer(Modifier.height(4.dp))
         when (tab) {
-            DetailTab.GUIDE -> GuidePanel(nowNext = nowNext)
+            DetailTab.GUIDE -> GuidePanel(channel = channel, nowNext = nowNext)
             DetailTab.CHANNELS -> LazyColumn(Modifier.fillMaxSize()) {
                 items(siblings, key = { it.id }) { sibling ->
                     MobileListRow(title = sibling.name, onClick = { vm.switchTo(sibling) })
@@ -167,36 +209,129 @@ fun ChannelDetailScreen(
 
 /** What is on now, in full, then what follows it. */
 @Composable
-private fun GuidePanel(nowNext: tv.own.owntv.core.live.EpgNowNext?) {
+private fun GuidePanel(channel: ChannelEntity?, nowNext: tv.own.owntv.core.live.EpgNowNext?) {
     val times = rememberTimeFormat()
     val now = nowNext?.now
     if (now == null) {
-        Text(
-            text = stringResource(R.string.content_no_epg),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(MobileDimens.ScreenPaddingH),
-        )
+        Column(Modifier.padding(MobileDimens.ScreenPaddingH)) {
+            if (channel != null) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(bottom = MobileDimens.GapSmall),
+                ) {
+                    Box(
+                        modifier = Modifier
+                            .size(48.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(Color.White)
+                            .border(BorderStroke(2.dp, MaterialTheme.colorScheme.primary), RoundedCornerShape(10.dp))
+                            .padding(3.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        ChannelLogoImage(
+                            channel = channel,
+                            modifier = Modifier.fillMaxSize(),
+                            fallback = {
+                                Icon(
+                                    imageVector = MobileIcons.LiveTv,
+                                    contentDescription = null,
+                                    tint = Color.DarkGray,
+                                    modifier = Modifier.size(24.dp),
+                                )
+                            },
+                        )
+                    }
+                    Spacer(Modifier.width(10.dp))
+                    Text(
+                        text = channel.name,
+                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                }
+            }
+            Text(
+                text = stringResource(R.string.content_no_epg),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
         return
     }
     val separator = stringResource(R.string.content_metadata_separator)
     LazyColumn(Modifier.fillMaxSize()) {
         item {
-            Column(Modifier.padding(MobileDimens.ScreenPaddingH)) {
-                Text(
-                    text = stringResource(R.string.content_live_now_label),
-                    style = MaterialTheme.typography.labelMedium,
+            Column(Modifier.padding(horizontal = MobileDimens.ScreenPaddingH, vertical = 4.dp)) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 4.dp),
+                ) {
+                    if (channel != null) {
+                        Box(
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(Color.White)
+                                .border(BorderStroke(1.5.dp, MaterialTheme.colorScheme.primary), RoundedCornerShape(8.dp))
+                                .padding(2.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            ChannelLogoImage(
+                                channel = channel,
+                                modifier = Modifier.fillMaxSize(),
+                                fallback = {
+                                    Icon(
+                                        imageVector = MobileIcons.LiveTv,
+                                        contentDescription = null,
+                                        tint = Color.DarkGray,
+                                        modifier = Modifier.size(24.dp),
+                                    )
+                                },
+                            )
+                        }
+                        Spacer(Modifier.width(10.dp))
+                    }
+                    Column(Modifier.weight(1f)) {
+                        Text(
+                            text = channel?.name ?: stringResource(R.string.content_live_now_label),
+                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            text = now.title,
+                            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+                            color = MaterialTheme.colorScheme.primary,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        val currTime = System.currentTimeMillis()
+                        val remainingMins = ((now.stopMs - currTime) / 60_000L).coerceAtLeast(0L)
+                        Text(
+                            text = stringResource(
+                                R.string.content_live_time_remaining,
+                                times.format(Date(now.stopMs)),
+                                remainingMins,
+                            ),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                val currTime = System.currentTimeMillis()
+                val totalMs = (now.stopMs - now.startMs).coerceAtLeast(1L)
+                val elapsedMs = (currTime - now.startMs).coerceIn(0L, totalMs)
+                val progressFraction = elapsedMs.toFloat() / totalMs.toFloat()
+
+                LinearProgressIndicator(
+                    progress = { progressFraction },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = MobileDimens.GapSmall),
                     color = MaterialTheme.colorScheme.primary,
-                )
-                Text(
-                    text = now.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = times.format(Date(now.startMs)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    trackColor = MaterialTheme.colorScheme.surfaceContainerHigh,
                 )
                 if (!now.description.isNullOrBlank()) {
                     Text(

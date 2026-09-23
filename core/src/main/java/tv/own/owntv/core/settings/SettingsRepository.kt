@@ -1250,7 +1250,7 @@ class SettingsRepository(private val context: Context, private val localeStore: 
      */
     val liveEnginePreference: Flow<tv.own.owntv.core.player.EnginePreference> = prefsFlow { prefs ->
         prefs[Keys.LIVE_ENGINE]?.let { runCatching { tv.own.owntv.core.player.EnginePreference.valueOf(it) }.getOrNull() }
-            ?: tv.own.owntv.core.player.EnginePreference.EXO_ONLY
+            ?: tv.own.owntv.core.player.EnginePreference.MPV_ONLY
     }
 
     suspend fun setLiveEnginePreference(preference: tv.own.owntv.core.player.EnginePreference) {
@@ -2353,9 +2353,13 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         context.dataStore.edit { it[Keys.GLASS_SCOPE] = bits }
     }
 
-    /** Select a tuned preset. Custom values remain stored so returning to CUSTOM restores them. */
+    /** Select a tuned preset. Also updates stored alpha and blur percentages to match the preset. */
     suspend fun setGlassPreset(preset: tv.own.owntv.core.theme.GlassPreset) {
-        context.dataStore.edit { it[Keys.GLASS_PRESET] = preset.name }
+        context.dataStore.edit {
+            it[Keys.GLASS_PRESET] = preset.name
+            preset.alpha?.let { a -> it[Keys.GLASS_ALPHA] = (a * 100).toInt() }
+            preset.blurStrength?.let { b -> it[Keys.GLASS_BLUR] = (b * 100).toInt() }
+        }
     }
 
     /** Persist glass alpha as an integer 0..100. */

@@ -58,7 +58,7 @@ fun ChannelOverlayPanel(
     title: String,
     channels: List<ChannelEntity>,
     currentChannelId: Long?,
-    nowPlayingMap: Map<Long, String>,
+    nowPlayingMap: Map<Long, tv.own.owntv.core.live.ChannelNowPlaying>,
     alignEnd: Boolean,
     onSelectChannel: (ChannelEntity) -> Unit,
     onDismiss: () -> Unit,
@@ -291,11 +291,12 @@ private fun OverlayCategoryRow(
 private fun OverlayChannelRow(
     channel: ChannelEntity,
     isSelected: Boolean,
-    nowPlaying: String?,
+    nowPlaying: tv.own.owntv.core.live.ChannelNowPlaying?,
     onClick: () -> Unit,
 ) {
     val accentColor = LocalAccentOnVideo.current
     val shape = RoundedCornerShape(10.dp)
+    val nowTitle = nowPlaying?.title
 
     Row(
         modifier = Modifier
@@ -319,20 +320,18 @@ private fun OverlayChannelRow(
             modifier = Modifier
                 .size(34.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .background(Color.Black.copy(alpha = 0.4f))
-                .border(1.dp, Color.White.copy(alpha = 0.15f), RoundedCornerShape(6.dp)),
+                .background(Color.White)
+                .padding(2.dp),
             contentAlignment = Alignment.Center,
         ) {
             ChannelLogoImage(
                 channel = channel,
-                modifier = Modifier
-                    .size(28.dp)
-                    .padding(2.dp),
+                modifier = Modifier.fillMaxSize(),
                 fallback = {
                     Text(
                         text = channel.name.take(2).uppercase(),
                         style = MaterialTheme.typography.labelMedium.copy(fontSize = 11.sp),
-                        color = Color.White.copy(alpha = 0.8f),
+                        color = Color.DarkGray,
                         fontWeight = FontWeight.Bold,
                     )
                 },
@@ -367,9 +366,9 @@ private fun OverlayChannelRow(
                 maxLines = 1,
                 overflow = TextOverflow.Ellipsis,
             )
-            if (!nowPlaying.isNullOrBlank()) {
+            if (!nowTitle.isNullOrBlank()) {
                 Text(
-                    text = nowPlaying,
+                    text = nowTitle,
                     style = MaterialTheme.typography.labelSmall.copy(fontSize = 10.sp),
                     color = Color.White.copy(alpha = 0.5f),
                     maxLines = 1,

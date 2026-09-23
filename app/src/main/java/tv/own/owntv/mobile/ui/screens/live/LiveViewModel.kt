@@ -38,6 +38,7 @@ import tv.own.owntv.core.database.dao.HistoryDao
 import tv.own.owntv.core.database.dao.ProfileDao
 import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ChannelEntity
+import tv.own.owntv.core.live.ChannelNowPlaying
 import tv.own.owntv.core.database.entity.ContentOrderEntity
 import tv.own.owntv.core.database.entity.FavoriteEntity
 import tv.own.owntv.core.epg.EpgShift
@@ -95,9 +96,22 @@ class LiveViewModel(
     epgDao: EpgDao,
     epgSourceStore: EpgSourceStore,
     xtreamClient: XtreamClient,
+    private val tuner: LiveTuner,
 ) : ViewModel() {
 
     private val epgReader = LiveEpgReader(epgDao, epgSourceStore, sourceDao, xtreamClient, streamUrlResolver)
+
+    init {
+        viewModelScope.launch {
+            tuner.nowNext.collect { nowNext ->
+                val currentChannel = tuner.channel.value ?: return@collect
+                val now = nowNext?.now ?: return@collect
+                if (now.title.isNotEmpty()) {
+                    _nowPlaying.value = _nowPlaying.value + (currentChannel.id to ChannelNowPlaying(now.title, now.startMs, now.stopMs))
+                }
+            }
+        }
+    }
 
     /** The same candidate set the Guide's picker uses — filtered by no source. */
     private val guideCandidates = tv.own.owntv.core.epg.GuideCandidates(epgDao)
@@ -229,10 +243,10 @@ class LiveViewModel(
         .map { it.toSet() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptySet())
 
-    private val _nowPlaying = MutableStateFlow<Map<Long, String>>(emptyMap())
+    private val _nowPlaying = MutableStateFlow<Map<Long, tv.own.owntv.core.live.ChannelNowPlaying>>(emptyMap())
 
     /** "What's on now" for the rows on screen, keyed by channel id. */
-    val nowPlaying: StateFlow<Map<Long, String>> = _nowPlaying
+    val nowPlaying: StateFlow<Map<Long, tv.own.owntv.core.live.ChannelNowPlaying>> = _nowPlaying
 
     private val _refreshing = MutableStateFlow(false)
     val refreshing: StateFlow<Boolean> = _refreshing
@@ -353,11 +367,38 @@ class LiveViewModel(
      * guide rather than a screenful.
      */
     fun loadNowPlaying(visible: List<ChannelEntity>) {
-        val missing = visible.filter { it.id !in _nowPlaying.value }
+        val missing = visible.filter { ch ->
+            val existing = _nowPlaying.value[ch.id]
+            existing == null || existing.title.isEmpty()
+        }
         if (missing.isEmpty()) return
         viewModelScope.launch {
             val found = epgReader.nowPlayingFor(missing, custom.value, epgOffset.value)
-            if (found.isNotEmpty()) _nowPlaying.value = _nowPlaying.value + found
+            if (found.isNotEmpty()) {
+                val updated = _nowPlaying.value.toMutableMap()
+                for ((id, now) in found) {
+                    if (now.title.isNotEmpty()) {
+                        updated[id] = now
+                    }
+                }
+                _nowPlaying.value = updated
+            }
+
+            val stillMissing = missing.filter { ch ->
+                val existing = _nowPlaying.value[ch.id]
+                existing == null || existing.title.isEmpty()
+            }
+            if (stillMissing.isNotEmpty()) {
+                for (ch in stillMissing) {
+                    launch {
+                        val nowNext = epgReader.nowNext(ch, custom.value, epgOffset.value)
+                        val now = nowNext?.now
+                        if (now != null && now.title.isNotEmpty()) {
+                            _nowPlaying.value = _nowPlaying.value + (ch.id to ChannelNowPlaying(now.title, now.startMs, now.stopMs))
+                        }
+                    }
+                }
+            }
         }
     }
 

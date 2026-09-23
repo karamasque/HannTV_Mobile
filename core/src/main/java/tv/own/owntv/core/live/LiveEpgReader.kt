@@ -236,7 +236,7 @@ class LiveEpgReader(
         channels: List<ChannelEntity>,
         cust: SectionCustomizations,
         globalShiftMinutes: Int,
-    ): Map<Long, String> = withContext(Dispatchers.IO) {
+    ): Map<Long, ChannelNowPlaying> = withContext(Dispatchers.IO) {
         if (channels.isEmpty()) return@withContext emptyMap()
         val now = System.currentTimeMillis()
         // Every playlist plus every EPG feed — NOT just the sources the visible page happens to come
@@ -259,7 +259,7 @@ class LiveEpgReader(
         if (channelKeys.isEmpty()) return@withContext emptyMap()
         val startedAt = android.os.SystemClock.elapsedRealtime()
         var chunks = 0
-        val result = HashMap<Long, String>()
+        val result = HashMap<Long, ChannelNowPlaying>()
         for ((shift, group) in channelKeys.groupBy { it.third }) {
             val at = EpgShift.toStored(now, shift)
             val rowsByKey = group
@@ -273,7 +273,7 @@ class LiveEpgReader(
             for ((channelId, epgKey, _) in group) {
                 rowsByKey[epgKey]
                     ?.firstOrNull { at in it.startMs until it.stopMs }
-                    ?.let { result[channelId] = it.title }
+                    ?.let { result[channelId] = ChannelNowPlaying(it.title, it.startMs, it.stopMs) }
             }
         }
         // Second pass: whatever the preview pane has already resolved for a channel the stored guide
@@ -292,7 +292,7 @@ class LiveEpgReader(
         val fromStored = result.size
         for (ch in channels) {
             if (ch.id in result) continue
-            cachedNowTitle(ch.id, now)?.let { result[ch.id] = it }
+            cachedNowPlaying(ch.id, now)?.let { result[ch.id] = it }
         }
         CorePerf.log {
             "live_nowplaying channels=${channels.size} keyed=${channelKeys.size} " +
@@ -309,13 +309,13 @@ class LiveEpgReader(
      *
      * Deliberately never fetches. See the note in [nowPlayingFor] for what happened when it did.
      */
-    private fun cachedNowTitle(channelId: Long, now: Long): String? {
-        cache[channelId]?.takeIf { now - it.at < CACHE_TTL_MS }?.data?.now?.title
-            ?.takeIf { it.isNotBlank() }?.let { return it }
+    private fun cachedNowPlaying(channelId: Long, now: Long): ChannelNowPlaying? {
+        cache[channelId]?.takeIf { now - it.at < CACHE_TTL_MS }?.data?.now
+            ?.takeIf { it.title.isNotBlank() }?.let { return ChannelNowPlaying(it.title, it.startMs, it.stopMs) }
         return providerRows[channelId]
             ?.takeIf { now - it.at < CACHE_TTL_MS }
             ?.rows?.firstOrNull { it.startMs <= now && it.stopMs > now }
-            ?.title?.takeIf { it.isNotBlank() }
+            ?.let { ChannelNowPlaying(it.title, it.startMs, it.stopMs) }
     }
 
     /**

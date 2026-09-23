@@ -668,11 +668,9 @@ fun Modifier.glassSurface(
 
                         else -> {
                             // Nothing frosted anywhere: no wallpaper, a device without hardware blur,
-                            // or a sheet, which is its own window and cannot replay the main window's
-                            // layer. A 22 % fill over nothing is not glass, it is an invisible panel,
-                            // so this is the tonal ceramic instead — near-opaque, wallpaper-tinted,
-                            // and still edge-lit below.
-                            drawRect(tinted.copy(alpha = CERAMIC_ALPHA))
+                            // or a sheet. Use the user's configured glass alpha translucency so presets
+                            // take effect immediately across all panels.
+                            drawRect(tinted.copy(alpha = glass.alpha))
                         }
                     }
                     body?.let { drawRect(it) }

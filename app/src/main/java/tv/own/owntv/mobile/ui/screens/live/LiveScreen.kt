@@ -1,5 +1,26 @@
 package tv.own.owntv.mobile.ui.screens.live
 
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.border
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import tv.own.owntv.mobile.ui.theme.glassClickable
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Surface
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
+import java.text.DateFormat
+import tv.own.owntv.core.live.ChannelNowPlaying
 import tv.own.owntv.mobile.ui.components.MobileIcons
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -12,6 +33,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -128,26 +150,31 @@ fun LiveScreen(
 
     // The guide is read for what is actually on screen. Watching the visible range rather than each
     // row means one batched query per scroll settle instead of one per row appearing.
-    LaunchedEffect(listState, channels) {
-        snapshotFlow { listState.layoutInfo.visibleItemsInfo.map { it.index } }
+    LaunchedEffect(listState, channels.itemCount, channels.itemSnapshotList) {
+        snapshotFlow {
+            val visibleIndices = listState.layoutInfo.visibleItemsInfo.map { it.index }
+            visibleIndices.mapNotNull { index ->
+                if (index in 0 until channels.itemCount) channels.peek(index) else null
+            }
+        }
             .distinctUntilChanged()
-            .collect { indices ->
-                vm.loadNowPlaying(indices.mapNotNull { channels.peek(it) })
+            .collect { visibleChannels ->
+                if (visibleChannels.isNotEmpty()) {
+                    vm.loadNowPlaying(visibleChannels)
+                }
             }
     }
 
     // Changing category scrolls back to the top: the position of the old list means nothing in the new one.
     LaunchedEffect(selected) { listState.scrollToItem(0) }
 
-    val listPane = @Composable {
-    Column(Modifier.fillMaxSize()) {
-        if (lockedKey == null) Box(Modifier.fillMaxWidth()) {
+    val categoryHeader = @Composable {
+        if (lockedKey == null) Box(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
             FilterChipRow(
                 labels = categories.map { it.label() },
                 selectedIndex = categories.indexOfFirst { it.key == selected },
                 onSelect = { index -> categories.getOrNull(index)?.let { vm.select(it.key) } },
-                modifier = Modifier.padding(end = MobileDimens.TouchTarget),
-                // All, Favorites, History and Catch-up are not folders: there is nothing to hide or move.
+                modifier = Modifier.padding(end = MobileDimens.TouchTarget + 8.dp),
                 onLongPress = { index ->
                     categoryMenuFor = categories.getOrNull(index)?.takeIf { it.builtIn == null }
                 },
@@ -160,14 +187,18 @@ fun LiveScreen(
                 Icon(MobileIcons.Search, stringResource(R.string.content_search_categories))
             }
         }
-        if (categoryPicker) {
-            CategoryPickerSheet(
-                labels = categories.map { it.label() },
-                selectedIndex = categories.indexOfFirst { it.key == selected },
-                onSelect = { index -> categories.getOrNull(index)?.let { vm.select(it.key) } },
-                onDismiss = { categoryPicker = false },
-            )
-        }
+    }
+
+    if (categoryPicker) {
+        CategoryPickerSheet(
+            labels = categories.map { it.label() },
+            selectedIndex = categories.indexOfFirst { it.key == selected },
+            onSelect = { index -> categories.getOrNull(index)?.let { vm.select(it.key) } },
+            onDismiss = { categoryPicker = false },
+        )
+    }
+
+    val channelListContent = @Composable { usePlate: Boolean ->
         PullToRefreshBox(
             isRefreshing = refreshing,
             onRefresh = vm::refresh,
@@ -176,7 +207,10 @@ fun LiveScreen(
             if (channels.itemCount == 0) {
                 EmptyChannels()
             } else {
-                LazyColumn(state = listState, modifier = Modifier.fillMaxSize().mobileGroupPlate()) {
+                LazyColumn(
+                    state = listState,
+                    modifier = if (usePlate) Modifier.fillMaxSize().mobileGroupPlate() else Modifier.fillMaxSize(),
+                ) {
                     items(count = channels.itemCount, key = channels.itemKey { it.id }) { index ->
                         val channel = channels[index]
                         if (channel != null) {
@@ -186,18 +220,9 @@ fun LiveScreen(
                                 nowPlaying = nowPlaying[channel.id],
                                 providerName = providers[channel.sourceId],
                                 isFavorite = channel.id in favorites,
-                                // Beside the list the channel opens in the pane; on a phone it is
-                                // a screen of its own, which is the same screen either way.
                                 onClick = {
                                     when {
-                                        // Channels are waiting to become a Multiview grid, so the
-                                        // tap that says "now" must actually start playing. Sent to
-                                        // the channel page instead, it took two taps to open the
-                                        // grid and the first one looked like it had done nothing.
                                         multiviewPending -> {
-                                            // Selected, not started: the grid is about to open and
-                                            // would only have to stop it again — and losing that
-                                            // race is what played a second channel under the tiles.
                                             tuner.selectWithoutPlaying(channel)
                                             onOpenPlayer()
                                         }
@@ -207,34 +232,52 @@ fun LiveScreen(
                                 },
                                 onLongClick = { menuFor = channel },
                             )
+                            if (index < channels.itemCount - 1) {
+                                HorizontalDivider(
+                                    color = Color.White.copy(alpha = 0.08f),
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                )
+                            }
                         }
                     }
                 }
             }
         }
     }
+
+    val listPane = @Composable {
+        Column(Modifier.fillMaxSize()) {
+            categoryHeader()
+            Box(Modifier.weight(1f)) {
+                channelListContent(true)
+            }
+        }
     }
 
     if (twoPane) {
-        TwoPane(
-            list = listPane,
-            detail = {
-                val channelId = previewing
-                if (channelId == null) {
-                    SelectAChannel()
-                } else {
-                    ChannelDetailScreen(
-                        channelId = channelId,
-                        openCatchup = false,
-                        onFullscreen = onOpenPlayer,
-                        // Back here empties the pane rather than leaving Live TV: the list is still
-                        // on screen, so the thing the user is finished with is the channel.
-                        onBack = { previewing = null },
-                    )
-                }
-            },
-            modifier = modifier,
-        )
+        Column(modifier = modifier.fillMaxSize()) {
+            categoryHeader()
+            Spacer(Modifier.height(4.dp))
+            TwoPane(
+                list = { channelListContent(false) },
+                detail = {
+                    val channelId = previewing
+                    if (channelId == null) {
+                        SelectAChannel()
+                    } else {
+                        ChannelDetailScreen(
+                            channelId = channelId,
+                            openCatchup = false,
+                            onFullscreen = onOpenPlayer,
+                            onBack = { previewing = null },
+                        )
+                    }
+                },
+                modifier = Modifier.weight(1f),
+                listShare = 0.28f,
+            )
+        }
     } else {
         Box(modifier) { listPane() }
     }
@@ -296,80 +339,136 @@ private fun EmptyChannels() {
     }
 }
 
-/**
- * One channel: its number, its logo, its name, and what is on it now.
- *
- * The second line is deliberately shared between the programme title and the playlist name — a
- * phone row has one line to spare, and which of the two is worth showing depends on whether the
- * user has a guide and more than one playlist.
- */
 @Composable
 private fun ChannelRow(
     channel: ChannelEntity,
     number: Int?,
-    nowPlaying: String?,
+    nowPlaying: ChannelNowPlaying?,
     providerName: String?,
     isFavorite: Boolean,
     onClick: () -> Unit,
     onLongClick: () -> Unit,
 ) {
-    val separator = stringResource(R.string.content_epg_bits_separator)
-    val subtitle = listOfNotNull(nowPlaying, providerName).takeIf { it.isNotEmpty() }?.joinToString(separator)
+    val times = rememberTimeFormat()
+    val epgSubtitle = nowPlaying?.formatDisplayText(times)?.takeIf { it.isNotBlank() }
+    val subtitle = epgSubtitle ?: providerName
+    val progress = nowPlaying?.progressFraction ?: 0f
+    val interactionSource = remember { MutableInteractionSource() }
 
-    MobileListRow(
-        title = channel.name,
-        subtitle = subtitle,
-        leading = { ChannelLogo(channel, number) },
-        trailing = {
-            Row(horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapTiny)) {
-                if (channel.catchup) {
-                    Icon(
-                        imageVector = MobileIcons.History,
-                        contentDescription = stringResource(R.string.content_catchup),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(TRAILING_ICON),
-                    )
-                }
-                if (isFavorite) {
-                    Icon(
-                        imageVector = MobileIcons.Star,
-                        contentDescription = stringResource(R.string.content_category_favorites),
-                        tint = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.size(TRAILING_ICON),
-                    )
-                }
-            }
-        },
-        onClick = onClick,
-        onLongClick = onLongClick,
-    )
-}
-
-/** The logo, with the channel number under it when the Channel numbers setting is on. */
-@Composable
-private fun ChannelLogo(channel: ChannelEntity, number: Int?) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        ChannelLogoImage(
-            channel = channel,
-            modifier = Modifier.size(LOGO_SIZE),
-            fallback = {
-                Icon(
-                    imageVector = MobileIcons.LiveTv,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.size(LOGO_SIZE),
-                )
-            },
-        )
-        if (number != null) {
-            Text(
-                text = number.toString(),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 44.dp)
+            .glassClickable(
+                interactionSource = interactionSource,
+                onClick = onClick,
+                onLongClick = onLongClick,
             )
+            .padding(horizontal = 8.dp, vertical = 4.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .padding(end = 8.dp),
+            contentAlignment = Alignment.Center,
+        ) {
+            ChannelLogoImage(
+                channel = channel,
+                modifier = Modifier.fillMaxSize(),
+                fallback = {
+                    Icon(
+                        imageVector = MobileIcons.LiveTv,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(24.dp),
+                    )
+                },
+            )
+        }
+
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.Center,
+        ) {
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(4.dp),
+            ) {
+                if (number != null) {
+                    Text(
+                        text = number.toString(),
+                        style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Bold),
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
+                Text(
+                    text = channel.name,
+                    style = MaterialTheme.typography.bodyMedium.copy(
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = (-0.14).sp,
+                    ),
+                    color = MaterialTheme.colorScheme.onSurface,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+
+            if (!subtitle.isNullOrBlank()) {
+                Text(
+                    text = subtitle,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                    modifier = Modifier.padding(top = 1.dp),
+                )
+            }
+
+            if (progress > 0f) {
+                LinearProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(2.dp)
+                        .padding(top = 2.dp)
+                        .clip(RoundedCornerShape(2.dp)),
+                    color = Color(0xFF3B82F6),
+                    trackColor = Color(0xFF2C2C2E),
+                )
+            }
+        }
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            modifier = Modifier.padding(start = 8.dp),
+        ) {
+            if (channel.catchup) {
+                Icon(
+                    imageVector = MobileIcons.History,
+                    contentDescription = stringResource(R.string.content_catchup),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
+            if (isFavorite) {
+                Icon(
+                    imageVector = MobileIcons.Star,
+                    contentDescription = stringResource(R.string.content_category_favorites),
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(18.dp),
+                )
+            }
         }
     }
 }
 
-private val LOGO_SIZE = 32.dp
-private val TRAILING_ICON = 18.dp
+@Composable
+private fun rememberTimeFormat(): DateFormat {
+    val locales = LocalConfiguration.current.locales
+    return remember(locales) { DateFormat.getTimeInstance(DateFormat.SHORT) }
+}
+
+
+
