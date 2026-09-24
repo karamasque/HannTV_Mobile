@@ -13,6 +13,12 @@
 > its "What's new" — the same as the TV app's copy. It is kept separate from CHANGELOG.md because
 > neither a release page nor an update sheet full of paragraphs is readable.
 
+## v1.2.0
+
+### Fixes
+
+- **📺 Canlı TV Düzeni:** Önizleme oynatıcı boyutu, EPG bilgileri ve tek ekranda çakışmasız tam görünüm sağlandı.
+
 ## v1.1.8
 
 ### Fixes
