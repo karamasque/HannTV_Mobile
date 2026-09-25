@@ -397,11 +397,6 @@ fun PlayerScreen(
             }
         }
     }
-    // Once the rotation has actually happened, hand the orientation back: the request above was to
-    // arrive in landscape, not to stay there.
-    LaunchedEffect(landscape) {
-        if (landscape) activity?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_UNSPECIFIED
-    }
 
     fun setBrightness(value: Float) {
         brightness = value.coerceIn(0.01f, 1f)

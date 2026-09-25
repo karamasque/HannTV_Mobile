@@ -849,7 +849,7 @@ class SettingsRepository(private val context: Context, private val localeStore: 
      * upgrade never silently changes anyone's metadata. "auto" = follow the device locale, resolved at
      * call time by [tv.own.owntv.core.metadata.MetadataConfig.resolvedLanguage].
      */
-    val metadataLanguage: Flow<String> = prefsFlow { it[Keys.METADATA_LANGUAGE] ?: "" }
+    val metadataLanguage: Flow<String> = prefsFlow { it[Keys.METADATA_LANGUAGE] ?: "auto" }
 
     suspend fun setMetadataLanguage(code: String) {
         context.dataStore.edit { it[Keys.METADATA_LANGUAGE] = code.trim() }
@@ -869,7 +869,7 @@ class SettingsRepository(private val context: Context, private val localeStore: 
             mode = parseMetadataMode(p),
             tmdbApiKey = p[Keys.TMDB_API_KEY] ?: "",
             customServerUrl = p[Keys.METADATA_SERVER_URL] ?: "",
-            language = p[Keys.METADATA_LANGUAGE] ?: "",
+            language = p[Keys.METADATA_LANGUAGE] ?: "auto",
         )
     }
 

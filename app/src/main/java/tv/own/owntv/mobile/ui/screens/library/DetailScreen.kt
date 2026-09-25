@@ -67,6 +67,17 @@ import tv.own.owntv.mobile.ui.components.episodeDetails
 import tv.own.owntv.mobile.ui.player.formatTimestamp
 import tv.own.owntv.mobile.ui.player.rememberResumeGate
 import tv.own.owntv.mobile.ui.theme.MobileDimens
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import tv.own.owntv.core.metadata.MetadataCast
+import tv.own.owntv.core.metadata.MetadataImages
+import tv.own.owntv.mobile.ui.components.TrailerPlayerScreen
+import tv.own.owntv.mobile.ui.components.jsonList
 import tv.own.owntv.mobile.ui.theme.MobilePosterShape
 import tv.own.owntv.mobile.ui.theme.glassSurface
 
@@ -102,15 +113,21 @@ fun DetailScreen(
     val nextUpId by vm.nextUpId.collectAsStateWithLifecycle()
     val hideWatched by vm.hideWatched.collectAsStateWithLifecycle()
     val order by vm.order.collectAsStateWithLifecycle()
+    val meta by vm.meta.collectAsStateWithLifecycle()
     val itemDownloads by vm.itemDownloads.collectAsStateWithLifecycle()
     val episodeDownloads by vm.episodeDownloadStates.collectAsStateWithLifecycle()
 
     val title = movie?.name ?: show?.name.orEmpty()
-    val plot = movie?.plot ?: show?.plot
-    val poster = movie?.posterUrl ?: show?.posterUrl
-    val backdrop = movie?.backdropUrl ?: show?.backdropUrl
-    val year = movie?.year ?: show?.year
-    val rating = movie?.rating ?: show?.rating
+    val rawPlot = movie?.plot ?: show?.plot
+    val plot = meta?.overview?.takeIf { it.isNotBlank() } ?: rawPlot
+    val poster = MetadataImages.poster(meta?.posterPath) ?: (movie?.posterUrl ?: show?.posterUrl)
+    val backdrop = MetadataImages.backdrop(meta?.backdropPath) ?: (movie?.backdropUrl ?: show?.backdropUrl ?: poster)
+    val year = meta?.year ?: (movie?.year ?: show?.year)
+    val rating = meta?.rating ?: (movie?.rating ?: show?.rating)
+    val genres = remember(meta) { jsonList(meta?.genresJson) }
+    val castMembers = remember(meta) { MetadataCast.parse(meta?.castJson) }
+    var activeTrailerKey by remember { mutableStateOf<String?>(null) }
+
     // Null until the show has loaded; then the last-watched season, or its first.
     val currentSeason = season ?: seasons.firstOrNull()
     val seasonEpisodes = remember(episodes, currentSeason, order) {
@@ -140,7 +157,7 @@ fun DetailScreen(
                     .background(MaterialTheme.colorScheme.surfaceContainerHigh),
             ) {
                 AsyncImage(
-                    model = backdrop ?: poster,
+                    model = backdrop,
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize(),
@@ -205,6 +222,13 @@ fun DetailScreen(
                             style = MobileButtonStyle.SECONDARY,
                         )
                     }
+                    if (!meta?.trailerKey.isNullOrBlank()) {
+                        MobileButton(
+                            text = stringResource(R.string.content_play_trailer),
+                            onClick = { activeTrailerKey = meta?.trailerKey },
+                            style = MobileButtonStyle.SECONDARY,
+                        )
+                    }
                     IconButton(onClick = { vm.toggleFavorite() }) {
                         Icon(
                             imageVector = if (favorite) MobileIcons.Star else MobileIcons.StarBorder,
@@ -225,9 +249,6 @@ fun DetailScreen(
                             else R.string.content_download,
                         ),
                     )
-                    // How the episode list is shown belongs with the show's other buttons, not
-                    // wedged between "Next up" and the first episode — down there it read as part of
-                    // the resume card and pushed the list itself off the screen.
                     if (tab == LibraryTab.SERIES) {
                         IconButton(onClick = { episodeOptions = true }) {
                             Icon(
@@ -238,13 +259,70 @@ fun DetailScreen(
                         }
                     }
                 }
+                if (genres.isNotEmpty()) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
+                        modifier = Modifier
+                            .padding(vertical = MobileDimens.GapSmall)
+                            .horizontalScroll(rememberScrollState()),
+                    ) {
+                        genres.forEach { genre -> Chip(genre) }
+                    }
+                }
                 if (!plot.isNullOrBlank()) {
                     Text(
                         text = plot,
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.padding(top = MobileDimens.GapMedium),
+                        modifier = Modifier.padding(top = MobileDimens.GapSmall),
                     )
+                } else if (loading) {
+                    Text(
+                        text = stringResource(R.string.content_researching_tmdb),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = MobileDimens.GapSmall),
+                    )
+                }
+                if (castMembers.isNotEmpty()) {
+                    Column(Modifier.padding(top = MobileDimens.GapMedium)) {
+                        Text(
+                            text = stringResource(R.string.content_media_cast),
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier.padding(bottom = MobileDimens.GapSmall),
+                        )
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        ) {
+                            castMembers.forEach { member ->
+                                Column(
+                                    modifier = Modifier.width(72.dp),
+                                    horizontalAlignment = Alignment.CenterHorizontally,
+                                ) {
+                                    AsyncImage(
+                                        model = MetadataImages.profile(member.profilePath),
+                                        contentDescription = member.name,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(56.dp)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.surfaceContainerHigh),
+                                    )
+                                    Text(
+                                        text = member.name,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                        textAlign = TextAlign.Center,
+                                        maxLines = 2,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.padding(top = 4.dp),
+                                    )
+                                }
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -328,6 +406,10 @@ fun DetailScreen(
             vm = vm,
             onDismiss = { menuFor = null },
         )
+    }
+
+    activeTrailerKey?.let { key ->
+        TrailerPlayerScreen(videoKey = key, onExit = { activeTrailerKey = null })
     }
 }
 

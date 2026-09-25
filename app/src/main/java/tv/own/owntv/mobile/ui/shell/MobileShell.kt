@@ -225,6 +225,12 @@ fun MobileShell(
     // The request dies with the stream, so the next one starts without a window the user never asked
     // for; without this, stopping and then previewing another channel would bring the old one back.
     LaunchedEffect(nothingPlaying) { if (nothingPlaying) miniRequested.value = false }
+    LaunchedEffect(showingStream, miniRequested.value, nothingPlaying) {
+        if (!nothingPlaying && !showingStream && !miniRequested.value) {
+            tuner.stop()
+            vodTuner.stop()
+        }
+    }
     val showMini = !nothingPlaying && !showingStream && miniRequested.value
     // Floating window, bar above the tabs, or neither — the user's choice, and the only thing that
     // changes is where the same stream is drawn.

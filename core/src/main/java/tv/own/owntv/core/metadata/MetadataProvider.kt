@@ -134,12 +134,11 @@ data class MetadataConfig(
      */
     val resolvedLanguage: String
         get() = when {
-            language.isBlank() -> ""
-            language != LANGUAGE_AUTO -> language
-            else -> java.util.Locale.getDefault().let { l ->
-                val lang = l.language.takeIf { it.isNotBlank() } ?: return@let ""
+            language.isBlank() || language == LANGUAGE_AUTO -> java.util.Locale.getDefault().let { l ->
+                val lang = l.language.takeIf { it.isNotBlank() } ?: "tr"
                 if (l.country.isNotBlank()) "$lang-${l.country}" else lang
             }
+            else -> language
         }
 
     /** Which tier this config resolves to (for the Settings label). */

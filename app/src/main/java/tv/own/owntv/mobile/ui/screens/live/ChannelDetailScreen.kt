@@ -103,9 +103,9 @@ fun ChannelDetailScreen(
     // screen on its way past and says through [LocalMiniRequested] that the stream was asked for.
     val miniRequested = LocalMiniRequested.current
     var toFullscreen by remember { mutableStateOf(false) }
-    DisposableEffect(Unit) {
+    DisposableEffect(channelId) {
         onDispose {
-            if (!toFullscreen && !miniRequested.value) {
+            if (!toFullscreen) {
                 tuner.stop()
                 vodTuner.stop()
             }
@@ -135,9 +135,8 @@ fun ChannelDetailScreen(
         // is the other way, and neither one restarts the stream.
         Box(
             Modifier
-                .fillMaxWidth(0.70f)
+                .fillMaxWidth()
                 .aspectRatio(VIDEO_ASPECT)
-                .align(Alignment.CenterHorizontally)
                 .clipToBounds()
                 .clip(RoundedCornerShape(12.dp))
                 .background(Color.Black)

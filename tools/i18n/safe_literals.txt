@@ -187,6 +187,7 @@
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodActions.kt	favourite
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodActions.kt	hide
 1	uri	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodActions.kt	https://www.youtube.com/watch?v=$key
+1	uri	app/src/main/java/tv/own/owntv/mobile/ui/components/TrailerPlayerScreen.kt	https://www.youtube.com/watch?v=$videoKey
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodActions.kt	mark_watched
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodActions.kt	move
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodActions.kt	move_to_category
