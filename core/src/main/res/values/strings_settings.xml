@@ -521,6 +521,10 @@
     <!-- Translators: Description of the clear-history action. -->
     <!-- Translators: Settings navigation group label for Appearance settings. -->
     <string name="settings_appearance_group">Appearance</string>
+    <string name="settings_category_display_mode">Category Display Mode</string>
+    <string name="settings_category_display_mode_tabs">Top Tab Strip Mode</string>
+    <string name="settings_category_display_mode_list">Folder / List Mode</string>
+    <string name="settings_category_display_mode_description">Choose whether Live TV categories are displayed as top tabs or vertical folder list.</string>
     <!-- Translators: Settings navigation label for the Theme setting. -->
     <string name="settings_theme">Theme</string>
     <!-- Translators: Description of the Theme setting. -->

@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import tv.own.owntv.core.CoreBuildInfo
+import tv.own.owntv.core.R
 import tv.own.owntv.core.i18n.LocaleStore
 import tv.own.owntv.core.live.DEFAULT_MULTIVIEW_TILES
 import tv.own.owntv.core.live.MAX_MULTIVIEW_TILES
@@ -437,6 +438,7 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         val AMBIENT_GLOW_PULSE = booleanPreferencesKey("ambient_glow_pulse")
         val RESUME_LAST_CHANNEL = booleanPreferencesKey("resume_last_channel")
         val LAST_LIVE_CATEGORY = stringPreferencesKey("last_live_category")
+        val CATEGORY_DISPLAY_MODE = stringPreferencesKey("category_display_mode")
         val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
         val LAST_LIVE_CHANNEL = androidx.datastore.preferences.core.longPreferencesKey("last_live_channel")
         val VOD_GRID_COLUMNS = intPreferencesKey("vod_grid_columns")
@@ -705,6 +707,23 @@ class SettingsRepository(private val context: Context, private val localeStore: 
     val rememberCategorySeries: Flow<Boolean> = prefsFlow { it[Keys.REMEMBER_CAT_SERIES] ?: true }
     suspend fun setRememberCategorySeries(enabled: Boolean) {
         context.dataStore.edit { it[Keys.REMEMBER_CAT_SERIES] = enabled }
+    }
+
+    enum class CategoryDisplayMode(val labelRes: Int) {
+        TABS(R.string.settings_category_display_mode_tabs),
+        LIST(R.string.settings_category_display_mode_list),
+    }
+
+    val categoryDisplayMode: Flow<CategoryDisplayMode> = prefsFlow { prefs ->
+        val raw = prefs[Keys.CATEGORY_DISPLAY_MODE]
+        if (raw != null) {
+            runCatching { CategoryDisplayMode.valueOf(raw) }.getOrDefault(CategoryDisplayMode.TABS)
+        } else {
+            CategoryDisplayMode.TABS
+        }
+    }
+    suspend fun setCategoryDisplayMode(mode: CategoryDisplayMode) {
+        context.dataStore.edit { it[Keys.CATEGORY_DISPLAY_MODE] = mode.name }
     }
 
     // --- Per-section "remember last ITEM per category" (default OFF each).

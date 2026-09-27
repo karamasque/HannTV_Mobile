@@ -233,6 +233,10 @@
     <string name="settings_content_menus_hint">Bir eylemi almak için üzerinde OK tuşunu basılı tutun, sonra Yukarı ve Aşağı ile taşıyın. Bırakmak için tekrar OK’a basın.</string>
     <string name="settings_browsing_lists">Gezinme ve listeler</string>
     <string name="settings_browsing_description">Canlı TV, Filmler ve Diziler bölümlerindeki son kategoriyi ve son ögeyi hatırlayın</string>
+    <string name="settings_category_display_mode">Kategori Görünüm Stili</string>
+    <string name="settings_category_display_mode_tabs">Üst Sekme / Şerit Modu</string>
+    <string name="settings_category_display_mode_list">Klasör / Liste Modu</string>
+    <string name="settings_category_display_mode_description">Canlı TV kategorilerinin üst sekmeler mi yoksa dikey klasör listesi olarak mı gösterileceğini belirler.</string>
     <string name="settings_home_root">Ana ekran</string>
     <string name="settings_home_root_description">Ana ekrandaki satırları seçin, yeniden sıralayın ve filtreleyin</string>
     <string name="settings_metadata_root_description">Filmler ve Diziler için afişler, özetler, oyuncu kadroları ve puanlar</string>

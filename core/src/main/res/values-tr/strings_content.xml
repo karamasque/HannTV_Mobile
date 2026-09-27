@@ -166,6 +166,8 @@
     <string name="content_live_next_label">SIRADA · <xliff:g id="time">%1$s</xliff:g></string>
     <string name="content_live_later_label">DAHA SONRA</string>
     <string name="content_live_time_range_plain"><xliff:g id="start">%1$s</xliff:g> – <xliff:g id="stop">%2$s</xliff:g></string>
+    <string name="content_back_to_categories">← Kategori Listesine Dön</string>
+    <string name="content_back_to_category_name">← <xliff:g id="cat">%1$s</xliff:g></string>
     <string name="content_category_favorites">Favoriler</string>
     <string name="content_category_history">İzleme Geçmişi</string>
     <string name="content_category_all_channels">Tüm Kanallar</string>

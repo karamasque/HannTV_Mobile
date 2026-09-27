@@ -89,6 +89,43 @@ fun SettingsLayoutPage(
         settingsSection(R.string.settings_browsing_title)
         settingsNote(R.string.settings_browsing_description_full)
         settingsGroup(key = "browsing") {
+            val categoryDisplayMode = vm.settings.categoryDisplayMode.pref(SettingsRepository.CategoryDisplayMode.TABS)
+            var categoryDisplaySheet by remember { mutableStateOf(false) }
+
+            SettingRow(
+                title = stringResource(R.string.settings_category_display_mode),
+                value = stringResource(categoryDisplayMode.labelRes),
+                onClick = { categoryDisplaySheet = true },
+            )
+
+            if (categoryDisplaySheet) {
+                MobileBottomSheet(
+                    onDismissRequest = { categoryDisplaySheet = false },
+                    title = stringResource(R.string.settings_category_display_mode),
+                ) {
+                    SettingsRepository.CategoryDisplayMode.entries.forEach { mode ->
+                        val isSelected = mode == categoryDisplayMode
+                        MobileListRow(
+                            title = stringResource(mode.labelRes),
+                            selected = isSelected,
+                            trailing = if (isSelected) {
+                                {
+                                    Icon(
+                                        imageVector = MobileIcons.Check,
+                                        contentDescription = null,
+                                        tint = MaterialTheme.colorScheme.primary,
+                                    )
+                                }
+                            } else null,
+                            onClick = {
+                                vm.edit { setCategoryDisplayMode(mode) }
+                                categoryDisplaySheet = false
+                            },
+                        )
+                    }
+                }
+            }
+
             BrowsingRows(
                 sectionRes = R.string.common_nav_live_tv,
                 category = categoryLive,

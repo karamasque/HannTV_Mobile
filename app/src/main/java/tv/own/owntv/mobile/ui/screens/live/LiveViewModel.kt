@@ -132,6 +132,9 @@ class LiveViewModel(
     private val sortMode: StateFlow<SettingsRepository.SortMode> = settings.sortLive
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.SortMode.PLAYLIST)
 
+    val categoryDisplayMode: StateFlow<SettingsRepository.CategoryDisplayMode> = settings.categoryDisplayMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.CategoryDisplayMode.TABS)
+
     private val liveCategories = ctx
         .flatMapLatest { c ->
             if (c.profileId < 0) flowOf(emptyList())

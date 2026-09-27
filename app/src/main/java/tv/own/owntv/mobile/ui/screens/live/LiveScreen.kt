@@ -76,6 +76,10 @@ import tv.own.owntv.mobile.ui.screens.ObeyScrollToTop
 import tv.own.owntv.mobile.ui.shell.LocalStreamOnScreen
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 
+import androidx.activity.compose.BackHandler
+import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.live.serialize
+
 /**
  * Live TV: a strip of categories, a list of channels, and a long-press menu on each one.
  *
@@ -121,6 +125,16 @@ fun LiveScreen(
 
     val categories by vm.categories.collectAsStateWithLifecycle()
     val selected by vm.selected.collectAsStateWithLifecycle()
+    val categoryDisplayMode by vm.categoryDisplayMode.collectAsStateWithLifecycle()
+    var activeCategoryInListMode by rememberSaveable { mutableStateOf<String?>(null) }
+    val isListMode = categoryDisplayMode == SettingsRepository.CategoryDisplayMode.LIST && lockedKey == null
+
+    if (isListMode && activeCategoryInListMode != null) {
+        BackHandler(enabled = true) {
+            activeCategoryInListMode = null
+        }
+    }
+
     val channels = vm.channels.collectAsLazyPagingItems()
     val nowPlaying by vm.nowPlaying.collectAsStateWithLifecycle()
     val favorites by vm.favoriteIds.collectAsStateWithLifecycle()
@@ -130,6 +144,16 @@ fun LiveScreen(
 
     val listState = rememberLazyListState()
     listState.ObeyScrollToTop(route = "live", scrollToTop = scrollToTop)
+
+    LaunchedEffect(activeCategoryInListMode) {
+        listState.scrollToItem(0)
+    }
+
+    LaunchedEffect(isListMode) {
+        if (!isListMode) {
+            activeCategoryInListMode = null
+        }
+    }
 
     var menuFor by remember { mutableStateOf<ChannelEntity?>(null) }
     var categoryPicker by remember { mutableStateOf(false) }
@@ -169,7 +193,7 @@ fun LiveScreen(
     LaunchedEffect(selected) { listState.scrollToItem(0) }
 
     val categoryHeader = @Composable {
-        if (lockedKey == null) Box(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
+        if (lockedKey == null && !isListMode) Box(Modifier.fillMaxWidth().padding(bottom = 4.dp)) {
             FilterChipRow(
                 labels = categories.map { it.label() },
                 selectedIndex = categories.indexOfFirst { it.key == selected },
@@ -204,13 +228,58 @@ fun LiveScreen(
             onRefresh = vm::refresh,
             modifier = Modifier.fillMaxSize(),
         ) {
-            if (channels.itemCount == 0) {
+            if (isListMode && activeCategoryInListMode == null) {
+                if (categories.isEmpty()) {
+                    EmptyChannels()
+                } else {
+                    LazyColumn(
+                        state = listState,
+                        modifier = if (usePlate) Modifier.fillMaxSize().mobileGroupPlate() else Modifier.fillMaxSize(),
+                    ) {
+                        items(count = categories.size, key = { categories[it].key.serialize() }) { index ->
+                            val cat = categories[index]
+                            CategoryFolderRow(
+                                title = cat.label(),
+                                onClick = {
+                                    activeCategoryInListMode = cat.key.serialize()
+                                    vm.select(cat.key)
+                                },
+                                onLongClick = {
+                                    if (cat.builtIn == null) categoryMenuFor = cat
+                                }
+                            )
+                            if (index < categories.size - 1) {
+                                HorizontalDivider(
+                                    color = Color.White.copy(alpha = 0.08f),
+                                    thickness = 1.dp,
+                                    modifier = Modifier.padding(horizontal = 8.dp),
+                                )
+                            }
+                        }
+                    }
+                }
+            } else if (channels.itemCount == 0) {
                 EmptyChannels()
             } else {
                 LazyColumn(
                     state = listState,
                     modifier = if (usePlate) Modifier.fillMaxSize().mobileGroupPlate() else Modifier.fillMaxSize(),
                 ) {
+                    if (isListMode && activeCategoryInListMode != null) {
+                        item(key = -99999L) {
+                            val activeCatLabel = categories.firstOrNull { it.key.serialize() == activeCategoryInListMode }?.label()
+                                ?: categories.firstOrNull { it.key == selected }?.label().orEmpty()
+                            BackToCategoryRow(
+                                categoryTitle = activeCatLabel,
+                                onClick = { activeCategoryInListMode = null }
+                            )
+                            HorizontalDivider(
+                                color = Color.White.copy(alpha = 0.12f),
+                                thickness = 1.dp,
+                                modifier = Modifier.padding(horizontal = 8.dp, vertical = 2.dp),
+                            )
+                        }
+                    }
                     items(count = channels.itemCount, key = channels.itemKey { it.id }) { index ->
                         val channel = channels[index]
                         if (channel != null) {
@@ -468,6 +537,90 @@ private fun ChannelRow(
 private fun rememberTimeFormat(): DateFormat {
     val locales = LocalConfiguration.current.locales
     return remember(locales) { DateFormat.getTimeInstance(DateFormat.SHORT) }
+}
+
+@Composable
+private fun BackToCategoryRow(
+    categoryTitle: String,
+    onClick: () -> Unit,
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 8.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(12.dp))
+            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.35f))
+            .border(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.5f), RoundedCornerShape(12.dp))
+            .glassClickable(interactionSource = interactionSource, onClick = onClick)
+            .padding(horizontal = 12.dp, vertical = 10.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            Icon(
+                imageVector = MobileIcons.ArrowBack,
+                contentDescription = stringResource(R.string.content_back_to_categories),
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+            Text(
+                text = stringResource(R.string.content_back_to_category_name, categoryTitle),
+                style = MaterialTheme.typography.titleSmall.copy(fontWeight = FontWeight.Bold),
+                color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+        }
+    }
+}
+
+@Composable
+private fun CategoryFolderRow(
+    title: String,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .glassClickable(interactionSource = interactionSource, onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = MobileIcons.Folder,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Icon(
+            imageVector = MobileIcons.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(18.dp),
+        )
+    }
 }
 
 

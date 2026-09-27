@@ -579,3 +579,4 @@
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/theme/MobileGlass.kt	\0
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/theme/MobileGlass.kt	glassPress
 2	empty	app/src/main/java/tv/own/owntv/mobile/ui/theme/MobileTheme.kt	\0
+1	json	core/src/main/java/tv/own/owntv/core/settings/SettingsRepository.kt	category_display_mode
