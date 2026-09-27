@@ -153,12 +153,12 @@ class BackupViewModel(
      * Restore [sections]. [password] may be null even for an encrypted file: everything but the
      * saved passwords comes back, which is a fair trade for a forgotten passphrase.
      */
-    fun restore(sections: Set<BackupManager.Section>, password: String?) {
+    fun restore(sections: Set<BackupManager.Section>, password: String?, deviceSettings: Boolean = false) {
         val current = pending ?: return
         if (busy) return
         viewModelScope.launch {
             busy = true
-            backup.import(current.file, sections, password ?: current.password).fold(
+            backup.import(current.file, sections, password ?: current.password, deviceSettings = deviceSettings).fold(
                 onSuccess = {
                     outcome = Outcome.Restored(it)
                     current.file.delete()

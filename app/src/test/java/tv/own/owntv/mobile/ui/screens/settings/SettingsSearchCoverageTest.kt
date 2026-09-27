@@ -51,7 +51,7 @@ class SettingsSearchCoverageTest {
         val page = read("SettingsPlaybackPage.kt")
         val titles = Regex("""title = stringResource\(R\.string\.([a-z_0-9]+)""")
             .findAll(page).map { it.groupValues[1] }
-            .filterNot { it.endsWith("_description") || it in notRows }
+            .filterNot { it.endsWith("_description") || it.endsWith("_description_mobile") || it in notRows }
             .toSortedSet()
         assertTrue("no rows found on the Video player page — has the file changed shape?", titles.size > 20)
         assertEquals(
@@ -59,6 +59,36 @@ class SettingsSearchCoverageTest {
             emptyList<String>(),
             titles.filterNot { it in indexed }.sorted(),
         )
+    }
+
+    @Test
+    fun `every quick switch on the video player page can be found by search`() {
+        // These rows take their title from the Quick registry, not from a `title =` of their own, so
+        // the test above never saw them — Hardware decoding, Channel numbers and Measured stats were
+        // unfindable by name.
+        val quick = read("SettingsQuick.kt")
+        val titleOf = Regex("""QuickToggle\(\s*"([a-z_]+)",\s*R\.string\.([a-z_0-9]+)""")
+            .findAll(quick).associate { it.groupValues[1] to it.groupValues[2] }
+        val keys = Regex("""quickToggle\("([a-z_]+)"\)""")
+            .findAll(read("SettingsPlaybackPage.kt")).map { it.groupValues[1] }.toList()
+        assertTrue("no quick switches found on the Video player page", keys.size > 3)
+        assertEquals(
+            "Video player switches missing from the settings search index",
+            emptyList<String>(),
+            keys.map { titleOf.getValue(it) }.filterNot { it in indexed }.sorted(),
+        )
+    }
+
+    @Test
+    fun `every recording and subtitle appearance row can be found by search`() {
+        // Dialog titles and picker options on the subtitle page are parts of a row, not rows. The
+        // page's master switch is the page's own title, indexed with the leaf.
+        val notRows = setOf("settings_subtitle_color", "settings_subtitle_default", "settings_color_picker")
+        val titles = listOf("SettingsRecordingPage.kt", "SettingsSubtitleAppearancePage.kt").flatMap { page ->
+            Regex("""(?<![a-z])title = stringResource\(R\.string\.([a-z_0-9]+)""").findAll(read(page)).map { it.groupValues[1] }
+        }.filterNot { it in notRows }.toSortedSet()
+        assertTrue(titles.size >= 10)
+        assertEquals(emptyList<String>(), titles.filterNot { it in indexed })
     }
 
     @Test
@@ -81,5 +111,43 @@ class SettingsSearchCoverageTest {
             Regex("""SettingsRowEntry\([^)]*R\.string\.([a-z_0-9]*_description)""")
                 .findAll(search).map { it.groupValues[1] }.toList(),
         )
+    }
+
+    /**
+     * Every setting on every settings page, not only the Video player's. Sheet titles, picker options,
+     * one-off actions and status lines are not settings and are listed here instead; Backup and Local
+     * sync are More pages, not settings.
+     */
+    @Test
+    fun `every setting on every settings page can be found by search`() {
+        val notSettings = setOf(
+            "settings_about", "settings_app_startup_dialog", "settings_join_telegram", "settings_color_picker",
+            "settings_focus_thickness", "settings_epg_sources_add", "settings_epg_sources_fill_playlist",
+            "settings_sources_delete", "settings_sources_edit", "settings_sources_refresh_days_title",
+            "common_clear", "settings_glass_effect_title", "settings_glass_preset_custom", "settings_glass_reset_balanced",
+            "settings_mode", "settings_language_help_translate", "settings_size", "settings_metadata_active_source",
+            "settings_metadata_clear_advanced_title", "player_subtitles_connected_as", "player_subtitles_delete_action",
+            "player_subtitles_downloads", "player_subtitles_resets", "player_subtitles_sign_in", "player_subtitles_sign_out",
+            "settings_sources_add", "settings_sources_cancel", "settings_sources_info", "settings_sources_resync_now_full",
+            "settings_sources_resync_remove_full", "settings_sources_test_title", "setup_auto_refresh",
+            "setup_auto_refresh_title", "setup_default_playlist", "profiles_add_button", "profiles_delete_title",
+            "settings_catchup_timezone_device", "settings_subtitle_color", "settings_subtitle_default",
+        ) + notRows
+        val quick = read("SettingsQuick.kt")
+        val quickTitle = Regex("""QuickToggle\(\s*"([a-z_]+)",\s*R\.string\.([a-z_0-9]+)""")
+            .findAll(quick).associate { it.groupValues[1] to it.groupValues[2] }
+        val skipped = setOf("SettingsBackupPage.kt", "SettingsLocalSyncPage.kt")
+        val pages = File("src/main/java/tv/own/owntv/mobile/ui/screens/settings").listFiles { f ->
+            f.name.startsWith("Settings") && f.name.contains("Page") && f.name !in skipped
+        }.orEmpty()
+        assertTrue("no settings pages found", pages.size > 15)
+        val missing = pages.flatMap { f ->
+            val text = f.readText()
+            val titles = Regex("""(?<![a-z])title = stringResource\(R\.string\.([a-z_0-9]+)""").findAll(text).map { it.groupValues[1] } +
+                Regex("""quickToggle\("([a-z_]+)"\)""").findAll(text).mapNotNull { quickTitle[it.groupValues[1]] }
+            titles.filterNot { it.endsWith("_description") || it in notSettings || it in indexed }
+                .map { "${f.name}: $it" }.toList()
+        }.distinct().sorted()
+        assertEquals("settings missing from the settings search index", emptyList<String>(), missing)
     }
 }

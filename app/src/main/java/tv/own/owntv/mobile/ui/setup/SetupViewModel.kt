@@ -49,6 +49,7 @@ class SetupViewModel(
         username: String,
         password: String,
         userAgent: String,
+        httpReferer: String,
         autoRefresh: PlaylistRefresh,
         live: SyncScopeChoice,
         movies: SyncScopeChoice,
@@ -57,13 +58,15 @@ class SetupViewModel(
     ) = runImport {
         importer.xtream(
             name = name, server = server, username = username, password = password,
-            userAgent = userAgent, autoRefresh = autoRefresh,
+            userAgent = userAgent, httpReferer = httpReferer, autoRefresh = autoRefresh,
             live = live, movies = movies, series = series, preferHls = preferHls,
         )
     }
 
-    fun startM3u(name: String, url: String, userAgent: String, autoRefresh: PlaylistRefresh) =
-        runImport { importer.m3u(name = name, url = url, userAgent = userAgent, autoRefresh = autoRefresh) }
+    fun startM3u(name: String, url: String, userAgent: String, httpReferer: String, autoRefresh: PlaylistRefresh) =
+        runImport {
+            importer.m3u(name = name, url = url, userAgent = userAgent, httpReferer = httpReferer, autoRefresh = autoRefresh)
+        }
 
     fun startStalker(
         name: String,
@@ -74,6 +77,7 @@ class SetupViewModel(
         deviceId2: String,
         signature: String,
         userAgent: String,
+        httpReferer: String,
         autoRefresh: PlaylistRefresh,
         live: SyncScopeChoice,
         movies: SyncScopeChoice,
@@ -82,7 +86,7 @@ class SetupViewModel(
         importer.stalker(
             name = name, portalUrl = portalUrl, mac = mac, serialNumber = serialNumber,
             deviceId = deviceId, deviceId2 = deviceId2, signature = signature, userAgent = userAgent,
-            autoRefresh = autoRefresh, live = live, movies = movies, series = series,
+            httpReferer = httpReferer, autoRefresh = autoRefresh, live = live, movies = movies, series = series,
         )
     }
 
@@ -94,17 +98,22 @@ class SetupViewModel(
      */
     fun importBackup(
         file: File,
+        sections: Set<BackupManager.Section> = BackupManager.Section.entries.toSet(),
+        /** Take another device's hardware settings too — see [BackupManager.import]. */
+        deviceSettings: Boolean = false,
     ) {
         importJob?.cancel()
-        importJob = appScope.launch { importer.importBackup(file) }
+        importJob = appScope.launch { importer.importBackup(file, sections, deviceSettings) }
     }
 
     fun restoreWithPassword(
         file: File,
         password: String?,
+        sections: Set<BackupManager.Section> = BackupManager.Section.entries.toSet(),
+        deviceSettings: Boolean = false,
     ) {
         importJob?.cancel()
-        importJob = appScope.launch { importer.restoreWithPassword(file, password) }
+        importJob = appScope.launch { importer.restoreWithPassword(file, password, sections, deviceSettings) }
     }
 
     /**

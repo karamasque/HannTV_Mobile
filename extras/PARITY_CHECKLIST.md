@@ -20,6 +20,7 @@ Two rows ended somewhere other than where the mockup put them. Both are explaine
 | Xtream / M3U / Stalker sources | ✅ | Setup flow and Settings → Playlists; all parsing is core's |
 | Multiple playlists | ✅ | Playlists page; the provider name shows on rows, which matters more here than on a television |
 | Catch-up & live rewind | ✅ | The same `LiveLadder` as the television; a drag replaces the D-pad |
+| Pause and rewind live TV (saved copy) | ✅ | Core's `TimeshiftManager`; rewind/forward buttons, bar, Go live, resume popup; PiP and sound-only keep saving |
 | Series detail, seasons, episodes | ✅ | Opens on the last-watched episode |
 | Autoplay next episode / season | ✅ | Core logic, untouched. **Previous / Next** buttons joined the transport row on 2026-09-17 — until then the next episode was reachable only from the card in the last thirty seconds |
 | Resume / watch history | ✅ | Core. The **Resume playback** setting (Always / Ask / Never) was displayed but never read until 2026-09-17, so the phone always resumed silently; all three modes now behave as the television's, including its ten-second threshold |
@@ -32,6 +33,7 @@ Two rows ended somewhere other than where the mockup put them. Both are explaine
 | Profiles, PIN, restrictions | ✅ | Plus a profile picture from the phone's photos, which the television has no way to offer |
 | Backup / restore | ✅ | Including the television→phone migration path, encrypted backups included |
 | Theme, accent, Glass Effect | ✅ | The same stored values; a colour picker was added for all three colour settings |
+| App icon (eight colours) | ✅ | The same stored choice and the same restart question; the phone has no banner or TV home channel |
 | Locales | ✅ | 26 packaged, inherited from core's resources — the mockup said 24, and the catalogue has grown since |
 | Player: engine ladder, mpv/Exo | ✅ | `:player-core`, untouched, including the per-channel compatibility pin. The phone ran **half** the ladder until 2026-09-14 — one engine was watched and the other was a terminus. It now walks core's own `LiveLadder`: four engine/format rungs, each at most once, with the whole-tune budget behind Settings → "Give up after" |
 | External player handoff | ✅ | Richer here than on the television, because a phone has more players installed |
@@ -101,7 +103,8 @@ far more settled than it was. Only the mockup disagreed, and the mockup was righ
 The mockup dropped it on the grounds that phone panels do not switch refresh rate for content. Some
 now do. It exists as `autoFrameRate` on the Playback settings page, **off by default**, and it warns
 before turning on where the display cannot be asked — which is the honest shape for a setting whose
-hardware support cannot be detected reliably.
+hardware support cannot be detected reliably. Since P10 (2026-09-23) it acts: full screen only, seamless
+switches only (owner decision 7) — through the same core surface hint the television uses.
 
 ---
 

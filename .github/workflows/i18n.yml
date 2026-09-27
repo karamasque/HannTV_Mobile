@@ -31,22 +31,9 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
-    inputs:
-      force_core_source:
-        description: 'Build core from source, as a fork pull request does (ignores GPR_TOKEN)'
-        type: boolean
-        required: false
-        default: false
 
 permissions:
   contents: read
-
-# The pseudo job assembles APKs, so it resolves tv.own.owntv:core from the GitHub Packages registry
-# of ahXN00/OwnTV_Core, which needs credentials even though that repo is public. A fork pull request
-# is given no secrets, so GPR_TOKEN is empty there — see the resolve-core step below.
-env:
-  GITHUB_ACTOR: ${{ github.actor }}
-  GPR_TOKEN: ${{ secrets.GPR_TOKEN }}
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -120,10 +107,6 @@ jobs:
           # 'tools' is obsolete and Google removed it from the SDK repository; the
           # action still asks for it by default, which fails the whole setup step.
           packages: 'platform-tools'
-      - name: Resolve core
-        uses: ./.github/actions/resolve-core
-        with:
-          force-source-build: ${{ inputs.force_core_source || false }}
       - name: Assemble standard debug + release APKs
         run: ./gradlew :app:assembleStandardDebug :app:assembleStandardRelease --console=plain
       - name: Verify pseudolocale packaging

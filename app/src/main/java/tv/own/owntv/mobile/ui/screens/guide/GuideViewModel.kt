@@ -12,6 +12,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -519,7 +520,7 @@ class GuideViewModel(
                     channel = channel,
                     programme = programme,
                     source = source,
-                    timeZone = settings.resolveCatchupTimeZone(),
+                    timeZone = settings.resolveCatchupTimeZone(source),
                     xtream = xtream,
                 )
                 return@launch
@@ -696,6 +697,30 @@ class GuideViewModel(
     }
 
     /**
+     * The review sheet's "Include guide logos" tick. Starts ticked when some EPG source already has
+     * "Use this guide's logos" on; while ticked, every match this run makes also turns that option on for
+     * the EPG sources that carry a logo for it. Same rule as the television.
+     */
+    private val _includeGuideLogos = MutableStateFlow(false)
+    val includeGuideLogos: StateFlow<Boolean> = _includeGuideLogos.asStateFlow()
+
+    fun setIncludeGuideLogos(include: Boolean) {
+        _includeGuideLogos.value = include
+    }
+
+    /** Guide ids the current run applied on its own, before the review sheet opened. */
+    private var runApplied: List<String> = emptyList()
+
+    private suspend fun includeLogosIfTicked(epgIds: List<String>) {
+        if (_includeGuideLogos.value) tv.own.owntv.core.epg.EpgLogoStore.includeLogosFor(settings, epgDao, runApplied + epgIds)
+    }
+
+    private suspend fun openReview(suggestions: List<EpgMatchSuggestion>) {
+        if (suggestions.isNotEmpty()) _includeGuideLogos.value = settings.epgUseLogos.first().isNotEmpty()
+        _review.value = suggestions
+    }
+
+    /**
      * Match every channel with no working guide against the guide's own channels, by name.
      *
      * The confident hits are applied outright; the rest are queued for review. This is the same run
@@ -718,10 +743,11 @@ class GuideViewModel(
                     return@launch
                 }
                 val applied = outcome.applied
+                runApplied = applied.map { it.second }
 
-                _review.value = outcome.review.map {
+                openReview(outcome.review.map {
                     EpgMatchSuggestion(it.channel, it.epgChannelId, it.displayName, it.score)
-                }
+                })
                 _matchSummary.value = when {
                     applied.isEmpty() && outcome.review.isEmpty() -> EpgMatchSummary.AllMatched
                     // Everything found pointed at a guide channel with nothing scheduled. Reporting a
@@ -751,9 +777,10 @@ class GuideViewModel(
                 if (best == null) {
                     _matchSummary.value = EpgMatchSummary.NoMatch(channel.name)
                 } else {
-                    _review.value = listOf(
+                    runApplied = emptyList()
+                    openReview(listOf(
                         EpgMatchSuggestion(channel, best.epgChannelId, best.displayName, best.score),
-                    )
+                    ))
                     // Say so up front when the winner's guide channel is empty, instead of letting the
                     // user accept it and find a blank row. Same warning the television gives.
                     if (!best.hasProgrammes) _matchSummary.value = EpgMatchSummary.MatchedNoProgrammes
@@ -770,6 +797,7 @@ class GuideViewModel(
             val key = CustomizeKeys.channel(suggestion.channel)
             customize.setEpgMatch(pid, MediaType.LIVE, key, suggestion.epgChannelId)
             _review.value = _review.value.filterNot { it.channel.id == suggestion.channel.id }
+            includeLogosIfTicked(listOf(suggestion.epgChannelId))
             awaitMatches(listOf(key))
             fillMatched(listOf(suggestion.epgChannelId))
         }
@@ -788,6 +816,7 @@ class GuideViewModel(
             applyMatches(pid, pairs)
             val keys = pairs.keys
             _review.value = emptyList()
+            includeLogosIfTicked(all.map { it.epgChannelId })
             awaitMatches(keys)
             fillMatched(all.map { it.epgChannelId })
         }
@@ -795,6 +824,8 @@ class GuideViewModel(
 
     /** Close the review list and clear the outcome line. */
     fun clearReview() {
+        // Closing the sheet still honours the tick for the matches the run applied on its own.
+        if (_review.value.isNotEmpty() && runApplied.isNotEmpty()) viewModelScope.launch { includeLogosIfTicked(emptyList()) }
         _review.value = emptyList()
         _matchSummary.value = null
     }

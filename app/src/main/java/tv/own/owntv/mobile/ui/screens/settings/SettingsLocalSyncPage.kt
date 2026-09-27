@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -28,6 +29,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -378,6 +380,7 @@ private fun FindDeviceSheet(vm: LocalSyncViewModel) {
                 value = manual,
                 onValueChange = { manual = it },
                 label = stringResource(R.string.local_sync_manual_address_label),
+                imeAction = ImeAction.Done,
             )
         }
         SheetButtons(
@@ -394,7 +397,11 @@ private fun PinSheet(onSubmit: (String) -> Unit, onDismiss: () -> Unit) {
     var pin by remember { mutableStateOf("") }
     MobileBottomSheet(onDismissRequest = onDismiss, title = stringResource(R.string.local_sync_enter_pin)) {
         Column(
-            modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
+            modifier = Modifier
+                .heightIn(max = sheetListHeight())
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(horizontal = MobileDimens.ScreenPaddingH),
             verticalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
         ) {
             Note(stringResource(R.string.local_sync_enter_pin_description))
@@ -403,6 +410,8 @@ private fun PinSheet(onSubmit: (String) -> Unit, onDismiss: () -> Unit) {
                 onValueChange = { pin = it.filter(Char::isDigit).take(PIN_LENGTH) },
                 label = stringResource(R.string.local_sync_pin_label),
                 keyboardType = androidx.compose.ui.text.input.KeyboardType.NumberPassword,
+                imeAction = ImeAction.Done,
+                onImeDone = { if (pin.length == PIN_LENGTH) onSubmit(pin) },
             )
         }
         SheetButtons(
@@ -507,9 +516,11 @@ private fun SectionsSheet(
 private fun ConfirmSheet(
     preview: BackupManager.Preview,
     direction: SyncDirection,
-    onConfirm: () -> Unit,
+    onConfirm: (Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
+    // The other device's hardware settings and engine pins: offered only when it sent some, unticked.
+    var deviceSettings by remember(preview) { mutableStateOf(false) }
     MobileBottomSheet(onDismissRequest = onDismiss, title = stringResource(R.string.local_sync_confirm_title)) {
         Column(
             modifier = Modifier
@@ -532,12 +543,20 @@ private fun ConfirmSheet(
                 PreviewLine(R.string.local_sync_change_deletions, preview.deletions)
                 if (preview.hasCustomizations) Note(stringResource(R.string.local_sync_change_customize))
             }
+            if (preview.hasDeviceSettings) {
+                CheckRow(
+                    label = stringResource(R.string.settings_backup_device_settings),
+                    description = stringResource(R.string.settings_backup_device_settings_desc),
+                    checked = deviceSettings,
+                    onToggle = { deviceSettings = it },
+                )
+            }
             if (direction == SyncDirection.MERGE) Note(stringResource(R.string.local_sync_merge_note))
         }
         SheetButtons(
             confirm = stringResource(R.string.local_sync_apply),
             confirmEnabled = !preview.isEmpty,
-            onConfirm = onConfirm,
+            onConfirm = { onConfirm(deviceSettings) },
             onDismiss = onDismiss,
         )
     }

@@ -33,6 +33,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextDirection
@@ -228,24 +229,27 @@ private fun SkipBody(skip: GestureFeedback.Skip) {
 private fun Chevrons(forward: Boolean) {
     // NEVER hand a scaled duration to infiniteRepeatable: at zero it is a divide-by-zero on the very
     // next frame. Animations off skips the transition outright.
+    // The animated State, read only in each mark's graphicsLayer (draw phase), so the sweep does not
+    // recompose the row every frame. Null means all three lit.
     val phase = if (LocalAnimations.current == AnimationLevel.OFF) {
-        1f
+        null
     } else {
         rememberInfiniteTransition(label = "chevrons").animateFloat(
             initialValue = 0f,
             targetValue = 3f,
             animationSpec = infiniteRepeatable(tween(CHEVRON_MS), RepeatMode.Restart),
             label = "chevronPhase",
-        ).value
+        )
     }
     Row(horizontalArrangement = Arrangement.spacedBy(1.dp)) {
         repeat(3) { index ->
-            val lit = phase >= index
             Icon(
                 imageVector = if (forward) MobileIcons.FastForward else MobileIcons.FastRewind,
                 contentDescription = null,
-                tint = Color.White.copy(alpha = if (lit) 1f else 0.35f),
-                modifier = Modifier.size(16.dp),
+                tint = Color.White,
+                modifier = Modifier
+                    .size(16.dp)
+                    .graphicsLayer { alpha = if ((phase?.value ?: 1f) >= index) 1f else 0.35f },
             )
         }
     }

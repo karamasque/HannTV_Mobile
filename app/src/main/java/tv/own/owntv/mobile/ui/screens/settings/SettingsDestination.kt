@@ -46,6 +46,12 @@ fun SettingsLeafPage(leaf: SettingsLeaf, onOpenRoute: (String) -> Unit, onAddSou
         SettingsLeaf.VIDEO_PLAYER -> SettingsVideoPlayerPage(
             onOpenLeaf = { target -> onOpenRoute(target.route) },
         )
+        SettingsLeaf.VP_PLAYER, SettingsLeaf.VP_PICTURE, SettingsLeaf.VP_STREAMING, SettingsLeaf.VP_LIVE,
+        SettingsLeaf.VP_LIVE_TUNING, SettingsLeaf.VP_CONTROLS, SettingsLeaf.VP_MULTIVIEW, SettingsLeaf.VP_SOUND,
+        SettingsLeaf.VP_LANGUAGES, SettingsLeaf.VP_RESUME, SettingsLeaf.VP_DIAGNOSTICS -> SettingsVideoPlayerPage(
+            onOpenLeaf = { target -> onOpenRoute(target.route) },
+            category = leaf,
+        )
         SettingsLeaf.SUBTITLE_APPEARANCE -> SettingsSubtitleAppearancePage()
         SettingsLeaf.RECORDING -> SettingsRecordingPage()
         SettingsLeaf.HOME -> SettingsHomePage()

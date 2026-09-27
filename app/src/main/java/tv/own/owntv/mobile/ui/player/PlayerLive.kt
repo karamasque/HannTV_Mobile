@@ -33,6 +33,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -321,8 +322,10 @@ private fun SlotLabel(text: String, color: Color) {
 internal fun LiveStateBadge(offsetSec: Int?, modifier: Modifier = Modifier) {
     val behind = offsetSec != null && offsetSec > 1
     val tint = if (behind) BehindAmber else LiveRed
+    // The animated State, not its value: it is read in the dot's graphicsLayer (draw phase), so the
+    // pulse does not recompose the badge every frame. Null means a steady dot.
     val pulse = if (behind || LocalAnimations.current == AnimationLevel.OFF) {
-        1f
+        null
     } else {
         val transition = rememberInfiniteTransition(label = "liveDot")
         transition.animateFloat(
@@ -330,7 +333,7 @@ internal fun LiveStateBadge(offsetSec: Int?, modifier: Modifier = Modifier) {
             targetValue = 0.25f,
             animationSpec = infiniteRepeatable(tween(PULSE_MS), RepeatMode.Reverse),
             label = "liveDotAlpha",
-        ).value
+        )
     }
     Row(
         modifier
@@ -343,8 +346,9 @@ internal fun LiveStateBadge(offsetSec: Int?, modifier: Modifier = Modifier) {
         Box(
             Modifier
                 .size(9.dp)
+                .graphicsLayer { alpha = pulse?.value ?: 1f }
                 .clip(RoundedCornerShape(50))
-                .background(Color.White.copy(alpha = if (behind) 1f else pulse)),
+                .background(Color.White),
         )
         Text(
             if (behind) {

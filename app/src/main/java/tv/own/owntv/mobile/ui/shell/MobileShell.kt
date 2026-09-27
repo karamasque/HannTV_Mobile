@@ -194,6 +194,12 @@ fun MobileShell(
 
     // 600dp is Material's compact/medium boundary: below it a rail would eat the content.
     val useRail = windowWidthDp >= 600
+    // Compact phones get tighter shell chrome so content keeps usable space in portrait: the same
+    // 48 dp touch targets and the same islands, with less air around them. Tablet/landscape keeps
+    // the existing insets untouched.
+    val compact = !useRail
+    val shellInsetH = if (compact) CompactShellInset else MobileDimens.ShellInset
+    val shellGapV = if (compact) CompactShellGap else MobileDimens.ShellGap
     val destinations =
         (if (useRail) MobileDestination.rail else MobileDestination.bottomBar).visible(sections)
     // A detail route ("live/42/false") keeps its tab selected and its tab's title: on a phone the
@@ -397,9 +403,9 @@ fun MobileShell(
                         ScaffoldDefaults.contentWindowInsets.only(WindowInsetsSides.Horizontal),
                     )
                     .padding(
-                        start = MobileDimens.ShellInset,
-                        end = MobileDimens.ShellInset,
-                        bottom = MobileDimens.ShellGap,
+                        start = shellInsetH,
+                        end = shellInsetH,
+                        bottom = shellGapV,
                     ),
             ) {
                 TopAppBar(
@@ -497,6 +503,7 @@ fun MobileShell(
                         PlaylistChip(
                             playlists = playlists,
                             activeId = activePlaylistId,
+                            compact = compact,
                             onClick = { playlistSheet = true },
                         )
                     },
@@ -514,7 +521,7 @@ fun MobileShell(
                     // The gap above the island is the page's own bottom inset, so it is not counted
                     // twice; this only holds the island clear of the gesture bar.
                     Modifier.navigationBarsPadding(),
-                    verticalArrangement = Arrangement.spacedBy(MobileDimens.ShellGap),
+                    verticalArrangement = Arrangement.spacedBy(shellGapV),
                 ) {
                     if (showMini && miniStyle == SettingsRepository.MiniPlayerStyle.DOCKED) {
                         // A channel wins when there is one, because the two tuners cannot both be
@@ -529,7 +536,7 @@ fun MobileShell(
                             onExpand = { navController.navigate(PLAYER_ROUTE) },
                             onStop = { if (live != null) tuner.stop() else vodTuner.stop() },
                             remote = castEngine,
-                            modifier = Modifier.padding(horizontal = MobileDimens.ShellInset),
+                            modifier = Modifier.padding(horizontal = shellInsetH),
                         )
                     }
                     if (!useRail) {
@@ -537,7 +544,7 @@ fun MobileShell(
                             containerColor = Color.Transparent,
                             windowInsets = WindowInsets(0, 0, 0, 0),
                             modifier = Modifier
-                                .padding(horizontal = MobileDimens.ShellInset)
+                                .padding(horizontal = shellInsetH)
                                 .height(MobileDimens.NavIslandHeight)
                                 .glassSurface(GlassSurface.SIDEBAR, MobileNavShape)
                                 .clip(MobileNavShape),
@@ -579,7 +586,7 @@ fun MobileShell(
         val bottomIsland = !useRail || (showMini && miniStyle == SettingsRepository.MiniPlayerStyle.DOCKED)
         val shellBottom = when {
             fullscreen -> 0.dp
-            bottomIsland -> MobileDimens.ShellInset
+            bottomIsland -> shellInsetH
             else -> (MobileDimens.ShellInset - insets.calculateBottomPadding()).coerceAtLeast(0.dp)
         }
 
@@ -629,8 +636,9 @@ fun MobileShell(
                     .padding(
                         // Against a rail the page keeps the smaller gap; against the screen edge it
                         // keeps the full inset, so the wallpaper frames the whole shell evenly.
-                        start = if (fullscreen) 0.dp else if (useRail) MobileDimens.ShellGap else MobileDimens.ShellInset,
-                        end = if (fullscreen) 0.dp else MobileDimens.ShellInset,
+                        // Compact phones use the tighter inset to keep one-handed content width.
+                        start = if (fullscreen) 0.dp else if (useRail) MobileDimens.ShellGap else shellInsetH,
+                        end = if (fullscreen) 0.dp else shellInsetH,
                         bottom = shellBottom,
                     )
                     .glassSurface(GlassSurface.PANELS, pageShape)
@@ -756,6 +764,7 @@ private fun PlaylistChip(
     playlists: List<SourceEntity>,
     activeId: Long,
     onClick: () -> Unit,
+    compact: Boolean = false,
 ) {
     if (playlists.isEmpty()) return
     val label = when {
@@ -769,7 +778,7 @@ private fun PlaylistChip(
         verticalAlignment = Alignment.CenterVertically,
         modifier = Modifier
             .padding(start = MobileDimens.GapSmall)
-            .widthIn(max = PlaylistChipMaxWidth)
+            .widthIn(max = if (compact) PlaylistChipMaxWidthCompact else PlaylistChipMaxWidth)
             .clip(shape)
             .background(MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.55f))
             .then(
@@ -821,6 +830,15 @@ private val MobileDestination.accentColor: Color
         MobileDestination.DOWNLOADS-> Color(0xFF22D3EE) // cyan
         MobileDestination.SETTINGS -> Color(0xFF94A3B8) // slate
     }
+
+/** Compact phones give the bar's title priority: the chip stays a badge, not a banner. */
+private val PlaylistChipMaxWidthCompact = 96.dp
+
+/** Tighter shell chrome for compact phones in portrait. Touch targets stay 48 dp; only air is cut. */
+private val CompactShellInset = 8.dp
+
+/** Vertical gap between shell islands on compact phones. */
+private val CompactShellGap = 6.dp
 
 @Composable
 private fun NavIcon(destination: MobileDestination, selected: Boolean = false) {

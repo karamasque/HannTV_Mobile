@@ -199,6 +199,7 @@
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodActions.kt	tmdb_details
 1	protocol	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodTuner.kt	EPISODE
 1	protocol	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodTuner.kt	MOVIE
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/library/VodTuner.kt	SERIES
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/ChannelActions.kt	\0
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/ChannelActions.kt	+
 2	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/ChannelActions.kt	30
@@ -217,28 +218,6 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/ChannelActions.kt	−
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/ChannelDetailScreen.kt	jump-back
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveScreen.kt	live
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	$label — $reason
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	$reason — gave up after ${ladderBudgetMs.value / 1000}s
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	${if (onMpv) "mpv" else "exoplayer"} (setting)
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	'${channel.name}' falling back to $label ($reason)
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	'${channel.name}' opened on mpv
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	'${channel.name}' — giving up: $detail
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	'${channel.name}' — no fallback left ($detail)
-2	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	'${channel.name}': $detail
-1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	ExoPlayer
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	LiveEngine
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	engine toggle '${channel.name}' -> ${if (goToMpv) "mpv" else "exoplayer"}
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	engine: $message
-2	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	exoplayer
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	exoplayer (drm)
-3	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	mpv
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	mpv (panel refuses segments)
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	mpv (pinned)
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	mpv couldn't play it: ${failure.second}
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	mpv handoff for '${channel.name}' abandoned — the channel changed while ExoPlayer released
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	mpv never opened it (${MPV_OPEN_TIMEOUT_MS / 1000}s, no picture and no error)
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	no picture within ${ladderBudgetMs.value / 1000}s of tuning
-1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveTuner.kt	tune '${channel.name}' -> $why [${preference.name}]
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveViewModel.kt	\0
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/live/LiveViewModel.kt	manual
 2	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/recordings/RecordingsScreen.kt	\0
@@ -342,6 +321,17 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	recording
 1	uri	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	subtitles
 1	uri	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-controls
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-diagnostics
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-languages
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-live
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-live-tuning
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-multiview
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-picture
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-player
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-resume
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-sound
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	video-streaming
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	weather
 3	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLocalSyncPage.kt	\0
 1	url	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLocalSyncPage.kt	http://
@@ -455,41 +445,36 @@
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackGroupPage.kt	pip_enabled
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackGroupPage.kt	pip_snap
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackGroupPage.kt	tv-only-note
-4	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	\0
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	ara
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	deu
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	eng
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	fra
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	hin
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	ita
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	jpn
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	kor
+7	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	\0
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	categories
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	controls
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	languages
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	latency
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	latency-secs
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	latency-sources
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	live
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	live-engine
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	live-engine-reset
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	live-engine-sources
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	measured-stats
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	nld
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	por
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	multiview
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	picture
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	player-more
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	preroll
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	preroll-sources
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	resume
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	rus
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	spa
-1	json	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	sub-style
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	sound
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	streaming
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	tune-timeout
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	tur
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	tune-timeout-sources
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vod-engine
-1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	volume
+1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vod-engine-sources
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vp_autoplay
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vp_channel_numbers
-1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vp_deinterlace
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vp_hdr
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vp_hw
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vp_logging
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	vp_measured_stats
-2	locale	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaybackPage.kt	zho
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaylistsPage.kt	\0
 1	log	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsPlaylistsPage.kt	add-source
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	audio_on_mobile_data
@@ -505,7 +490,6 @@
 1	technical	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	quick_hdr
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	vp_autoplay
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	vp_channel_numbers
-1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	vp_deinterlace
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	vp_hdr
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	vp_hw
 1	preference-key	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsQuick.kt	vp_logging
@@ -564,7 +548,7 @@
 2	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/customize/CustomizeSpanUi.kt	\0
 1	json	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/customize/CustomizeSupport.kt	new
 1	empty	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/customize/CustomizeViewModel.kt	\0
-14	empty	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
+15	empty	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
 1	file-path	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	playlists
 1	mime	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupFiles.kt	*/*
 1	file-path	app/src/main/java/tv/own/owntv/mobile/ui/setup/SetupFiles.kt	picked

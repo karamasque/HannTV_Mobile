@@ -51,6 +51,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import org.koin.compose.koinInject
+import tv.own.owntv.core.brand.AppIcon
+import tv.own.owntv.mobile.ui.components.AppIconPicker
+import tv.own.owntv.mobile.ui.components.BrandLockup
 import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.i18n.LocaleStore
 import tv.own.owntv.core.i18n.SupportedLocales
@@ -342,9 +345,9 @@ fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
     val scope = rememberCoroutineScope()
     val zoom by settings.uiZoomPercent.collectAsStateWithLifecycle(UiZoom.DEFAULT)
     val fonts by settings.fontCustomization.collectAsStateWithLifecycle(FontCustomization())
+    val appIcon by settings.appIcon.collectAsStateWithLifecycle(AppIcon.DEFAULT)
     var pendingLowZoom by remember { mutableStateOf<Int?>(null) }
     var lowZoomAccepted by remember { mutableStateOf(zoom < UiZoom.LOW_RAM_WARN) }
-
     RaySetupScaffold(
         stepIndex = 3,
         stepTitle = stringResource(R.string.setup_step_display),
@@ -375,7 +378,7 @@ fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
                 range = UiZoom.MIN..UiZoom.MAX,
                 steps = stepsFor(UiZoom.MIN, UiZoom.MAX, UiZoom.STEP),
                 onValueChange = { raw ->
-                    val snapped = ((raw + UiZoom.STEP / 2) / UiZoom.STEP) * UiZoom.STEP
+                    val snapped = UiZoom.clamp(((raw + UiZoom.STEP / 2) / UiZoom.STEP) * UiZoom.STEP)
                     if (snapped < UiZoom.LOW_RAM_WARN && !lowZoomAccepted) {
                         pendingLowZoom = snapped
                     } else {
@@ -391,13 +394,21 @@ fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
                 range = UiFontScale.MIN..UiFontScale.MAX,
                 steps = stepsFor(UiFontScale.MIN, UiFontScale.MAX, UiFontScale.STEP),
                 onValueChange = { raw ->
-                    val snapped = ((raw + UiFontScale.STEP / 2) / UiFontScale.STEP) * UiFontScale.STEP
+                    val snapped = UiFontScale.clamp(((raw + UiFontScale.STEP / 2) / UiFontScale.STEP) * UiFontScale.STEP)
                     scope.launch {
                         settings.setFontCustomization(fonts.copy(sizePercent = snapped))
                     }
                 },
                 subtitle = "${fonts.sizePercent}%",
             )
+
+            Text(
+                text = stringResource(R.string.settings_app_icon),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White,
+            )
+            AppIconPicker(selected = appIcon, onPick = { scope.launch { settings.setAppIcon(it) } })
 
             // Live Readability Preview Card
             Box(
@@ -417,6 +428,7 @@ fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
                 )
             }
         }
+
     }
 
     pendingLowZoom?.let { target ->
@@ -427,7 +439,7 @@ fun DisplaySizeStep(onNext: () -> Unit, onBack: () -> Unit) {
             text = {
                 Text(
                     stringResource(
-                        R.string.settings_low_zoom_warning,
+                        R.string.settings_low_zoom_warning_mobile,
                         UiZoom.LOW_RAM_WARN,
                         UiZoom.LOW_RAM_WARN,
                     ),

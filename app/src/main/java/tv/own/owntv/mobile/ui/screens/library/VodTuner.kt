@@ -30,6 +30,7 @@ import tv.own.owntv.core.player.ExternalPlayerLauncher
 import tv.own.owntv.core.player.enginePinKey
 import tv.own.owntv.core.database.dao.resolveExistingProfileId
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.settings.SourceOverrides
 import tv.own.owntv.core.stalker.ReconnectUrlProvider
 import tv.own.owntv.core.stalker.StreamUrlResolver
 import tv.own.owntv.core.subtitles.SubtitleController
@@ -211,7 +212,7 @@ class VodTuner(
                 logoUrl = movie.posterUrl,
                 isLive = false,
                 startPositionMs = startPositionMs,
-                httpHeaders = movie.httpHeaders,
+                httpHeaders = SourceOverrides.headersWithReferer(movie.httpHeaders, source),
                 drm = movie.drmConfig != null,
             ),
         )
@@ -223,10 +224,11 @@ class VodTuner(
                 isLive = false,
                 startPositionMs = startPositionMs,
                 userAgent = source?.userAgent,
-                httpHeaders = movie.httpHeaders,
+                httpHeaders = SourceOverrides.headersWithReferer(movie.httpHeaders, source),
                 drmConfig = movie.drmConfig,
                 contentKey = enginePinKey(movie.sourceId, "MOVIE", movie.remoteId),
                 reconnectProvider = reconnectFor(source, movie.streamUrl),
+                vodEngineOverride = SourceOverrides.vodEngineOf(source),
             )
         }
         began(pid, VodPlayback(MediaType.MOVIE, movie.id, movie.name, posterUrl = movie.posterUrl, sourceId = movie.sourceId), handedOver)
@@ -277,7 +279,7 @@ class VodTuner(
                 logoUrl = show.posterUrl,
                 isLive = false,
                 startPositionMs = startPositionMs,
-                httpHeaders = episode.httpHeaders,
+                httpHeaders = SourceOverrides.headersWithReferer(episode.httpHeaders, source),
                 drm = episode.drmConfig != null,
             ),
         )
@@ -290,6 +292,8 @@ class VodTuner(
                         subtitle = episodeLabel(ep),
                         logoUrl = show.posterUrl,
                         contentKey = enginePinKey(show.sourceId, "EPISODE", ep.remoteId),
+                        // v44 — audio/subtitle choices are remembered per series (owner decision 11).
+                        trackKey = enginePinKey(show.sourceId, "SERIES", show.remoteId),
                         seasonNumber = ep.seasonNumber,
                         episodeNumber = ep.episodeNumber,
                     ),
@@ -300,13 +304,14 @@ class VodTuner(
                     } else {
                         null
                     },
-                    httpHeaders = ep.httpHeaders,
+                    httpHeaders = SourceOverrides.headersWithReferer(ep.httpHeaders, source),
                     drmConfig = ep.drmConfig,
                 )
             },
             startIndex = startIndex,
             startPositionMs = startPositionMs,
             userAgent = source?.userAgent,
+            vodEngineOverride = SourceOverrides.vodEngineOf(source),
         )
         began(pid, VodPlayback(MediaType.EPISODE, episode.id, title, subtitle, show.posterUrl, show.id, show.sourceId), handedOver)
         val parentTmdbId = runCatching { metadata.resolveSeries(show)?.tmdbId?.toLong() }.getOrNull()
@@ -551,7 +556,7 @@ class VodTuner(
             url = url,
             title = title,
             userAgent = source?.userAgent,
-            httpHeaders = httpHeaders,
+            httpHeaders = SourceOverrides.headersWithReferer(httpHeaders, source),
         )
         runCatching {
             withContext(Dispatchers.IO) {

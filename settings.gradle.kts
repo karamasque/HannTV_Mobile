@@ -16,6 +16,11 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
+        maven {
+            name = "OwnTV"
+            url = uri("https://ahxn00.github.io/OwnTV_Core/maven")
+            content { includeGroup("tv.own.owntv") }
+        }
     }
 }
 

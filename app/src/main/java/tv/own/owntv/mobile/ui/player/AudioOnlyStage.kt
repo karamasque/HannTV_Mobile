@@ -2,6 +2,9 @@ package tv.own.owntv.mobile.ui.player
 
 import tv.own.owntv.mobile.ui.theme.LocalAccentOnVideo
 import tv.own.owntv.mobile.ui.components.MobileIcons
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -17,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -32,6 +36,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
@@ -40,15 +45,13 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import coil3.compose.AsyncImage
 import org.koin.compose.koinInject
 import tv.own.owntv.mobile.R
-import tv.own.owntv.mobile.playback.SleepTimer
+import tv.own.owntv.player.ScreenOff
+import tv.own.owntv.player.SleepTimer
 import tv.own.owntv.mobile.ui.components.MobileBottomSheet
 import tv.own.owntv.mobile.ui.components.MobileListRow
 import tv.own.owntv.mobile.ui.components.SheetScroll
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 import tv.own.owntv.mobile.ui.theme.MobileSheetShape
-
-/** What the sleep timer offers, in minutes. Round numbers, because nobody falls asleep to 37. */
-private val SLEEP_MINUTES = intArrayOf(15, 30, 45, 60, 90)
 
 /** The artwork tile, big enough to read a channel logo on and small enough for landscape. */
 private val ARTWORK_SIZE = 132.dp
@@ -176,6 +179,8 @@ fun SleepTimerSheet(
     sleepTimer: SleepTimer = koinInject(),
 ) {
     val remaining by sleepTimer.remainingMs.collectAsStateWithLifecycle()
+    // Only while a movie or episode plays; live and catch-up have "End of programme" instead.
+    val endKind = remember { sleepTimer.itemEndKind() }
     MobileBottomSheet(onDismissRequest = onDismiss, title = stringResource(R.string.player_sleep_timer)) {
         SheetScroll {
             if (remaining != null) {
@@ -187,7 +192,7 @@ fun SleepTimerSheet(
                     },
                 )
             }
-            SLEEP_MINUTES.forEach { minutes ->
+            SleepTimer.CHOICES_MINUTES.forEach { minutes ->
                 MobileListRow(
                     title = stringResource(R.string.player_duration_minutes, minutes),
                     onClick = {
@@ -196,9 +201,9 @@ fun SleepTimerSheet(
                     },
                 )
             }
-            // Only with a guide behind it: "end of programme" with no programme is a button that
-            // stops the stream at once.
-            programmeEndMs?.let { endMs ->
+            // Only with a guide behind it, and only while that programme is still on: "end of
+            // programme" with no programme, or one already over, is a button that stops the stream at once.
+            programmeEndMs?.takeIf { it > System.currentTimeMillis() }?.let { endMs ->
                 MobileListRow(
                     title = stringResource(R.string.player_sleep_timer_end_of_programme),
                     onClick = {
@@ -207,16 +212,50 @@ fun SleepTimerSheet(
                     },
                 )
             }
+            endKind?.let { kind ->
+                MobileListRow(
+                    title = stringResource(if (kind == SleepTimer.EndKind.EPISODE) R.string.player_sleep_timer_end_of_episode else R.string.player_sleep_timer_end_of_movie),
+                    onClick = {
+                        sleepTimer.startUntilItemEnd()
+                        onDismiss()
+                    },
+                )
+            }
+            ScreenOffRow()
         }
     }
 }
 
-/** The countdown reads in whole minutes, rounded up: "Stops in 1 min" until it really is over. */
+/**
+ * "Also turn off the screen": on is the system grant itself ([ScreenOff]), re-read after the system
+ * screen answers rather than stored. Turning it off gives the grant back.
+ */
 @Composable
-private fun minutesLabel(remainingMs: Long): String {
-    val minutes = ((remainingMs + 59_999L) / 60_000L).toInt()
-    return stringResource(R.string.player_duration_minutes, minutes)
+private fun ScreenOffRow(screenOff: ScreenOff = koinInject()) {
+    val context = LocalContext.current
+    var allowed by remember { mutableStateOf(screenOff.isAllowed()) }
+    val ask = rememberLauncherForActivityResult(ActivityResultContracts.StartActivityForResult()) { allowed = screenOff.isAllowed() }
+    val toggle: () -> Unit = {
+        if (allowed) {
+            screenOff.revoke()
+            allowed = false
+        } else {
+            runCatching { ask.launch(screenOff.requestIntent()) }.onFailure {
+                Toast.makeText(context, R.string.player_sleep_timer_screen_off_unavailable, Toast.LENGTH_LONG).show()
+            }
+        }
+    }
+    MobileListRow(
+        title = stringResource(R.string.player_sleep_timer_screen_off),
+        trailing = { Switch(checked = allowed, onCheckedChange = { toggle() }) },
+        onClick = toggle,
+    )
 }
+
+/** The countdown reads in whole minutes, rounded up — see [SleepTimer.minutesLeft]. */
+@Composable
+private fun minutesLabel(remainingMs: Long): String =
+    stringResource(R.string.player_duration_minutes, SleepTimer.minutesLeft(remainingMs))
 
 /**
  * Something moving, so a screen with no picture still looks like it is playing.
@@ -235,9 +274,10 @@ private fun minutesLabel(remainingMs: Long): String {
  */
 @Composable
 fun Waveform(active: Boolean, modifier: Modifier = Modifier) {
-    val transition = rememberInfiniteTransition(label = "waveform")
+    // Paused draws flat bars, so no transition exists then: nothing ticks frames behind a still stub.
+    val transition = if (active) rememberInfiniteTransition(label = "waveform") else null
     // Each bar swings on its own clock, or the row would pump as one block.
-    val heights = WAVE_PEAKS.mapIndexed { index, peak ->
+    val heights = transition?.let { WAVE_PEAKS.mapIndexed { index, peak ->
         transition.animateFloat(
             initialValue = 0.25f,
             targetValue = peak,
@@ -247,16 +287,16 @@ fun Waveform(active: Boolean, modifier: Modifier = Modifier) {
             ),
             label = "bar$index",
         )
-    }
+    } }
     // Over the picture — or, here, over where the picture would be. The scheme's primary is a dark
     // accent on a dark scene in the light theme.
     val color = LocalAccentOnVideo.current
     Canvas(modifier.size(width = WAVE_WIDTH, height = WAVE_HEIGHT)) {
         val gap = size.width * 0.12f
         val barWidth = (size.width - gap * (WAVE_PEAKS.size - 1)) / WAVE_PEAKS.size
-        heights.forEachIndexed { index, height ->
+        WAVE_PEAKS.indices.forEach { index ->
             // Flat only when the stream really is paused, which is the one thing it should say.
-            val fraction = if (active) height.value else WAVE_RESTING
+            val fraction = heights?.get(index)?.value ?: WAVE_RESTING
             val barHeight = size.height * fraction
             drawRoundRect(
                 color = color,

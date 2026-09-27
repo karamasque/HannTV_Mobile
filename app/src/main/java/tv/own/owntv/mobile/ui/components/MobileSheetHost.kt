@@ -288,7 +288,10 @@ private fun BoxScope.SheetLayer(entry: SheetEntry) {
             .background(MaterialTheme.colorScheme.scrim.copy(alpha = SCRIM_ALPHA * shown * (1f - backProgress.value)))
             // Tapping away is a dismissal, and it is the sheet that animates out rather than the
             // whole layer blinking off. The scrim also swallows the touches the page behind must not
-            // receive while a modal sheet is open.
+            // receive while a modal sheet is open. It must never take focus: it is a full-screen
+            // clickable, so IME Next/Done traversal would otherwise land on it instead of the next
+            // field or the keyboard dismiss.
+            .focusProperties { canFocus = false }
             .clickable(
                 interactionSource = remember { MutableInteractionSource() },
                 indication = null,

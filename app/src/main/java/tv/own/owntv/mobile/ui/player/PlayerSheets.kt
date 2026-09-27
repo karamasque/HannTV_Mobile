@@ -75,6 +75,8 @@ fun PlayerSheetHost(
     /** "Go back to…" — the offsets on offer, and what to do with the chosen one. */
     catchup: CatchupOptions?,
     onDismiss: () -> Unit,
+    /** When the programme on air ends, for the sleep timer's "End of programme"; null offers no such row. */
+    programmeEndMs: Long? = null,
 ) {
     when (sheet) {
         PlayerSheet.VOLUME -> VolumeSheet(player, onDismiss)
@@ -89,11 +91,13 @@ fun PlayerSheetHost(
         PlayerSheet.SUBTITLE_SEARCH -> SubtitleSearchSheet(onDismiss)
         PlayerSheet.AUDIO -> AudioSheet(player, onDismiss)
         PlayerSheet.ASPECT -> AspectSheet(player, onDismiss)
+        PlayerSheet.QUALITY -> QualitySheet(player, onDismiss)
         PlayerSheet.SPEED -> SpeedSheet(player, onDismiss)
         PlayerSheet.INFO -> StreamInfoSheet(player, onDismiss)
         PlayerSheet.CHANNELS -> ChannelSheet(channels, onTuneToNumber, onPickChannel, onDismiss)
         PlayerSheet.HISTORY -> HistorySheet(channels, onPickChannel, onDismiss)
         PlayerSheet.CATCHUP -> catchup?.let { CatchupSheet(it, onDismiss) } ?: onDismiss()
+        PlayerSheet.SLEEP_TIMER -> SleepTimerSheet(programmeEndMs = programmeEndMs, onDismiss = onDismiss)
     }
 }
 
@@ -328,6 +332,24 @@ private fun AspectSheet(player: PlaybackEngine, onDismiss: () -> Unit) {
                     title = stringResource(mode.labelRes),
                     subtitle = if (mode == current) stringResource(R.string.common_on) else null,
                     onClick = { player.setZoomModeByUser(mode); onDismiss() },
+                )
+            }
+        }
+    }
+}
+
+/** N11 — Auto (Settings → Maximum video quality), then every height this stream offers, highest first. */
+@Composable
+private fun QualitySheet(player: PlaybackEngine, onDismiss: () -> Unit) {
+    val heights by player.videoQualities.collectAsStateWithLifecycle()
+    val current by player.videoQualityPick.collectAsStateWithLifecycle()
+    MobileBottomSheet(onDismissRequest = onDismiss, title = stringResource(R.string.player_tool_quality)) {
+        SheetScroll {
+            (listOf<Int?>(null) + heights).forEach { height ->
+                MobileListRow(
+                    title = if (height == null) stringResource(R.string.settings_auto) else stringResource(R.string.settings_video_quality_lines, height),
+                    subtitle = if (height == current) stringResource(R.string.common_on) else null,
+                    onClick = { player.selectVideoQuality(height); onDismiss() },
                 )
             }
         }

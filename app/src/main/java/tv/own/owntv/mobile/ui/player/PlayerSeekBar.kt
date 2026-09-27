@@ -50,6 +50,7 @@ import tv.own.owntv.mobile.ui.theme.LocalAnimations
 import tv.own.owntv.mobile.ui.theme.SquircleShape
 import tv.own.owntv.player.LIVE_WINDOW_SEC
 import tv.own.owntv.player.LiveProgramme
+import tv.own.owntv.player.liveGapSpans
 import tv.own.owntv.player.liveTicks
 import tv.own.owntv.player.offsetFrac
 import tv.own.owntv.player.programmeAt
@@ -290,6 +291,8 @@ internal fun MobileLiveTimeline(
     accent: Color,
     onScrub: (deltaSec: Int) -> Unit,
     modifier: Modifier = Modifier,
+    /** N4 — wall-clock holes in a saved copy, drawn as dark stretches the rewind jumps over. */
+    gaps: () -> List<LongRange> = { emptyList() },
 ) {
     var dragging by remember { mutableStateOf(false) }
     var dragFraction by remember { mutableFloatStateOf(1f) }
@@ -364,6 +367,20 @@ internal fun MobileLiveTimeline(
                             .clip(RoundedCornerShape(50))
                             .background(accent),
                     )
+                }
+                // N4 — where the saved copy has no picture (the connection dropped): dark, so a jump over
+                // it is expected rather than a surprise.
+                Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.CenterStart) {
+                    liveGapSpans(gaps(), liveEdgeMs).forEach { span ->
+                        Box(Modifier.fillMaxWidth(span.endFrac), contentAlignment = Alignment.CenterEnd) {
+                            Box(
+                                Modifier
+                                    .fillMaxWidth((span.endFrac - span.startFrac) / span.endFrac)
+                                    .height(trackHeight)
+                                    .background(Color.Black.copy(alpha = 0.75f)),
+                            )
+                        }
+                    }
                 }
                 // Programme boundaries. The one the picture is inside is brighter — that is the edge
                 // to rewind to for a programme from its start. Matched on position, not on title, so

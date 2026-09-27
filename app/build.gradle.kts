@@ -320,6 +320,8 @@ dependencies {
 
     // Core
     implementation(libs.androidx.core.ktx)
+    // The launch screen: the flip-card animation, one theme per icon colour (see themes.xml).
+    implementation(libs.androidx.core.splashscreen)
     implementation(libs.androidx.activity.compose)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.youtube.player)
@@ -379,6 +381,9 @@ dependencies {
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(platform(libs.androidx.compose.bom))
+    androidTestImplementation(libs.androidx.compose.ui.test.junit4)
+    debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // Records the profile this module then packages. Recording needs a real device, so this is
     // never exercised by CI; see baselineprofile/BaselineProfileGenerator.kt.

@@ -26,7 +26,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -304,6 +306,8 @@ private fun RenameChannelDialog(
                 value = text,
                 onValueChange = { text = it },
                 label = stringResource(R.string.content_rename_channel),
+                imeAction = ImeAction.Done,
+                onImeDone = { onSet(text.trim().takeIf { it.isNotEmpty() }); onDismiss() },
             )
         },
         confirmButton = {
@@ -343,6 +347,7 @@ internal fun EpgMatchSheet(
 ) {
     var query by remember { mutableStateOf("") }
     var results by remember { mutableStateOf<List<GuideCandidate>?>(null) }
+    val epgKeyboard = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(channelName) {
         snapshotFlow { query }
@@ -369,6 +374,8 @@ internal fun EpgMatchSheet(
             value = query,
             onValueChange = { query = it },
             label = stringResource(R.string.content_search_guide_channels),
+            imeAction = ImeAction.Search,
+            onSearch = { epgKeyboard?.hide() },
             modifier = Modifier.padding(
                 horizontal = MobileDimens.ScreenPaddingH,
                 vertical = MobileDimens.GapSmall,

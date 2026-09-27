@@ -175,6 +175,7 @@ fun SettingsPlaylistsPage(
                     user = v.username,
                     pass = v.password,
                     userAgent = v.userAgent,
+                    httpReferer = v.httpReferer,
                     autoRefresh = v.autoRefresh,
                     mac = v.mac,
                     stalkerSerialNumber = v.serialNumber,
@@ -419,9 +420,9 @@ private fun EditPlaylistDialog(
                     }
                 }
                 AddSourceForm(
-                    onStartXtream = { _, _, _, _, _, _, _, _, _, _ -> },
-                    onStartM3u = { _, _, _, _ -> },
-                    onStartStalker = { _, _, _, _, _, _, _, _, _, _, _, _ -> },
+                    onStartXtream = { _, _, _, _, _, _, _, _, _, _, _ -> },
+                    onStartM3u = { _, _, _, _, _ -> },
+                    onStartStalker = { _, _, _, _, _, _, _, _, _, _, _, _, _ -> },
                     initial = source.toFormValues(),
                     onSave = onSave,
                 )
@@ -447,6 +448,7 @@ private fun SourceEntity.toFormValues(): SourceFormValues {
         deviceId2 = stalkerDeviceId2.orEmpty(),
         signature = stalkerSignature.orEmpty(),
         userAgent = userAgent.orEmpty(),
+        httpReferer = httpReferer.orEmpty(),
         live = scope(syncLive),
         movies = scope(syncMovies),
         series = scope(syncSeries),

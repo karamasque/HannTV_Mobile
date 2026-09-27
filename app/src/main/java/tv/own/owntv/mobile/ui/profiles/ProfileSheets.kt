@@ -7,11 +7,15 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,7 +27,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import tv.own.owntv.core.database.entity.ProfileEntity
@@ -34,6 +41,7 @@ import tv.own.owntv.mobile.ui.components.MobileButton
 import tv.own.owntv.mobile.ui.components.MobileButtonStyle
 import tv.own.owntv.mobile.ui.components.MobileSwitch
 import tv.own.owntv.mobile.ui.components.MobileTextField
+import tv.own.owntv.mobile.ui.components.sheetListHeight
 import tv.own.owntv.mobile.ui.theme.MobileDimens
 
 /** A PIN is four to six digits — long enough to be a lock, short enough to type one-handed. */
@@ -58,11 +66,24 @@ fun ProfilePinSheet(
 ) {
     var pin by remember { mutableStateOf("") }
     var wrong by remember { mutableStateOf(false) }
+    val focusManager = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    fun submit() {
+        if (pin.length in PIN_MIN..PIN_MAX) {
+            if (!onSubmit(pin)) { wrong = true; pin = "" } else keyboard?.hide()
+        }
+    }
     MobileBottomSheet(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.profiles_enter_pin, profileName),
     ) {
-        Column(modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH)) {
+        Column(
+            modifier = Modifier
+                .heightIn(max = sheetListHeight())
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(horizontal = MobileDimens.ScreenPaddingH),
+        ) {
             MobileTextField(
                 value = pin,
                 onValueChange = {
@@ -75,16 +96,22 @@ fun ProfilePinSheet(
                 placeholder = stringResource(R.string.profiles_pin_placeholder),
                 isPassword = true,
                 keyboardType = KeyboardType.NumberPassword,
+                imeAction = ImeAction.Done,
                 isError = wrong,
                 supportingText = if (wrong) stringResource(R.string.profiles_wrong_pin) else null,
+                onImeDone = { submit() },
             )
         }
         SheetButtons(
             confirm = stringResource(R.string.common_ok),
             confirmEnabled = pin.length >= PIN_MIN,
             // Deliberately not dismissed here: a wrong PIN has to keep the sheet up to say so.
-            onConfirm = { if (!onSubmit(pin)) { wrong = true; pin = "" } },
-            onDismiss = onDismiss,
+            onConfirm = { submit() },
+            onDismiss = {
+                keyboard?.hide()
+                focusManager.clearFocus()
+                onDismiss()
+            },
         )
     }
 }
@@ -124,7 +151,11 @@ fun ProfileEditorSheet(
         title = stringResource(if (initial == null) R.string.profiles_new else R.string.profiles_edit),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
+            modifier = Modifier
+                .heightIn(max = sheetListHeight())
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(horizontal = MobileDimens.ScreenPaddingH),
             verticalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
         ) {
             MobileTextField(
@@ -132,6 +163,7 @@ fun ProfileEditorSheet(
                 onValueChange = { name = it },
                 label = stringResource(R.string.profiles_name),
                 placeholder = stringResource(R.string.profiles_name_hint),
+                imeAction = ImeAction.Next,
                 isError = nameTaken,
                 supportingText = if (nameTaken) stringResource(R.string.profiles_name_taken) else null,
             )
@@ -235,6 +267,7 @@ fun ProfileEditorSheet(
                     placeholder = stringResource(R.string.profiles_pin_digits),
                     isPassword = true,
                     keyboardType = KeyboardType.NumberPassword,
+                    imeAction = ImeAction.Done,
                 )
             }
         }

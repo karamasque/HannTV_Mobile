@@ -28,11 +28,9 @@ import tv.own.owntv.core.database.dao.SourceDao
 import tv.own.owntv.core.database.entity.ChannelEntity
 import tv.own.owntv.core.database.entity.EpgProgrammeEntity
 import tv.own.owntv.core.database.entity.FavoriteEntity
-import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.database.entity.WatchHistoryEntity
-import tv.own.owntv.core.database.entity.playStreamUrl
-import tv.own.owntv.core.database.entity.resolveStreamUrl
 import tv.own.owntv.core.epg.displayLogoUrl
+import tv.own.owntv.core.live.CatchupContinue
 import tv.own.owntv.core.live.EpgNowNext
 import tv.own.owntv.core.live.LiveArchiveUrls
 import tv.own.owntv.core.live.LiveEpgReader
@@ -43,6 +41,7 @@ import tv.own.owntv.core.player.enginePinKey
 import tv.own.owntv.core.repository.ActiveProfileSources
 import tv.own.owntv.core.repository.activeProfileSources
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.settings.SourceOverrides
 import tv.own.owntv.core.stalker.StreamUrlResolver
 import tv.own.owntv.mobile.cast.CastController
 import tv.own.owntv.mobile.cast.CastHandoff
@@ -50,13 +49,11 @@ import tv.own.owntv.mobile.cast.CastRequest
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.playback.DataSaverGate
 import tv.own.owntv.mobile.playback.PlaybackService
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.map
 import tv.own.owntv.player.LiveProgramme
-import tv.own.owntv.player.LiveExoWatchdog
-import tv.own.owntv.player.LiveLadder
+import tv.own.owntv.player.EnginePair
+import tv.own.owntv.player.LiveTuneController
 import tv.own.owntv.player.LivePreviewEngine
-import tv.own.owntv.player.MediaMeta
 import tv.own.owntv.player.PlaybackEngine
 import tv.own.owntv.player.MpvPlaybackEngine
 import tv.own.owntv.player.OwnTVPlayer
@@ -194,7 +191,23 @@ class LiveTuner(
 
     // --- Which engine is playing live (L2) -------------------------------------------------------
 
-    private val _liveOnExo = MutableStateFlow(false)
+    /**
+     * Routing, the fallback ladder, the handovers and the give-up alarm — core's, the same code the
+     * television runs, so a fix to either reaches both. What stays here is the phone's own: which
+     * channel is on screen, casting, sound-only, history and the media session.
+     */
+    private val live = LiveTuneController(
+        scope = scope,
+        engines = EnginePair(exo, player),
+        host = LiveTuneController.CoreHost(
+            context = context,
+            settings = settings,
+            sourceDao = sourceDao,
+            resolver = streamUrlResolver,
+            forceMpvStore = forceMpvStore,
+            engineStarted = { publishToSystem() },
+        ),
+    )
 
     /**
      * Whether live is on ExoPlayer right now — false means mpv, and false is also every VOD case.
@@ -203,7 +216,7 @@ class LiveTuner(
      * the *actual* engine rather than the pin, because an automatic handover to mpv leaves a channel
      * running on mpv while still unpinned, and a button keyed off the pin would then do nothing.
      */
-    val liveOnExo: StateFlow<Boolean> = _liveOnExo
+    val liveOnExo: StateFlow<Boolean> = live.liveOnExo
 
     /** The live ExoPlayer engine, for the surface the player screen has to give it. */
     val exoEngine: LivePreviewEngine get() = exo
@@ -215,7 +228,7 @@ class LiveTuner(
      * arrangement the television uses, and the reason the phone's HUD needed no second set of
      * controls.
      */
-    val activeEngine: StateFlow<PlaybackEngine> = _liveOnExo
+    val activeEngine: StateFlow<PlaybackEngine> = liveOnExo
         .map { onExo -> if (onExo) exo else engine }
         .stateIn(scope, SharingStarted.Eagerly, engine)
 
@@ -224,13 +237,13 @@ class LiveTuner(
      * derived off it.
      *
      * **Not the same thing as `activeEngine.value`, and the difference matters.** `stateIn` republishes
-     * on its own coroutine, so between `_liveOnExo` changing and that coroutine running, the flow
+     * on its own coroutine, so between the engine flag changing and that coroutine running, the flow
      * still holds the engine that was playing a moment ago. Everything in this class acts immediately
      * after starting an engine — the sound-only default is applied on the very next line — and would
      * otherwise be talking to the one just stopped. The flow stays, because a composable has to be
      * able to *observe* the change; a caller that only needs the answer now uses this.
      */
-    val currentEngine: PlaybackEngine get() = if (_liveOnExo.value) exo else engine
+    val currentEngine: PlaybackEngine get() = if (liveOnExo.value) exo else engine
 
     /**
      * Whether anything is playing at all, asked of whichever engine would be holding it.
@@ -242,7 +255,7 @@ class LiveTuner(
      * a channel pinned to compatibility mode, because those genuinely are its streams.
      */
     val hasStream: Boolean
-        get() = if (_liveOnExo.value) exo.currentUrl != null else player.hasActiveStream
+        get() = if (liveOnExo.value) exo.currentUrl != null else player.hasActiveStream
 
     /**
      * The shape of the picture, from whichever engine is drawing it, or null before one is known.
@@ -253,10 +266,7 @@ class LiveTuner(
      * for the same reason.
      */
     val videoAspect: Float?
-        get() = if (_liveOnExo.value) exo.videoAspect.value else player.videoAspect.value
-
-    /** Cancelled by the next tune, a stop, or a manual engine switch. */
-    private var exoWatchJob: Job? = null
+        get() = if (liveOnExo.value) exo.videoAspect.value else player.videoAspect.value
 
     /**
      * Hand the stream to the system: the session takes the lockscreen and the audio focus, the
@@ -266,7 +276,7 @@ class LiveTuner(
     private fun publishToSystem() {
         // Whichever engine actually holds the stream: a session published for the idle one would
         // answer the lockscreen and the headphone button for something that is not playing.
-        session.attach(if (_liveOnExo.value) exo else engine)
+        session.attach(if (liveOnExo.value) exo else engine)
         PlaybackService.start(context)
     }
 
@@ -284,6 +294,26 @@ class LiveTuner(
 
     /** The channel on screen, with the user's own name for it. */
     val channel: StateFlow<ChannelEntity?> = _channel
+
+    /** N2 — the channel watched before the one on screen; null hides the player's "previous channel". */
+    val previousChannel: StateFlow<ChannelEntity?> = combine(live.previousChannel, ctx) { p, c ->
+        p?.takeIf { it.sourceId in c.sourceIds }
+    }.stateIn(scope, SharingStarted.Eagerly, null)
+
+    /**
+     * Go back to [previousChannel] — the player's button, and "previous" from a headset or the media
+     * notification. Only from a playlist this profile has active; [tune] re-reads it by id (a sync may
+     * have removed it) and [open] applies the adult filter. A deliberate pick, so it opens at once.
+     */
+    fun tunePrevious() {
+        val previous = live.previousChannel.value ?: return
+        if (previous.sourceId !in ctx.value.sourceIds) return
+        tune(previous.id)
+    }
+
+    init {
+        session.livePrevious = ::tunePrevious
+    }
 
     init {
         // Tell core which playlist is on screen, so its background catalogue drain steps aside.
@@ -391,7 +421,29 @@ class LiveTuner(
         },
         loadArchive = ::loadArchiveStream,
         onLiveEdge = { goToLive() },
+        // N4 — a channel without catch-up rewinds into its own saved copy.
+        local = live.localRewind,
     )
+
+    /** N4 — the user came back to a channel whose copy was kept: where they were, for "Resume from
+     *  buffer / Go live". Null when there is nothing to offer. */
+    val timeshiftResumeAt: StateFlow<Long?> = live.localTimeshift.map { it?.resumeAtWallMs }
+        .stateIn(scope, SharingStarted.Eagerly, null)
+
+    fun resumeTimeshift() {
+        val at = timeshiftResumeAt.value ?: return
+        live.dismissResumeOffer()
+        live.seekTimeshift(at)
+    }
+
+    fun dismissTimeshiftResume() = live.dismissResumeOffer()
+
+    /** N4 — the wall-clock holes in the saved copy on screen, for the live bar. */
+    fun timeshiftGaps(): List<LongRange> = live.localGaps()
+
+    /** N4 — the channel on screen is playing from its saved copy, so it can be rewound. */
+    val hasLocalCopy: StateFlow<Boolean> = live.localTimeshift.map { it != null }
+        .stateIn(scope, SharingStarted.Eagerly, false)
 
     /** Seconds behind the live edge; null at the edge — what the red bar and the pill read. */
     val offsetSec: StateFlow<Int?> = timeshift.offsetSec
@@ -405,6 +457,35 @@ class LiveTuner(
      *  dropping the user at the live edge. Null whenever a replay is not what is playing. */
     private var lastCatchup: EpgProgrammeEntity? = null
 
+    init {
+        scope.launch { player.archiveEnded.collect { continueAfterCatchup() } }
+    }
+
+    /**
+     * A replayed programme played to its end with "Auto-play next" on (the player only raises
+     * `archiveEnded` then). Carry on down the guide instead of leaving a black screen — the
+     * television's rule, from core's [CatchupContinue]: the next programme if it has finished airing,
+     * the live stream if it is on air now, otherwise stop.
+     *
+     * Guarded on [replaying]: a rewind into the archive also ends on `archiveEnded`, and that one is
+     * the timeshift's to handle.
+     */
+    private fun continueAfterCatchup() {
+        if (!_replaying.value) return
+        val ch = _channel.value ?: return
+        val ended = lastCatchup ?: return
+        scope.launch {
+            val next = epgReader.programmeAfter(
+                ch, ended.stopMs, custom.value, settings.epgOffsetMinutes.first(), ctx.value.sourceIds,
+            )
+            when (CatchupContinue.decide(next?.startMs, next?.stopMs, System.currentTimeMillis())) {
+                is CatchupContinue.Next.Programme -> next?.let { playCatchup(it, ch) }
+                CatchupContinue.Next.Live -> live.launch { open(ch) }
+                CatchupContinue.Next.Stop -> Unit
+            }
+        }
+    }
+
     /** Open [channelId]: read the row, start it, and fill the guide and the channel list around it. */
     fun tune(channelId: Long) {
         // `hasStream`, not mpv's own: on live-on-ExoPlayer mpv always answers "nothing here", so
@@ -412,9 +493,10 @@ class LiveTuner(
         // a reconnection and a second of black for a screen you had just come back to.
         if (loadedId == channelId && hasStream) return
         loadedId = channelId
-        scope.launch {
+        // One tune in flight: a newer pick, or a catch-up, cancels this one wherever it has got to.
+        live.launch {
             val channel = withContext(Dispatchers.IO) { channelDao.getById(channelId) } ?: return@launch
-            start(channel)
+            open(channel)
             loadSiblings(channel)
         }
     }
@@ -438,28 +520,54 @@ class LiveTuner(
     fun switchTo(channel: ChannelEntity) {
         if (channel.id == loadedId) return
         loadedId = channel.id
-        scope.launch { start(channel) }
+        live.launch { open(channel) }
     }
 
     /**
      * The next (+1) or previous (−1) channel of the same folder, wrapping at both ends — Channel +/−
      * from the Picture-in-Picture window, where there is no room for a list.
+     *
+     * The stream opens once the user stops pressing, [ZAP_TUNE_DELAY_MS] later, and the next press
+     * cancels it — the television's rule. Every press used to open a stream, and a one-session Xtream
+     * panel answers a burst of opens by locking the account for two minutes (HTTP 458).
      */
     fun step(delta: Int) {
         val list = _siblings.value
         if (list.size < 2) return
         val index = list.indexOfFirst { it.id == loadedId }
         if (index < 0) return
-        switchTo(list[(index + delta).mod(list.size)])
+        val target = list[(index + delta).mod(list.size)]
+        if (target.id == loadedId) return
+        loadedId = target.id
+        live.launch {
+            kotlinx.coroutines.delay(ZAP_TUNE_DELAY_MS)
+            open(target)
+        }
     }
 
-    private suspend fun start(channel: ChannelEntity) {
-        // Before anything is claimed to be tuned: refusing has to leave the screen as it was, and the
-        // channel forgotten, so tapping the same row again on Wi-Fi opens it.
-        if (!dataSaver.allowsStreaming()) {
-            loadedId = null
-            return
+    /**
+     * Open [channel]. Runs inside the controller's one tune job, so a newer pick cancels it.
+     *
+     * Every check that can refuse runs **before** the screen claims the new channel: the data saver,
+     * the profile's adult filter and minting a Stalker link. A refusal used to leave the new channel's
+     * name over the old channel's picture; now the screen stays as it was, and the tapped row can be
+     * tapped again.
+     */
+    private suspend fun open(channel: ChannelEntity) {
+        val showing = _channel.value
+        val refuse = { loadedId = showing?.id }
+        if (!dataSaver.allowsStreaming()) return refuse()
+        val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return refuse()
+        if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return refuse()
+
+        val source = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
+        // Stalker portals mint a play URL per tune; the stored "URL" is a portal command until then.
+        val url = if (streamUrlResolver.needsResolve(source)) {
+            runCatching { streamUrlResolver.resolve(source!!, channel.streamUrl) }.getOrNull() ?: return refuse()
+        } else {
+            channel.streamUrl
         }
+
         timeshift.clear() // a new channel is never still rewound into the old one's archive
         _replaying.value = false
         lastCatchup = null
@@ -468,17 +576,6 @@ class LiveTuner(
         _channel.value = named
         _nowNext.value = null
         _timelineProgrammes.value = emptyList()
-
-        val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return
-        if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return
-
-        val source = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
-        // Stalker portals mint a play URL per tune; the stored "URL" is a portal command until then.
-        val url = if (streamUrlResolver.needsResolve(source)) {
-            runCatching { streamUrlResolver.resolve(source!!, channel.streamUrl) }.getOrNull() ?: return
-        } else {
-            channel.streamUrl
-        }
         // The television first, if one has been picked. It plays the stream itself, so nothing below
         // about engines, sound-only or the local session applies to it.
         val handedOver = cast.offer(
@@ -488,302 +585,22 @@ class LiveTuner(
                 title = named.name,
                 logoUrl = named.displayLogoUrl,
                 isLive = true,
-                httpHeaders = channel.httpHeaders,
+                httpHeaders = SourceOverrides.headersWithReferer(channel.httpHeaders, source),
             ),
         )
         if (!handedOver) {
-            // L2 - which engine opens it, in the television's own descending order of authority.
-            //
-            // The phone used to skip the middle two entirely: it asked only whether the channel was
-            // pinned and otherwise opened on ExoPlayer. So **Settings → Video player → Live TV
-            // player did nothing here**, global or per playlist — "mpv only" still opened every
-            // channel on ExoPlayer, waited for it to fail, and arrived at mpv the slow way.
-            //
-            //  1. **A protected channel is ExoPlayer's, always.** mpv ships no CDM, so it cannot ask
-            //     a licence server for a key; handing one over could only produce a failure. It
-            //     outranks the pin as well as the setting, because it is a fact about the stream.
-            //  2. **The per-channel pin** — "compatibility mode", the user saying so about this one
-            //     channel. It outranks the setting, which is the whole point of the button.
-            //  3. **This playlist's own override**, then the global setting.
-            val setting = enginePreferenceFor(source)
-            val pinnedToMpv = pinKeyFor(channel) in forceMpvStore.urls.first()
-            val protected = channel.drmConfig != null
-            // Learned, rather than pinned: a panel already caught handing out signed segment URLs it
-            // then refuses can never be satisfied by ExoPlayer, so go straight to mpv instead of
-            // replaying the detection — two dead 403s and the wait — on every further channel of it.
-            // The lesson is taught by core's own ExoPlayer engine, so the phone was already learning
-            // it and simply never read it. Consulted only while both engines are allowed and the
-            // channel is unpinned: a lesson the app taught itself may not overturn the user's choice.
-            val refusing = !pinnedToMpv && setting.allowsHandover && panelRefusesSegments(channel, source)
-            val onMpv = !protected && (pinnedToMpv || refusing || setting.startsOnMpv)
-            // What the LADDER is armed with, which is not always the setting. A protected channel is
-            // ExoPlayer-only whatever the setting says. A pin that contradicts an "only" setting
-            // re-opens the handover for that one channel — otherwise the exception channel would be
-            // locked to the engine the user has just said cannot play it, with the ladder forbidden
-            // from ever reaching the one that can: a dead end of the app's own making.
-            val preference = when {
-                protected -> tv.own.owntv.core.player.EnginePreference.EXO_ONLY
-                setting.allowsHandover -> tv.own.owntv.core.player.EnginePreference.firstOn(onMpv)
-                onMpv == setting.startsOnMpv -> setting
-                else -> tv.own.owntv.core.player.EnginePreference.firstOn(onMpv)
-            }
-            val why = when {
-                protected -> "exoplayer (drm)"
-                pinnedToMpv -> "mpv (pinned)"
-                refusing -> "mpv (panel refuses segments)"
-                else -> "${if (onMpv) "mpv" else "exoplayer"} (setting)"
-            }
-            engineLog("tune '${channel.name}' -> $why [${preference.name}]")
-            armLadder(channel, source, preference)
-            if (onMpv) startOnMpv(named, source, resolved = url) else startOnExo(named, source, resolved = url)
+            // Core decides which engine opens it, arms the ladder and starts it — the television's
+            // order of authority (DRM, the pin, a learned panel refusal, the playlist, the setting).
+            // The link minted above is reused for the first rung: minting ends the previous session.
+            live.start(named, source, resolved = url)
             applyAudioOnlyDefault(channel)
+        } else {
+            live.noteWatched(named) // "previous channel" follows a cast zap too (N2)
         }
         recordHistory(pid, channel.id)
         _nowNext.value = epgReader.nowNext(channel, custom.value, settings.epgOffsetMinutes.first())
         _timelineProgrammes.value = catchupProgrammes()
             .map { LiveProgramme(it.startMs, it.stopMs, it.title) }
-    }
-
-    /** The stable per-channel key a compatibility pin is filed under (P6), with the URL as fallback. */
-    private fun pinKeyFor(channel: ChannelEntity): String =
-        enginePinKey(channel.sourceId, MediaType.LIVE.name, channel.remoteId) ?: channel.streamUrl
-
-    // --- The three per-playlist overrides, each falling back to the global setting ----------------
-    //
-    // All three are the television's, read the same way and resolved by the same core helpers, so a
-    // playlist configured on one device means the same thing on the other after a sync. The phone
-    // stored and displayed all three and passed none of them to an engine.
-
-    /**
-     * Which engine this channel's playlist wants, or the global setting when it has no opinion.
-     *
-     * Per playlist because which engine copes is a property of the provider's stream format, not of
-     * the person watching.
-     */
-    private suspend fun enginePreferenceFor(source: tv.own.owntv.core.database.entity.SourceEntity?):
-        tv.own.owntv.core.player.EnginePreference =
-        source?.liveEnginePreference
-            ?.let { name ->
-                tv.own.owntv.core.player.EnginePreference.entries.firstOrNull { it.name == name }
-            }
-            ?: settings.liveEnginePreference.first()
-
-    /** This playlist's "Pre-buffer" in seconds, or null to follow the global slider. */
-    private fun prerollFor(source: tv.own.owntv.core.database.entity.SourceEntity?): Int? =
-        source?.livePrerollSecs?.takeIf { it >= 0 }
-
-    /**
-     * This playlist's Live latency, or null to follow the global setting.
-     *
-     * Resolved through the same `LiveBuffer.effectiveSeconds` the global path uses, so a Custom value
-     * is clamped identically and Balanced still means "the engine's own defaults" — for this
-     * playlist rather than for all of them.
-     */
-    private fun liveBufferFor(source: tv.own.owntv.core.database.entity.SourceEntity?):
-        tv.own.owntv.core.settings.LiveBuffer.Override? {
-        val mode = source?.liveLatencyMode ?: return null
-        return tv.own.owntv.core.settings.LiveBuffer.Override(
-            tv.own.owntv.core.settings.LiveBuffer.effectiveSeconds(
-                tv.own.owntv.core.settings.LiveLatency.fromName(mode),
-                source.liveLatencyCustomSecs,
-            ),
-        )
-    }
-
-    /**
-     * Open [channel] on mpv — a pinned channel, or ExoPlayer having given up on it.
-     *
-     * mpv is the full-screen player the rest of the app already uses, so this is the path the phone
-     * has always taken; the only new thing is that it is now a choice rather than the only option.
-     */
-    private suspend fun startOnMpv(
-        channel: ChannelEntity,
-        /** The playlist, for its User-Agent and its three per-playlist overrides. */
-        source: SourceEntity?,
-        /** This rung is the `.ts` one: do not let "Prefer HLS" rewrite the URL. */
-        forceTs: Boolean = false,
-        /** A URL already minted for this tune, so the first rung does not resolve a Stalker link twice
-         *  — minting one ends the portal's previous session. Later rungs pass null and mint afresh,
-         *  because a link already spent on ExoPlayer is not one mpv can reuse. */
-        resolved: String? = null,
-    ) {
-        // What ExoPlayer discovered before it let go: some panels redirect their advertised `.ts` to
-        // HLS, and handing mpv that misleading URL traps FFmpeg at the manifest EOF. "Discovered"
-        // strictly means ExoPlayer asked for something that was NOT HLS and got HLS anyway — playing
-        // an `.m3u8` we deliberately requested teaches nothing about the `.ts` endpoint.
-        val exoTuneUrl = exo.currentUrl
-        val exoDiscoveredHls = _liveOnExo.value && exo.isHlsStream &&
-            exoTuneUrl != null && !tv.own.owntv.player.LiveStreamQuirks.isExplicitHlsUrl(exoTuneUrl)
-        exoWatchJob?.cancel()
-        mpvOutcomeJob?.cancel()
-        _liveOnExo.value = false
-        // Free ExoPlayer's decoder and its connection BEFORE mpv asks for either. A one-connection
-        // playlist refuses the second request outright, and a TV-class decoder hands mpv a codec the
-        // outgoing engine still holds — the same ordering every other engine transition already uses.
-        exo.stop()
-        // Let ExoPlayer's decoder actually go before mpv initialises. Nothing exposes "the MediaCodec
-        // is released", so the only alternative to waiting is guessing, and guessing short reproduces
-        // the codec-claim failure this constant exists to prevent.
-        //
-        // Only when ExoPlayer had something, though. A tune that starts on mpv — "mpv first", or a
-        // pinned channel — has no decoder to wait for, and paying half a second of black on every one
-        // of them would be a handover cost charged to a tune that never handed over.
-        if (exoTuneUrl != null) {
-            kotlinx.coroutines.delay(OwnTVPlayer.SURFACE_HANDOFF_MS)
-            if (loadedId != channel.id) {
-                // The only exit that leaves the shell on mpv's surface with nothing loaded. Normal
-                // when the user zapped during the release wait; in a support log it is the difference
-                // between "the handoff was abandoned" and "the handoff vanished".
-                engineLog("mpv handoff for '${channel.name}' abandoned — the channel changed while ExoPlayer released")
-                return
-            }
-        }
-        val raw = urlFor(channel, source, resolved) ?: return
-        // Keyed to mpv's OWN verdict: ExoPlayer failing this channel's `.m3u8` says nothing about
-        // whether mpv can play it, and on a traced channel mpv plays exactly the manifest ExoPlayer
-        // cannot — which is why `mpv + HLS` is a rung of its own rather than a repeat.
-        val preferred = if (forceTs || tv.own.owntv.player.LiveStreamQuirks.lacksHlsVariantMpv(channel.streamUrl)) {
-            raw
-        } else {
-            resolveStreamUrl(raw, source)
-        }
-        // Recorded against the PANEL, not this one channel: the redirect is a property of the
-        // provider, so every later channel starts out knowing this `.ts` is really HLS instead of
-        // re-learning it the slow way.
-        if (exoDiscoveredHls) tv.own.owntv.player.LiveStreamQuirks.rememberHlsRedirect(preferred)
-        val url = if (tv.own.owntv.player.LiveStreamQuirks.isKnownHlsHost(preferred)) {
-            tv.own.owntv.player.LiveStreamQuirks.toHlsUrl(preferred)
-        } else {
-            preferred
-        }
-        player.play(
-            url = url,
-            title = channel.name,
-            logoUrl = channel.displayLogoUrl,
-            isLive = true,
-            userAgent = source?.userAgent,
-            // The same stable key ExoPlayer files this channel under. Without it mpv filed the
-            // channel by its stream URL instead, so a zoom or a volume set on one engine was
-            // forgotten the moment the channel fell back to the other.
-            contentKey = pinKeyFor(channel),
-            httpHeaders = channel.httpHeaders,
-            livePrerollSecsOverride = prerollFor(source),
-            liveBufferOverride = liveBufferFor(source),
-        )
-        publishToSystem()
-        // mpv is watched now too. Without this it was a terminus: a channel it could not open simply
-        // sat there, because every fallback on the phone was written for the ExoPlayer-first direction.
-        watchMpvOutcome(channel, source)
-    }
-
-    /**
-     * The URL to actually open for [channel] — [resolved] when this tune already minted one, otherwise
-     * the stored address, or a freshly minted Stalker link.
-     *
-     * Minting is not free and not repeatable: a Stalker `create_link` ends the portal's previous
-     * session, and the link it returns is single-use. So the first rung of a tune reuses what was
-     * already minted, and a later rung mints again because the one before it is spent.
-     */
-    private suspend fun urlFor(
-        channel: ChannelEntity,
-        source: SourceEntity?,
-        resolved: String?,
-    ): String? = when {
-        resolved != null -> resolved
-        streamUrlResolver.needsResolve(source) ->
-            runCatching { streamUrlResolver.resolve(source!!, channel.streamUrl) }.getOrNull()
-        else -> channel.streamUrl
-    }
-
-    /**
-     * Which of the channel's two addresses ExoPlayer should ask for.
-     *
-     * The `.m3u8` and the `.ts` of one channel are different muxes, and an engine that chokes on one
-     * can play the other — so they are separate rungs rather than one attempt. This serves the plain
-     * stream when the ladder is on the TS rung, or when ExoPlayer has already learned this session
-     * that the channel has no working HLS variant.
-     */
-    private fun exoTuneUrl(channel: ChannelEntity, source: SourceEntity?): String =
-        if (forceTsForExo == channel.streamUrl ||
-            tv.own.owntv.player.LiveStreamQuirks.lacksHlsVariant(channel.streamUrl)
-        ) {
-            channel.streamUrl
-        } else {
-            channel.playStreamUrl(source)
-        }
-
-    /** Put [channel] on ExoPlayer, releasing mpv first when mpv currently holds the stream. mpv's stop
-     *  is asynchronous, so handing over too early makes the app its own competitor for a session. */
-    private suspend fun switchToExo(channel: ChannelEntity, source: SourceEntity?) {
-        if (!_liveOnExo.value) {
-            player.stopAndAwaitRelease()
-            kotlinx.coroutines.delay(OwnTVPlayer.SURFACE_HANDOFF_MS)
-            if (loadedId != channel.id) return
-        }
-        startOnExo(channel, source)
-    }
-
-    /**
-     * Open [channel] on ExoPlayer, and watch it.
-     *
-     * The watch is the point. An engine that reports what happened is not the same as one that knows
-     * when to give up, and every rung of [LiveExoWatchdog] exists because a real channel failed in a
-     * way nothing else caught — a picture that never arrives while the audio plays, segment URLs the
-     * provider refuses, a stream that opens and then delivers nothing, no decodable audio, or a
-     * channel that played and then froze. Each of those hands the channel to mpv, which frequently
-     * plays it.
-     */
-    private suspend fun startOnExo(
-        channel: ChannelEntity,
-        /** The playlist, for its User-Agent and its three per-playlist overrides. */
-        source: SourceEntity?,
-        /** A URL already minted for this tune — see [urlFor]. */
-        resolved: String? = null,
-    ) {
-        val url = if (streamUrlResolver.needsResolve(source)) {
-            urlFor(channel, source, resolved) ?: return
-        } else {
-            exoTuneUrl(channel, source)
-        }
-        exoWatchJob?.cancel()
-        mpvOutcomeJob?.cancel() // ExoPlayer owns the channel now
-        _liveOnExo.value = true
-        // Same ordering as the reverse direction above: mpv lets go of the connection and the decoder
-        // before ExoPlayer claims either.
-        player.stop()
-        exo.play(
-            url,
-            muted = false,
-            meta = MediaMeta(
-                title = channel.name,
-                logoUrl = channel.displayLogoUrl,
-                contentKey = pinKeyFor(channel),
-            ),
-            userAgent = source?.userAgent,
-            prerollSecsOverride = prerollFor(source),
-            liveBufferOverride = liveBufferFor(source),
-            httpHeaders = channel.httpHeaders,
-            drmConfig = channel.drmConfig,
-        )
-        publishToSystem()
-        exoWatchJob = scope.launch {
-            LiveExoWatchdog(
-                engine = exo,
-                // A watchdog outlives the tune that armed it — the user zaps, backs out, or starts a
-                // film — and firing after that would stop a stream nobody complained about.
-                stillOurs = { isStillExo(channel) },
-                // Into the ladder rather than straight to mpv. The ladder decides what "next" means:
-                // this engine's other stream format, the other engine, or nothing left at all — and
-                // it is what stops a handover in each direction from bouncing the channel for ever.
-                handOver = { reason -> advanceLadder(channel, source, reason) },
-                onOpened = { ladderOpened() },
-                // A provider back-off is a wait OwnTV agreed to, so it must not be charged to the
-                // tune's budget — otherwise a perfectly good channel is abandoned over a delay the
-                // app itself accepted.
-                postponeDeadline = { ladder.postponeDeadline(it) },
-                log = { engineLog(it) },
-            ).watch(channel.name)
-        }
     }
 
     /**
@@ -795,291 +612,12 @@ class LiveTuner(
      * once the two have synced.
      */
     fun toggleLiveEngine() {
-        val channel = _channel.value ?: return
         // A replay is a recorded programme, not the live stream: re-tuning here would swap what the
         // user is watching for whatever is on that channel now.
-        if (_replaying.value || timeshift.isRewound) return
-        // A protected channel has only one engine that can obtain its key, so swapping would trade a
-        // playing channel for a guaranteed failure.
-        if (channel.drmConfig != null) return
-        scope.launch {
-            val goToMpv = _liveOnExo.value
-            forceMpvStore.pin(pinKeyFor(channel), goToMpv)
-            val source = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
-            engineLog("engine toggle '${channel.name}' -> ${if (goToMpv) "mpv" else "exoplayer"}")
-            // A manual choice restarts the ladder around that engine, and for THIS tune only as an
-            // "only" mode. This is the button the user has just pressed, on the engine they just
-            // named, while watching: bouncing them off it seconds later makes the control look broken
-            // and leaves them no way to stay put. The next tune of the same channel reads the pin and
-            // gets the full ladder back, so a channel the chosen engine genuinely cannot play still
-            // ends up somewhere that plays it rather than stuck for ever on one bad decision.
-            armLadder(channel, source, tv.own.owntv.core.player.EnginePreference.onlyOn(goToMpv))
-            if (goToMpv) startOnMpv(channel, source) else switchToExo(channel, source)
-        }
+        // A copy saved on this device (N4) is the exception: the other engine continues it at the same moment.
+        if (_replaying.value || (timeshift.isRewound && !hasLocalCopy.value)) return
+        live.toggleEngine()
     }
-
-    // --- The fallback ladder ----------------------------------------------------------------------
-    //
-    // The phone had half of one: ExoPlayer was watched and its failures went to mpv, and mpv was a
-    // terminus. So "mpv first" — which Phase 4 made a real setting rather than an inert one — had no
-    // way back, a channel pinned to compatibility mode that mpv could not open simply sat there, and
-    // neither engine ever retried a channel on its other stream format. This is the television's
-    // ladder, and it is the television's because the ordering IS the feature: `LiveLadder` lives in
-    // `:player-core` and is unit-tested there. Everything with a side effect stays here.
-
-    /** The ladder for the tune on screen: which engine/format rungs are left, and how long is left. */
-    private val ladder = LiveLadder()
-
-    /** Settings → "Give up after", as a whole-tune budget. The phone displayed this slider and read it
-     *  nowhere else — the budget belongs to the ladder, which the phone did not have. */
-    private val ladderBudgetMs: StateFlow<Long> = settings.liveTuneTimeoutSecs
-        .map { secs -> if (secs <= 0) LiveLadder.NO_BUDGET else secs * 1000L }
-        .stateIn(scope, SharingStarted.Eagerly, LiveLadder.NO_BUDGET)
-
-    /**
-     * The channel whose ExoPlayer rung is the explicit `.ts` one.
-     *
-     * Keyed by channel rather than a bare flag, for the reason the television records: the URL helper
-     * is used by more than the ladder, so a global flag left set by one channel's TS rung would send
-     * every other channel to `.ts` until the next tune.
-     */
-    private var forceTsForExo: String? = null
-
-    /** Engine routing goes to logcat unconditionally and to the diagnostics ring, so a release build
-     *  can be read with `adb logcat -s LiveEngine`. Channel names only — never a stream URL. */
-    private fun engineLog(message: String) {
-        android.util.Log.i(ENGINE_TAG, message)
-        tv.own.owntv.player.LiveDiagnosticsLog.event("engine: $message")
-    }
-
-    /**
-     * Mirror a ladder decision into the user-visible playback error log.
-     *
-     * Called before the engine actually switches, so `_liveOnExo` still names the engine that failed.
-     * At most four per tune and only ever on a failure, which keeps it inside the "these stay rare"
-     * rule that log is built on.
-     */
-    private fun recordLadderEvent(
-        event: tv.own.owntv.player.PlayerFailureReason,
-        channel: ChannelEntity,
-        detail: String,
-    ) {
-        tv.own.owntv.player.PlaybackErrorLog.event(
-            context = context,
-            engine = if (_liveOnExo.value) "ExoPlayer" else "mpv",
-            live = true,
-            reason = event,
-            detail = "'${channel.name}': $detail",
-        )
-    }
-
-    /**
-     * Whether this channel's panel has already been caught handing out signed segment URLs it then
-     * refuses.
-     *
-     * The lesson is panel-wide and lasts only for the session, so the first channel still pays the
-     * detection and a provider that fixes its panel is back on the ExoPlayer-first path after the
-     * next app start. Stalker sources are excluded: their stored address is a portal command, not a
-     * URL, so there is no host to key on until it has been resolved — a network call this decision
-     * must not make.
-     */
-    private fun panelRefusesSegments(channel: ChannelEntity, source: SourceEntity?): Boolean =
-        !streamUrlResolver.needsResolve(source) &&
-            tv.own.owntv.player.LiveStreamQuirks.refusesSegments(channel.playStreamUrl(source))
-
-    /** Whether "Prefer HLS" actually rewrites this channel's URL — if it does not, an HLS rung and a
-     *  TS rung are the same attempt and the ladder drops the HLS ones. A Stalker cmd is not a URL. */
-    private fun hasHlsAlternative(channel: ChannelEntity, source: SourceEntity?): Boolean =
-        !streamUrlResolver.needsResolve(source) && channel.playStreamUrl(source) != channel.streamUrl
-
-    /** Reset the ladder for a fresh tune. Rungs climbed by the last tune are forgotten — a new tune is
-     *  a new chance, including for a channel that ended the last one on its final rung. */
-    private suspend fun armLadder(
-        channel: ChannelEntity,
-        source: SourceEntity?,
-        preference: tv.own.owntv.core.player.EnginePreference,
-    ) {
-        forceTsForExo = null
-        ladder.arm(
-            channel.streamUrl,
-            preference,
-            budgetMs = ladderBudgetMs.value,
-            nowMs = android.os.SystemClock.elapsedRealtime(),
-        ) { hasHlsAlternative(channel, source) }
-        startLadderDeadline(channel)
-    }
-
-    private var ladderDeadlineJob: Job? = null
-
-    /**
-     * The alarm behind "Give up after", so the budget bounds the black screen rather than only the
-     * decision to climb another rung.
-     *
-     * Checking at rung boundaries alone is not enough: a rung entered at 24 s with a 35 s timeout of
-     * its own runs to 59 s before anyone asks the time. The deadline is re-read on each pass rather
-     * than captured, so a provider back-off that bought the tune more time moves this alarm with it.
-     * A channel that opens cancels the alarm outright — a stream that plays and later stalls belongs
-     * to the watchdogs, which are about recovery rather than about opening.
-     */
-    private fun startLadderDeadline(channel: ChannelEntity) {
-        ladderDeadlineJob?.cancel()
-        ladderDeadlineJob = scope.launch {
-            while (ladder.owns(channel.streamUrl)) {
-                val left = (ladder.deadlineAt() ?: return@launch) - android.os.SystemClock.elapsedRealtime()
-                if (left <= 0) break
-                kotlinx.coroutines.delay(left)
-            }
-            // Both gates matter. The ladder can still own a channel the user has walked away from, and
-            // this alarm stops an engine — on the mpv branch that is the shared full player, which by
-            // then may be showing a film.
-            if (!ladder.owns(channel.streamUrl)) return@launch
-            if (!isStillExo(channel) && !isStillMpv(channel)) return@launch
-            val detail = "no picture within ${ladderBudgetMs.value / 1000}s of tuning"
-            engineLog("'${channel.name}' — giving up: $detail")
-            recordLadderEvent(tv.own.owntv.player.PlayerFailureReason.LIVE_NO_FALLBACK, channel, detail)
-            exoWatchJob?.cancel()
-            mpvOutcomeJob?.cancel()
-            mpvHandoffJob?.cancel()
-            abandonTune(channel, detail)
-        }
-    }
-
-    /** A picture arrived, so the opening budget has been met: stand the alarm down. */
-    private fun ladderOpened() {
-        ladderDeadlineJob?.cancel()
-        ladderDeadlineJob = null
-    }
-
-    /**
-     * The ladder has nothing left — it ran out of rungs or it ran out of time. Put the failure on
-     * screen.
-     *
-     * Without this the spinner simply stays up: a stream that opens its playlist and then delivers no
-     * segment produces no frame AND no error, so the honest answer has to be written by whoever
-     * decided to stop trying. Whichever engine is showing is the one told to give up, because that is
-     * the one the HUD is reading.
-     */
-    private fun abandonTune(channel: ChannelEntity, detail: String) {
-        val reason = "'${channel.name}': $detail"
-        if (_liveOnExo.value) exo.abandon(reason) else player.abandonLive(reason)
-    }
-
-    /**
-     * Whether [reason] is the panel refusing the *request* rather than the stream failing — an
-     * account-busy 458, a 403, a rate limit.
-     *
-     * Such a refusal must not teach the ladder anything: it is not a property of the channel, the
-     * format or the engine, it is the account being busy, and it clears on its own.
-     */
-    private fun isRequestRefusal(reason: String): Boolean =
-        tv.own.owntv.player.PlayerErrors.httpStatusIn(reason)
-            ?.let { tv.own.owntv.player.LiveStreamQuirks.isRequestRefusal(it) } == true
-
-    /** Still this channel, still on ExoPlayer — the guard every ExoPlayer-side callback needs. */
-    private fun isStillExo(channel: ChannelEntity): Boolean =
-        _liveOnExo.value && loadedId == channel.id
-
-    /** Still this channel, still on mpv. */
-    private fun isStillMpv(channel: ChannelEntity): Boolean =
-        !_liveOnExo.value && loadedId == channel.id
-
-    /** The in-flight handoff to mpv, so a newer rung supersedes an older one. */
-    private var mpvHandoffJob: Job? = null
-
-    private var mpvOutcomeJob: Job? = null
-
-    /**
-     * Move to the next untried rung after a failure, or give up when there is nothing left.
-     *
-     * This is the only place the ladder is climbed, from either engine's watcher, which is what makes
-     * "each rung at most once" hold — and that finiteness is the safety property. Without it an
-     * ExoPlayer failure handing over to mpv and an mpv failure handing back would bounce a channel
-     * between the two for ever.
-     */
-    private suspend fun advanceLadder(channel: ChannelEntity, source: SourceEntity?, reason: String) {
-        if (!ladder.owns(channel.streamUrl)) return // a newer tune owns the ladder now
-        val nowMs = android.os.SystemClock.elapsedRealtime()
-        val outOfTime = ladder.expired(nowMs)
-        val next = ladder.advance(failureWasAboutFormat = !isRequestRefusal(reason), nowMs = nowMs) ?: run {
-            val detail = if (outOfTime) "$reason — gave up after ${ladderBudgetMs.value / 1000}s" else reason
-            engineLog("'${channel.name}' — no fallback left ($detail)")
-            recordLadderEvent(tv.own.owntv.player.PlayerFailureReason.LIVE_NO_FALLBACK, channel, detail)
-            abandonTune(channel, detail)
-            return
-        }
-        val label = ladder.label(next)
-        engineLog("'${channel.name}' falling back to $label ($reason)")
-        recordLadderEvent(tv.own.owntv.player.PlayerFailureReason.LIVE_FALLBACK, channel, "$label — $reason")
-        if (next.onMpv) {
-            // Detached on purpose, exactly as on the television: every automatic rung is dispatched
-            // from inside a watcher job, and the handoff cancels those watchers the moment it takes
-            // over — so run inline it would cancel itself at its first suspension point and leave a
-            // permanent black screen with mpv never asked to load anything.
-            mpvHandoffJob?.cancel()
-            mpvHandoffJob = scope.launch { startOnMpv(channel, source, forceTs = !next.isHls) }
-        } else {
-            forceTsForExo = if (next.isHls) null else channel.streamUrl
-            switchToExo(channel, source)
-        }
-    }
-
-    /**
-     * Watch a channel mpv has just been given, and take it to the next rung if mpv cannot play it.
-     *
-     * **"Opened" is a decoded picture or the spinner clearing — never `isPlaying`.** mpv seeds that
-     * flag true at load time, so it says nothing about whether the stream ever arrived; a watcher
-     * built on it would call every dead channel a success. The deadline is looser than ExoPlayer's
-     * because mpv runs its own retry and format ladder internally first.
-     */
-    private fun watchMpvOutcome(channel: ChannelEntity, source: SourceEntity?) {
-        mpvOutcomeJob?.cancel()
-        mpvOutcomeJob = scope.launch {
-            val failure = kotlinx.coroutines.withTimeoutOrNull(MPV_OPEN_TIMEOUT_MS) {
-                combine(player.videoRes, player.buffering, player.error) { res, buffering, error ->
-                    when {
-                        error != null -> false to error.toString() // mpv gave up
-                        res != null || !buffering -> true to null   // a picture, or the spinner cleared
-                        else -> null                               // still trying
-                    }
-                }.first { it != null }
-            }
-            if (!isStillMpv(channel)) return@launch
-            val reason = when {
-                failure == null -> "mpv never opened it (${MPV_OPEN_TIMEOUT_MS / 1000}s, no picture and no error)"
-                failure.first -> { engineLog("'${channel.name}' opened on mpv"); ladderOpened(); return@launch }
-                else -> "mpv couldn't play it: ${failure.second}"
-            }
-            advanceLadder(channel, source, reason)
-        }
-    }
-
-    /**
-     * Give live playback back to mpv, because something that is not the live stream is about to open
-     * on it: a catch-up programme, or a rewind into the provider's archive.
-     *
-     * **Without this the two engines played at once.** An archive always opens on mpv, but nothing
-     * told ExoPlayer to let go, so the live stream carried on underneath: two sounds, two of the
-     * playlist's connections spent, and the picture still ExoPlayer's — the archive was audible and
-     * invisible. The television has done this since live moved to ExoPlayer there; it is its
-     * `clearLiveOnExo()`, and the phone simply never gained it.
-     *
-     * The watchdog goes with it: it was armed for a live tune that is over, and firing afterwards
-     * would hand a channel over while a recording of last night plays.
-     */
-    private fun handArchiveToMpv() {
-        exoWatchJob?.cancel()
-        // The ladder and its alarm belong to a LIVE tune. An archive is a different stream with its
-        // own end, so leaving them armed would let the give-up alarm stop a replay that is playing
-        // perfectly well, and let a stale rung hand the channel to the other engine underneath it.
-        ladderDeadlineJob?.cancel()
-        mpvOutcomeJob?.cancel()
-        mpvHandoffJob?.cancel()
-        _liveOnExo.value = false
-        exo.stop()
-    }
-
-    /** Tag for the engine decisions above, so a support log can be filtered to just them. */
-    private val ENGINE_TAG = "LiveEngine"
 
     // --- Multiview: channels kept from the browse screen ------------------------------------------
     // The plan's second entry point: pick two to four channels from the Live list, then play one and
@@ -1120,24 +658,9 @@ class LiveTuner(
             if (!dataSaver.allowsStreaming()) return@launch
             val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return@launch
             if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return@launch
-            val source = withContext(Dispatchers.IO) { sourceDao.getById(channel.sourceId) }
-            val url = if (streamUrlResolver.needsResolve(source)) {
-                runCatching { streamUrlResolver.resolve(source!!, channel.streamUrl) }.getOrNull() ?: return@launch
-            } else {
-                channel.streamUrl
-            }
-            engine.play(
-                url,
-                muted = muted,
-                meta = tv.own.owntv.player.MediaMeta(title = channel.name, logoUrl = channel.displayLogoUrl),
-                userAgent = source?.userAgent,
-                // A tile is one of this playlist's streams like any other, so the playlist's own
-                // pre-buffer and latency apply to it — which is what the television does too.
-                prerollSecsOverride = prerollFor(source),
-                liveBufferOverride = liveBufferFor(source),
-                httpHeaders = channel.httpHeaders,
-                drmConfig = channel.drmConfig,
-            )
+            // Core builds the tile's URL, headers and per-playlist overrides exactly as a full-screen
+            // tune does — including "Prefer HLS", which the phone's own copy of this had left out.
+            live.playTile(engine, channel, muted)
         }
     }
 
@@ -1218,28 +741,6 @@ class LiveTuner(
             .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
     }
 
-    /** Recently watched channels for the player's history sheet overlay. */
-    suspend fun recentlyWatchedForPicker(limit: Int = 30): List<ChannelEntity> {
-        val c = ctx.value
-        if (c.profileId < 0) return emptyList()
-        val cust = custom.value
-        return withContext(Dispatchers.IO) {
-            channelDao.recentlyWatched(c.profileId, limit).first()
-        }
-            .filter { CustomizeKeys.channel(it) !in cust.hiddenItems }
-            .map { ch -> cust.itemNames[CustomizeKeys.channel(ch)]?.let { ch.copy(name = it) } ?: ch }
-    }
-
-    /** Now playing EPG programme titles for a list of channels. */
-    suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.live.ChannelNowPlaying> {
-        if (channels.isEmpty()) return emptyMap()
-        val offset = settings.epgOffsetMinutes.first()
-        val cust = custom.value
-        return withContext(Dispatchers.IO) {
-            epgReader.nowPlayingFor(channels, cust, offset)
-        }
-    }
-
     private suspend fun loadSiblings(channel: ChannelEntity) {
         val c = ctx.value
         if (c.profileId < 0) return
@@ -1289,7 +790,10 @@ class LiveTuner(
             _nowNext.value = null
             _timelineProgrammes.value = emptyList()
         }
-        scope.launch {
+        // The controller's one tune job: a live tune of this channel still resolving is cancelled here
+        // instead of starting over the replay a moment later (the Guide's race), and a later pick
+        // cancels this in turn.
+        live.launch {
             if (!dataSaver.allowsStreaming()) return@launch
             val pid = ctx.value.profileId.takeIf { it >= 0 } ?: return@launch
             if (!AdultCategoryClassifier.allows(pid, channel.categoryId, profileDao, categoryDao)) return@launch
@@ -1311,13 +815,14 @@ class LiveTuner(
                     subtitle = programme.title,
                     logoUrl = channel.displayLogoUrl,
                     isLive = false,
-                    httpHeaders = channel.httpHeaders,
+                    httpHeaders = SourceOverrides.headersWithReferer(channel.httpHeaders, source),
                 ),
             )
             if (!handedOver) {
                 // A replay is an mpv stream, so the live ExoPlayer engine lets go of its channel —
-                // its connection and its decoder — before mpv asks for either.
-                handArchiveToMpv()
+                // its connection and its decoder — before mpv asks for either, and the live ladder
+                // stands down: its alarm would otherwise stop a replay that plays perfectly well.
+                releaseForArchive()
                 player.play(
                     url = url,
                     title = channel.name,
@@ -1326,7 +831,7 @@ class LiveTuner(
                     isLive = false,
                     isArchive = true,
                     userAgent = source?.userAgent,
-                    httpHeaders = channel.httpHeaders,
+                    httpHeaders = SourceOverrides.headersWithReferer(channel.httpHeaders, source),
                 )
                 publishToSystem()
             }
@@ -1346,7 +851,7 @@ class LiveTuner(
      */
     fun jumpBackTo(offsetSec: Int) {
         if (casting()) return
-        val ch = _channel.value?.takeIf { it.catchup } ?: return
+        val ch = _channel.value?.takeIf { timeshift.canRewind(it) } ?: return
         _replaying.value = false
         timeshift.beginAt(ch, offsetSec)
     }
@@ -1368,7 +873,8 @@ class LiveTuner(
 
     /** Offsets worth offering in the catch-up sheet, nearest first; empty without an archive. */
     fun jumpOptions(): List<Int> =
-        if (casting()) emptyList() else _channel.value?.let { timeshift.jumpOptions(it) } ?: emptyList()
+        // The provider archive's alone — a channel without catch-up gets no catch-up control for its saved copy.
+        if (casting()) emptyList() else _channel.value?.takeIf { it.catchup }?.let { timeshift.jumpOptions(it) } ?: emptyList()
 
     /**
      * Tune the channel carrying provider number [number] — the numeric entry in the channel sheet.
@@ -1404,6 +910,20 @@ class LiveTuner(
         }.getOrElse { DirectTune.Failed }
     }
 
+    /** Settings → Live rewind step, read live so a change applies without a restart. */
+    private val rewindStepSec: StateFlow<Int> = settings.liveRewindStepSec
+        .stateIn(scope, SharingStarted.Eagerly, tv.own.owntv.core.settings.SeekSteps.DEFAULT_LIVE_REWIND_STEP_SEC)
+
+    /**
+     * One live skip: [rewindStepSec] back into the archive, or toward live when [forward].
+     *
+     * The phone used the films' seek step here, so "Live rewind step" in Settings did nothing at all.
+     */
+    fun skipLive(forward: Boolean) {
+        val step = rewindStepSec.value
+        scrubLive(if (forward) -step else step)
+    }
+
     /** Drag back into the archive (+) or toward live (−), in seconds. */
     fun scrubLive(deltaSec: Int) {
         if (casting()) return
@@ -1428,7 +948,7 @@ class LiveTuner(
     /** Back to the real-time edge, off the archive stream. */
     fun goToLive() {
         timeshift.clear()
-        _channel.value?.let { ch -> scope.launch { start(ch) } }
+        _channel.value?.let { ch -> live.launch { open(ch) } }
     }
 
     /**
@@ -1436,10 +956,10 @@ class LiveTuner(
      * False when no archive URL can be built, or the user reached live while it was being resolved.
      */
     private suspend fun loadArchiveStream(ch: ChannelEntity, startMs: Long, offsetSec: Int): Boolean {
-        val tz = withContext(Dispatchers.IO) { settings.resolveCatchupTimeZone() }
-        val (url, sourceUa) = withContext(Dispatchers.IO) {
+        val (url, source) = withContext(Dispatchers.IO) {
             val source = sourceDao.getById(ch.sourceId) ?: return@withContext null
-            archiveUrls.forTimeshift(ch, source, startMs, offsetSec, tz)?.let { it to source.userAgent }
+            val tz = settings.resolveCatchupTimeZone(source)
+            archiveUrls.forTimeshift(ch, source, startMs, offsetSec, tz)?.let { it to source }
         } ?: run {
             // The timeshift hands back to the live edge from here, which on its own is indistinguishable
             // from "Go back to…" doing nothing at all.
@@ -1449,15 +969,17 @@ class LiveTuner(
         if (timeshift.offsetSec.value == null) return false // user jumped back to live meanwhile
         // The rewind plays out of the archive on mpv, so the live ExoPlayer engine stops first. This
         // is the one that cost two connections and made two sounds: drag the bar back ten minutes and
-        // the live stream went on playing behind the archive.
-        handArchiveToMpv()
+        // the live stream went on playing behind the archive. A live tune still in flight is cancelled
+        // too — the rewind is the newer request.
+        live.cancelTune()
+        live.releaseForArchive()
         player.play(
             url = url,
             title = ch.name,
             logoUrl = ch.displayLogoUrl,
             isArchive = true,
-            userAgent = sourceUa,
-            httpHeaders = ch.httpHeaders,
+            userAgent = source.userAgent,
+            httpHeaders = SourceOverrides.headersWithReferer(ch.httpHeaders, source),
             rewindStartMs = startMs,
         )
         publishToSystem()
@@ -1477,15 +999,9 @@ class LiveTuner(
         cast.release(this)
         session.attach(null)
         PlaybackService.stop(context)
-        // Every watcher the ladder owns, or one of them fires on a channel nobody is watching and
-        // stops the shared player — which by then may be showing a film.
-        exoWatchJob?.cancel()
-        ladderDeadlineJob?.cancel()
-        mpvOutcomeJob?.cancel()
-        mpvHandoffJob?.cancel()
-        _liveOnExo.value = false
-        exo.stop()
-        player.stop()
+        // Both engines and every watcher the ladder owns, or one of them fires on a channel nobody is
+        // watching and stops the shared player — which by then may be showing a film.
+        live.stop()
     }
 
     /**
@@ -1502,13 +1018,7 @@ class LiveTuner(
         //
         // The ladder goes with them: the channel is the television's now, and a give-up alarm or an
         // mpv watcher left armed would act on a stream that is playing perfectly well in another room.
-        exoWatchJob?.cancel()
-        ladderDeadlineJob?.cancel()
-        mpvOutcomeJob?.cancel()
-        mpvHandoffJob?.cancel()
-        _liveOnExo.value = false
-        exo.stop()
-        player.stop()
+        live.stop()
         return position
     }
 
@@ -1522,7 +1032,7 @@ class LiveTuner(
         // thing entirely — it is started again instead. From its beginning: the receiver's position
         // is not a place the archive URL can be re-entered at.
         val replay = lastCatchup.takeIf { _replaying.value }
-        if (replay != null) playCatchup(replay, channel) else scope.launch { start(channel) }
+        if (replay != null) playCatchup(replay, channel) else live.launch { open(channel) }
     }
 
     private suspend fun recordHistory(profileId: Long, channelId: Long) {
@@ -1538,14 +1048,9 @@ class LiveTuner(
     private companion object {
         const val SIBLING_LIMIT = 2_000
 
-        /**
-         * How long mpv gets to produce a picture before the ladder moves on.
-         *
-         * The television's own figure, and deliberately looser than ExoPlayer's: mpv walks its own
-         * internal retry and format ladder first, so cutting it short would abandon channels it was
-         * about to open.
-         */
-        const val MPV_OPEN_TIMEOUT_MS = 35_000L
+        /** How long Channel +/− waits for the user to stop pressing before it opens a stream — the
+         *  television's figure. */
+        const val ZAP_TUNE_DELAY_MS = 500L
     }
 }
 

@@ -5,12 +5,18 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.toMutableStateList
@@ -18,7 +24,12 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.onFocusEvent
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
+import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.MobileListRow
@@ -134,14 +145,27 @@ private fun SettingsList(
 
     SettingsPage(modifier) {
         item(key = "search") {
+            val settingsKeyboard = LocalSoftwareKeyboardController.current
+            val settingsFocus = LocalFocusManager.current
+            val settingsBiv = remember { BringIntoViewRequester() }
+            val settingsScope = rememberCoroutineScope()
             OutlinedTextField(
                 value = query,
                 onValueChange = onQuery,
                 singleLine = true,
                 placeholder = { Text(stringResource(R.string.settings_search_hint)) },
                 leadingIcon = { Icon(MobileIcons.Search, contentDescription = null) },
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(
+                    onSearch = {
+                        settingsKeyboard?.hide()
+                        settingsFocus.clearFocus()
+                    },
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
+                    .bringIntoViewRequester(settingsBiv)
+                    .onFocusEvent { if (it.isFocused) settingsScope.launch { runCatching { settingsBiv.bringIntoView() } } }
                     .padding(
                         horizontal = MobileDimens.ScreenPaddingH,
                         vertical = MobileDimens.GapSmall,

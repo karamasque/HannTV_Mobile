@@ -22,7 +22,8 @@ Welcome  →  Text size  →  Disclaimer  →  Set up OwnTV  →  Profile  →  
 
 1. **Welcome** — the language picker is on this screen: one of 26, or **System default**. Tap
    **Get started**.
-2. **Text size** — interface zoom and font size, with a sample that resizes as you adjust.
+2. **Text size** — interface zoom and font size, with a sample that resizes as you adjust, and the
+   **App icon** colour.
 3. **Disclaimer** — OwnTV is a player; you bring the sources.
 4. **Set up OwnTV** — **New profile**, **Restore a backup**, or **From another device** (copy
    everything off a television you already have — see below).
@@ -66,7 +67,7 @@ Live TV, the Library and Settings open **two panes** side by side.
 | Gesture | Does |
 |---|---|
 | **Tap** | Show or hide the controls |
-| **Double-tap left / right** | Skip back / forward by your seek step |
+| **Double-tap left / right** | Skip back / forward by your seek step — on a live channel with catch-up, by your **Live rewind step** |
 | **Drag sideways** | Scrub. The bar shows where you will land before you let go |
 | **Drag up/down, left third** | Brightness |
 | **Drag up/down, right third** | Volume |
@@ -87,6 +88,8 @@ moves per centimetre of finger, without changing how far you must travel to star
 **Where:** Settings → Sources → **Playlists** → Add, or the first-run wizard
 **Xtream** (server, user, password), **M3U** (a URL, or a file picked with your phone's file picker),
 or **Stalker/Ministra** (portal URL + MAC, with optional Serial Number, Device IDs and Signature).
+Under **User-Agent** there is an optional **Referer** — leave it empty unless your provider asks
+for one; it is then sent with every stream of that playlist.
 
 ### 📱 Setting up the television too?
 **Where:** on the **TV** — Settings → Manage sources → Add source → **Remote**
@@ -140,13 +143,14 @@ If a channel stutters or won't open, one press flips it to the other engine and 
 channel's choice.
 
 ### 🏛️ Which engine channels start on
-**Where:** Settings → Playback → Video player → **Live TV player**
+**Where:** Settings → Playback → Video player → Player → **Live TV player**
 **ExoPlayer, then mpv** (default) · **mpv, then ExoPlayer** · **ExoPlayer only** · **mpv only**, with
 a **per playlist** override below it.
 
 > **A channel that won't play is worked through every combination** — each engine on each stream
 > format, up to four, each tried once. Then it stops and tells you.
-> **Give up after** (Settings → Playback → Video player) bounds how long that may take.
+> **Give up after** (Settings → Playback → Video player → Live tuning) bounds how long that may take, and
+> **Give up after, per playlist** gives one provider its own time.
 
 ---
 
@@ -161,7 +165,7 @@ a **per playlist** override below it.
 | **Timeline** | One channel read top to bottom |
 
 The app remembers which you chose. Also in that sheet: **sort**, **Auto-match EPG** with a review
-list, and a **Size** slider for the grid's time scale. A day strip sits above the guide — as many days
+list — tick **Include guide logos** there and the matched channels also take the guide's logo — and a **Size** slider for the grid's time scale. A day strip sits above the guide — as many days
 as **Guide days to keep** is set to — and there's a search box.
 
 **Tap a programme** for its synopsis, **Watch channel**, **Watch from start** (catch-up),
@@ -174,7 +178,7 @@ this is why. Add XMLTV feeds here, **Fill from playlist** to take the URL your p
 carries, set a User-Agent, pick a refresh interval — which can be **every N days** — and choose
 whether to use that feed's channel logos.
 
-**Guide days to keep** is on the same screen: how many days of upcoming guide to store, 1–14, seven
+**Guide days to keep** is under Settings → Sources & guide → EPG, beside EPG time offset: how many days of upcoming guide to store, 1–14, seven
 by default. The same number decides how much is downloaded, how much is kept, and how many days the
 strip above the guide offers. Old programmes are kept only on channels with catch-up, since those are
 the only ones that can play them back.
@@ -194,7 +198,26 @@ shows while it does, so the phone lets it finish instead of stopping it and star
 
 ### 🕐 Rewind live
 **Where:** full-screen player, on a channel with an archive
-Drag the live bar back, or use **Go back to…** for a list of times. **Go live** returns.
+Drag the live bar back, tap the rewind button, or use **Go back to…** for a list of times. **Go live**
+returns.
+
+### ⏸️ Pause and rewind channels without catch-up
+**Where:** **Settings → Playback → Video Player Settings → Live TV → Pause and rewind live TV**
+Off by default. While you watch a channel full screen, OwnTV saves it on this phone and plays it
+from that copy, so it still looks live — and you can **pause**, rewind and go forward on channels
+whose provider keeps no archive. Pause, the rewind button, forward (once you are behind), the bar and **Go live** work as on a catch-up channel. A dark stretch on the bar is a moment the connection
+dropped; playback jumps over it.
+
+- **Rewind length:** 15 (default), 30, 45 or 60 minutes. At least **1 GB** of the phone's storage always
+  stays free; the oldest part goes first.
+- **Picture-in-picture and sound-only playback are not leaving: they keep saving.**
+- **The delete rules:**
+  - Leave the channel and its copy is kept for **5 minutes**. Come back within them and OwnTV asks
+    **Continue where you left off?** — **Resume** plays on from where you left, **Go live** jumps to now.
+  - Watch another channel for **2 minutes** and the copy you left is deleted at once — you have moved on.
+  - After 5 minutes it is deleted anyway, and every copy is deleted when OwnTV starts.
+- Catch-up channels still rewind into the provider's archive. Protected (DRM) and encrypted channels
+  play as before, without a copy.
 
 ### ⏺️ Record
 **Where:** long-press a programme in the Guide, or a channel in the list, or the **Record** button in
@@ -241,7 +264,7 @@ Tap for its page: backdrop, cast, chips, **Resume** or **Play**, favourite, down
 and episode progress. A show **opens on the episode you last watched**.
 
 Starting something part-watched anywhere else — a **Continue watching** row, the hero card, an
-episode in a series — asks **Resume or start over?** Settings → Video player → **Resume playback**
+episode in a series — asks **Resume or start over?** Settings → Video player → Resume & auto-play → **Resume playback**
 changes that to always resuming, or always starting from the beginning. A film you left in the first
 ten seconds never asks.
 
@@ -288,7 +311,9 @@ leave the app.
 ### 📂 Choose where they are saved
 **Where:** Settings → Content → Downloads → **Download folder**
 Pick any folder with your phone's own folder picker, an SD card included. **Export** copies a
-finished download or recording anywhere you like.
+finished download or recording anywhere you like. If that folder goes missing — a card removed, or
+permission withdrawn — downloads go to OwnTV's own folder until it is back, and the Downloads screen
+says so.
 
 ### 📶 Wi-Fi only
 **Where:** Settings → Network
@@ -305,17 +330,20 @@ Every gesture above also has a button on the control bar:
 | **Go live** | Back to the live edge |
 | **Volume · Brightness** | Sliders, with a mute row |
 | **Speed** | 0.5× to 2× |
-| **Subtitles · Audio** | Tracks, plus subtitle search, subtitle timing and A/V sync. Both are always on the bar — a film with one soundtrack still has A/V sync. Scroll the panel to reach what is below the tracks |
+| **Subtitles · Audio** | Tracks (the language you pick is remembered per channel, film or series), plus subtitle search, subtitle timing and A/V sync. Both are always on the bar — a film with one soundtrack still has A/V sync. Scroll the panel to reach what is below the tracks |
 | **Previous · Next** | The episode either side of this one, beside play. Series only |
 | **Aspect** | Fit · Fill · Stretch · Original · Force 16:9 · Force 4:3 |
+| **Quality** | Only when the stream offers several picture sizes. Auto, or one size for what is playing now |
 | **Favourite** | Adds what is playing |
 | **Catch-up** | *Go back to…* on archive channels |
+| **Previous channel** | Back to the channel you watched before; tap again to flip back. Headphone "previous" does the same on live |
 | **⇄** | Swap the player engine |
 | **Channels** | The channel list, categories first |
 | **Mini player** | Shrink and keep browsing |
 | **Sound only** | Drop the picture, keep the sound |
 | **Record · Multiview** | Once enabled in Settings |
-| **Info** | The technical readout — and **Report** appears while it is open |
+| 🌙 **Sleep timer** | 15–90 min, end of programme on a live channel, or end of movie / episode (the next episode then does not start); green while running. Stopping playback yourself cancels it. **Also turn off the screen** locks the phone when it ends — Android asks for permission once |
+| **Info** | The technical readout (on mpv including **Interlacing**: none, deinterlaced by the player or by the phone, or not deinterlaced) — and **Report** appears while it is open |
 
 **Back stops the stream.** The mini-player button and the swipe down are what keep it playing.
 
@@ -336,7 +364,7 @@ window, over other apps, with skip and play/pause buttons. Turn it off in
 **Where:** the headphones button in the player, or the floating window's menu
 Keeps the sound, drops the picture — the phone's biggest battery and data saving. It can switch
 itself on **when the screen goes off** or **on mobile data**, and it remembers your choice per
-channel. A **sleep timer** lives in the same menu.
+channel. A **sleep timer** lives in the same menu — and on the full-screen player bar.
 
 ---
 
@@ -391,6 +419,12 @@ Light, dark or system, with an accent colour. Three colour settings — accent, 
 subtitle text — each open a **real colour picker**: hue bar, saturation square, live preview and a
 hex box.
 
+**App icon** (Settings → App): eight colours for the OwnTV icon and logo — Petrol,
+Sunflower, Cobalt, Tomato, Station Board, **Eggshell** (default), Olive and Olive on Cream. **Restart
+now** switches at once: OwnTV closes and opens again by itself, on Home, with the new colour.
+**Later** switches when you next leave the app. Some launchers take a moment
+to show the new icon, and a few move it from the home screen to the app list.
+
 **Glass Effect** has its own page: presets including **Aurora**, transparency, frost, and which
 surfaces get it. Real frost needs Android 12+.
 
@@ -418,13 +452,21 @@ Settings is a list of groups, each opening its own page. There's a **search box*
 
 | Setting | Where | Why |
 |---|---|---|
-| **Live TV player** (+ per playlist) | Playback → Video player | Which engine opens a channel |
-| **Give up after** | Playback → Video player | Bounds how long a dead channel can spin |
-| **Live latency** (+ per playlist) | Playback → Video player | Closer to live, or steadier |
-| **Pre-buffer** (+ per playlist) | Playback → Video player | Collect a few seconds first on a flaky provider |
-| **Multiview** | Playback → Video player | Off by default; also sets the tile ceiling |
+| **Live TV player** (+ per playlist) | Playback → Video player → Player | Which engine opens a channel |
+| **Give up after** (+ per playlist) | Playback → Video player → Live tuning | Bounds how long a dead channel can spin |
+| **Movies & Series player** (+ per playlist) | Playback → Video player → Player | Which engine opens films and episodes |
+| **Catch-up time zone per playlist** | Sources & guide | One provider's archive on a different clock (quarter-hour zones included) |
+| **Live latency** (+ per playlist) | Playback → Video player → Live tuning | Closer to live, or steadier |
+| **Pre-buffer** (+ per playlist) | Playback → Video player → Live tuning | Collect a few seconds first on a flaky provider |
+| **Multiview** | Playback → Video player → Multiview | Off by default; also sets the tile ceiling |
 | **Record what I'm watching** | Playback → Recording | Adds the Record button to the player |
-| **Auto frame rate** | Playback → Video player | Off by default; warns where the display can't be asked |
+| **Auto frame rate** | Playback → Video player → Picture | Off by default; full screen, seamless switches only; warns where the display can't be asked |
+| **Film buffer** · **Network timeout** · **Reconnect attempts** | Playback → Video player → Streaming | Films, episodes and catch-up on a bad line. Auto / 1 = as before |
+| **Reset saved live TV player choices** · **Forget learned stream fixes** | Playback → Video player → Player | Undo per-channel player choices; forget what the player learned about a provider |
+| **Dolby and DTS passthrough** · **Night mode** · **Volume leveling** | Playback → Video player → Sound | Send Dolby/DTS undecoded (on) or decode in the app; turn loud scenes down; even out loudness between channels. Night mode and leveling work on both engines |
+| **Maximum video quality** · **Maximum quality on mobile data** | Playback → Video player → Picture | The highest picture played when a stream offers several; the mobile-data limit follows a Wi-Fi ⇄ mobile switch while playing |
+| **Tunneled playback** | Playback → Video player → Picture | Experimental, off. Only on phones that support it; turns itself off after a failure |
+| **Preferred audio / subtitle language** | Playback → Video player → Languages & subtitles | Per profile, 50 languages. **Original language** (audio) plays a film or series in the language it was made in, when the stream has it |
 | **Subtitle appearance** | Playback → Subtitle appearance | Size, **font**, colour, position, background |
 | **Gesture sensitivity** | Playback → Mobile | How far a value moves per centimetre of finger |
 | **Background playback** | Playback → Mobile | Keep the sound when the app leaves the screen |

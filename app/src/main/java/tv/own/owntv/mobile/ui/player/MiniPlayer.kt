@@ -72,7 +72,9 @@ fun MiniPlayer(
     remote: CastPlaybackEngine? = null,
 ) {
     val playing by (remote?.isPlaying ?: engine.isPlaying).collectAsStateWithLifecycle()
-    val position by (remote?.position ?: engine.position).collectAsStateWithLifecycle()
+    // The State itself, read only inside the progress line's lambda (draw phase), so the bar does not
+    // recompose every second.
+    val position = (remote?.position ?: engine.position).collectAsStateWithLifecycle()
     val duration by (remote?.duration ?: engine.duration).collectAsStateWithLifecycle()
     // Two ways to have no picture — the user turned it off, or the stream never had one — and the bar
     // has the same black rectangle to fill either way. Casting is a third: the picture exists, it is
@@ -163,7 +165,7 @@ fun MiniPlayer(
         // Live has no end to move towards, so the line only appears for something that does.
         if (duration > 0) {
             LinearProgressIndicator(
-                progress = { (position.toFloat() / duration).coerceIn(0f, 1f) },
+                progress = { (position.value.toFloat() / duration).coerceIn(0f, 1f) },
                 modifier = Modifier.fillMaxWidth(),
             )
         }

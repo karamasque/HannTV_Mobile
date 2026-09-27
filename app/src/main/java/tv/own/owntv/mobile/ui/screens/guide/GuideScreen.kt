@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -32,7 +33,9 @@ import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -113,15 +116,18 @@ fun GuideScreen(
     // A different category, day or search is a different list; the old scroll position means nothing.
     LaunchedEffect(selected, day, query, mode) { listState.scrollToItem(0) }
 
-    Column(modifier.fillMaxSize()) {
+    Column(modifier.fillMaxSize().imePadding()) {
         Row(
             modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            val guideKeyboard = LocalSoftwareKeyboardController.current
             MobileTextField(
                 value = query,
                 onValueChange = vm::setQuery,
                 label = stringResource(R.string.content_epg_search_hint),
+                imeAction = ImeAction.Search,
+                onSearch = { guideKeyboard?.hide() },
                 modifier = Modifier.weight(1f),
             )
             IconButton(onClick = { optionsOpen = true }) {
@@ -209,8 +215,11 @@ fun GuideScreen(
         )
     }
     if (review.isNotEmpty()) {
+        val includeLogos by vm.includeGuideLogos.collectAsStateWithLifecycle()
         EpgReviewSheet(
             suggestions = review,
+            includeLogos = includeLogos,
+            onIncludeLogos = vm::setIncludeGuideLogos,
             onAccept = vm::acceptSuggestion,
             onSkip = vm::skipSuggestion,
             onAcceptAll = vm::acceptAllSuggestions,

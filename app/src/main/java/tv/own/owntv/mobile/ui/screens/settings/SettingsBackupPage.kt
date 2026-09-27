@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -15,6 +16,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -25,6 +27,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
 import org.koin.androidx.compose.koinViewModel
@@ -156,6 +159,21 @@ fun SettingsBackupPage(
     }
 
     vm.outcome?.let { outcome -> OutcomeSheet(outcome, vm::dismissOutcome) }
+
+    // A restore can bring a different icon colour than the launcher shows. Offer the restart once the
+    // summary is closed, so the two dialogs never stack.
+    val settings: tv.own.owntv.core.settings.SettingsRepository = org.koin.compose.koinInject()
+    val chosenIcon = settings.appIcon.pref(null)
+    val appliedIcon = tv.own.owntv.mobile.ui.components.rememberAppliedIcon()
+    var restoredPending by remember { mutableStateOf(false) }
+    LaunchedEffect(vm.outcome) { if (vm.outcome is BackupViewModel.Outcome.Restored) restoredPending = true }
+    if (restoredPending && vm.outcome == null) {
+        if (chosenIcon != null && chosenIcon != appliedIcon) {
+            tv.own.owntv.mobile.ui.components.AppIconRestartDialog(chosenIcon) { restoredPending = false }
+        } else {
+            LaunchedEffect(Unit) { restoredPending = false }
+        }
+    }
 }
 
 /** Everything the export needs, decided before the picker opens. */
@@ -233,6 +251,7 @@ private fun ExportSheet(
                 onValueChange = { password = it },
                 label = stringResource(R.string.settings_backup_password),
                 isPassword = true,
+                imeAction = ImeAction.Done,
             )
         }
         SheetButtons(
@@ -278,7 +297,11 @@ private fun SealedPasswordSheet(
         title = stringResource(R.string.settings_backup_enter_password),
     ) {
         Column(
-            modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
+            modifier = Modifier
+                .heightIn(max = sheetListHeight())
+                .verticalScroll(rememberScrollState())
+                .imePadding()
+                .padding(horizontal = MobileDimens.ScreenPaddingH),
             verticalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall),
         ) {
             Note(stringResource(R.string.settings_backup_encrypted_description))
@@ -287,6 +310,8 @@ private fun SealedPasswordSheet(
                 onValueChange = { password = it },
                 label = stringResource(R.string.settings_backup_password),
                 isPassword = true,
+                imeAction = ImeAction.Done,
+                onImeDone = { if (password.isNotBlank()) onSubmit(password) },
                 isError = wrong,
                 supportingText = if (wrong) {
                     stringResource(R.string.settings_backup_password_encrypted_mismatch)
@@ -316,10 +341,13 @@ private fun RestoreSheet(
     inspection: BackupManager.Inspection,
     wrongPassword: Boolean,
     askPassword: Boolean,
-    onRestore: (Set<BackupManager.Section>, String?) -> Unit,
+    onRestore: (Set<BackupManager.Section>, String?, Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var sections by remember(inspection) { mutableStateOf(inspection.sections) }
+    // The other device's hardware settings (engine, decoder, frame rate, HDR, surround): offered only
+    // for a file written elsewhere, and unticked — a phone's values are rarely a television's.
+    var deviceSettings by remember(inspection) { mutableStateOf(false) }
     var password by remember { mutableStateOf("") }
     MobileBottomSheet(
         onDismissRequest = onDismiss,
@@ -339,6 +367,14 @@ private fun RestoreSheet(
                     description = stringResource(section.descriptionRes()),
                     checked = section in sections,
                     onToggle = { on -> sections = if (on) sections + section else sections - section },
+                )
+            }
+            if (inspection.fromOtherDevice && BackupManager.Section.SETTINGS in sections) {
+                CheckRow(
+                    label = stringResource(R.string.settings_backup_device_settings),
+                    description = stringResource(R.string.settings_backup_device_settings_desc),
+                    checked = deviceSettings,
+                    onToggle = { deviceSettings = it },
                 )
             }
             if (askPassword) {
@@ -366,7 +402,7 @@ private fun RestoreSheet(
                 },
             ),
             confirmEnabled = sections.isNotEmpty(),
-            onConfirm = { onRestore(sections, password.takeIf { it.isNotBlank() }) },
+            onConfirm = { onRestore(sections, password.takeIf { it.isNotBlank() }, deviceSettings) },
             onDismiss = onDismiss,
         )
     }

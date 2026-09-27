@@ -4,6 +4,35 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
+    <style name="Theme.OwnTVMobile.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/owntv_window_bg</item>
+        <item name="postSplashScreenTheme">@style/Theme.OwnTVMobile</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.Petrol">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_petrol</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.Sunflower">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_sunflower</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.Cobalt">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_cobalt</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.Tomato">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_tomato</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.Board">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_board</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.Eggshell">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_eggshell</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.Olive">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_olive</item>
+    </style>
+    <style name="Theme.OwnTVMobile.Starting.OliveCream">
+        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_olive_cream</item>
+    </style>
+
     <style name="Theme.HanTVMobile.CastButton" parent="Theme.AppCompat.NoActionBar">
         <item name="mediaRouteButtonStyle">@style/Widget.HanTVMobile.MediaRouteButton.Light</item>
     </style>

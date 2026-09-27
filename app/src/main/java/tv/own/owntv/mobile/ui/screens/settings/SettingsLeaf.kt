@@ -88,8 +88,87 @@ enum class SettingsLeaf(
     VIDEO_PLAYER(
         SettingsGroup.PLAYBACK, "video",
         R.string.settings_video_player, R.string.settings_search_keywords_video,
-        R.string.settings_vp_section_engine_summary,
+        R.string.settings_video_player_description,
         MobileIcons.PlayCircle,
+    ),
+    // Video player's categories: that page lists them, so the Playback page does not (see
+    // [VIDEO_PLAYER_CATEGORIES]). Each is a page of its own, so back from one returns to the list.
+    VP_PLAYER(
+        SettingsGroup.PLAYBACK, "video-player",
+        R.string.settings_vp_cat_player, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_player_summary,
+        MobileIcons.PlayArrow,
+        listedInGroup = false,
+    ),
+    VP_PICTURE(
+        SettingsGroup.PLAYBACK, "video-picture",
+        R.string.settings_vp_cat_picture, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_picture_summary,
+        MobileIcons.Image,
+        listedInGroup = false,
+    ),
+    VP_STREAMING(
+        SettingsGroup.PLAYBACK, "video-streaming",
+        R.string.settings_vp_cat_streaming, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_streaming_summary,
+        MobileIcons.Wifi,
+        listedInGroup = false,
+    ),
+    VP_LIVE(
+        SettingsGroup.PLAYBACK, "video-live",
+        R.string.settings_live_tv, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_live_summary,
+        MobileIcons.LiveTv,
+        listedInGroup = false,
+    ),
+    VP_LIVE_TUNING(
+        SettingsGroup.PLAYBACK, "video-live-tuning",
+        R.string.settings_vp_cat_live_tuning, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_live_tuning_summary,
+        MobileIcons.Tune,
+        listedInGroup = false,
+    ),
+    VP_CONTROLS(
+        SettingsGroup.PLAYBACK, "video-controls",
+        R.string.settings_vp_cat_controls, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_controls_summary,
+        MobileIcons.FastForward,
+        listedInGroup = false,
+    ),
+    VP_MULTIVIEW(
+        SettingsGroup.PLAYBACK, "video-multiview",
+        R.string.settings_multiview, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_multiview_summary_mobile,
+        MobileIcons.GridView,
+        listedInGroup = false,
+    ),
+    VP_SOUND(
+        SettingsGroup.PLAYBACK, "video-sound",
+        R.string.settings_vp_section_sound, R.string.settings_search_keywords_audio,
+        R.string.settings_vp_cat_sound_summary,
+        MobileIcons.VolumeUp,
+        listedInGroup = false,
+    ),
+    VP_LANGUAGES(
+        SettingsGroup.PLAYBACK, "video-languages",
+        R.string.settings_vp_cat_languages, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_languages_summary,
+        MobileIcons.Translate,
+        listedInGroup = false,
+    ),
+    VP_RESUME(
+        SettingsGroup.PLAYBACK, "video-resume",
+        R.string.settings_vp_cat_resume, R.string.settings_search_keywords_video,
+        R.string.settings_vp_cat_resume_summary,
+        MobileIcons.SkipNext,
+        listedInGroup = false,
+    ),
+    VP_DIAGNOSTICS(
+        SettingsGroup.PLAYBACK, "video-diagnostics",
+        R.string.settings_diagnostics, R.string.settings_search_keywords_video,
+        R.string.settings_vp_section_diagnostics_summary,
+        MobileIcons.Info,
+        listedInGroup = false,
     ),
     SUBTITLE_APPEARANCE(
         SettingsGroup.PLAYBACK, "subtitles",
@@ -136,3 +215,13 @@ fun settingsLeafOf(route: String?): SettingsLeaf? =
 /** The leaves of one group, in declaration order — what a group page lists at its head. */
 fun leavesOf(group: SettingsGroup): List<SettingsLeaf> =
     SettingsLeaf.entries.filter { it.group == group && it.listedInGroup }
+
+/**
+ * Video player's categories, in the order its page lists them. The television has the same ones plus
+ * Frame rate, which on a phone is a single row and lives in Picture.
+ */
+val VIDEO_PLAYER_CATEGORIES: List<SettingsLeaf> = listOf(
+    SettingsLeaf.VP_PLAYER, SettingsLeaf.VP_PICTURE, SettingsLeaf.VP_STREAMING, SettingsLeaf.VP_LIVE,
+    SettingsLeaf.VP_LIVE_TUNING, SettingsLeaf.VP_CONTROLS, SettingsLeaf.VP_MULTIVIEW, SettingsLeaf.VP_SOUND,
+    SettingsLeaf.VP_LANGUAGES, SettingsLeaf.VP_RESUME, SettingsLeaf.VP_DIAGNOSTICS,
+)

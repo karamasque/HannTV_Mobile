@@ -42,19 +42,18 @@ import tv.own.owntv.core.live.ChannelNowPlaying
 import tv.own.owntv.core.database.entity.ContentOrderEntity
 import tv.own.owntv.core.database.entity.FavoriteEntity
 import tv.own.owntv.core.epg.EpgShift
-import tv.own.owntv.core.epg.EpgSourceStore
 import tv.own.owntv.core.live.LiveEpgReader
 import tv.own.owntv.core.live.LiveKey
 import tv.own.owntv.core.live.livePagingSource
 import tv.own.owntv.core.live.parseLiveKey
 import tv.own.owntv.core.live.serialize
 import tv.own.owntv.core.model.MediaType
-import tv.own.owntv.core.parser.XtreamClient
 import tv.own.owntv.core.player.ExternalPlayerLauncher
 import tv.own.owntv.core.repository.ActiveProfileSources
 import tv.own.owntv.core.repository.EpgRepository
 import tv.own.owntv.core.repository.activeProfileSources
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.core.settings.SourceOverrides
 import tv.own.owntv.core.stalker.StreamUrlResolver
 import tv.own.owntv.core.sync.work.CatalogSyncScheduler
 import tv.own.owntv.mobile.ui.components.ReorderItem
@@ -97,9 +96,10 @@ class LiveViewModel(
     epgSourceStore: EpgSourceStore,
     xtreamClient: XtreamClient,
     private val tuner: LiveTuner,
+    /** The app-wide reader the Guide uses too (T18) — one now/next cache, not two. */
+    private val epgReader: LiveEpgReader,
 ) : ViewModel() {
 
-    private val epgReader = LiveEpgReader(epgDao, epgSourceStore, sourceDao, xtreamClient, streamUrlResolver)
 
     init {
         viewModelScope.launch {
@@ -479,7 +479,7 @@ class LiveViewModel(
                 url = url,
                 title = channel.name,
                 userAgent = source?.userAgent,
-                httpHeaders = channel.httpHeaders,
+                httpHeaders = SourceOverrides.headersWithReferer(channel.httpHeaders, source),
             )
         }
     }

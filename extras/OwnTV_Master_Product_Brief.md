@@ -1,5 +1,8 @@
 <p align="center">
-  <img src="logo.png" alt="OwnTV Mobile" width="300">
+  <picture>
+    <source media="(prefers-color-scheme: light)" srcset="brand/app-logos/logo_eggshell_light.png">
+    <img src="brand/app-logos/logo_eggshell.png" alt="OwnTV Mobile" width="300">
+  </picture>
 </p>
 
 <h1 align="center">OwnTV Mobile — Master Product Brief</h1>
@@ -68,6 +71,9 @@ The same two engines as the television, behind the same `PlaybackEngine` interfa
 
 - **Engine preference per section**, globally and **per playlist** — either engine first with the
   automatic handover, or one engine only with it switched off.
+- **Track memory** — the audio and subtitle language picked in the player is remembered per
+  channel, film and series (per profile).
+- **Per-playlist provider quirks** — catch-up time zone, "give up after" time and an HTTP Referer.
 - **Per-channel compatibility mode** — the **⇄** button pins a channel to mpv and remembers it,
   using the same store the television uses, so a pin syncs between the two devices.
 - **The fallback ladder** — core's `LiveLadder`: up to four rungs, each tried once,
@@ -136,8 +142,11 @@ than growing.
 
 Text, image (PGS/VOBSUB/DVB) and closed captions, with size, **font**, colour, position and
 background; the chosen font file is handed to the engine so mpv draws it too. OpenSubtitles search
-and local files, a timing nudge, preferred audio and subtitle languages, A/V sync with a
-remember-this-delay, surround handling and 150% volume boost — all core's, all shared.
+and local files, a timing nudge, preferred audio and subtitle languages (per profile, 50 languages, plus "Original
+language" from TMDB), A/V sync with a
+remember-this-delay, surround handling and 150% volume boost, Night mode and Volume leveling (both
+engines), a Dolby/DTS passthrough switch, Maximum video quality with a mobile-data limit and a per-item
+Quality button, and experimental tunneled playback — all core's, all shared.
 
 ---
 
@@ -187,7 +196,9 @@ order, so both apps offer the same actions in the same arrangement.
 ## 4. EPG, catch-up & recording
 
 The guide, catch-up, live rewind, auto-matching, guide offsets and multiple XMLTV feeds are core's
-and behave as they do on the television. Mobile-specific shapes:
+and behave as they do on the television — including **Pause and rewind live TV** (a channel without
+catch-up saved on the phone while watched, kept through picture-in-picture and sound-only playback).
+Mobile-specific shapes:
 
 - The **three guide views** above, with a day strip, a jump-to-now button and a category filter.
 - A **programme sheet** whose synopsis is fetched when it opens, carrying watch, watch-from-start,
@@ -311,7 +322,7 @@ app/src/main/java/tv/own/owntv/mobile/
 ├── ui/player/       the full-screen player, gestures, sheets, mini players
 ├── ui/components/   the shared surface language — buttons, rows, sheets, glass, icons
 ├── ui/shell/        the bar/rail shell, the top bar, the sync pill
-├── playback/        the foreground service, PiP, the data-saver gate, the sleep timer
+├── playback/        the foreground service, PiP, the data-saver gate (the sleep timer is core's)
 ├── cast/            the Google Cast sender
 └── di/              Koin modules
 tools/i18n/          the locale catalogue and the consumer-side string checks

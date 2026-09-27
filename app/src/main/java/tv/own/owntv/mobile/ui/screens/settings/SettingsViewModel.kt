@@ -90,6 +90,8 @@ class SettingsViewModel(
     private val customize: CustomizationStore,
     private val okHttpClient: OkHttpClient,
     private val vodEngineStore: VodEngineStore,
+    private val forceMpvStore: tv.own.owntv.core.player.ForceMpvStore,
+    private val archiveDecodeStore: tv.own.owntv.core.player.ArchiveDecodeStore,
     private val playbackPrefs: PlaybackPrefsStore,
     private val metadataProvider: MetadataProvider,
     private val metadataBudget: MetadataBudget,
@@ -239,6 +241,7 @@ class SettingsViewModel(
         user: String,
         pass: String,
         userAgent: String,
+        httpReferer: String,
         autoRefresh: PlaylistRefresh,
         mac: String = "",
         stalkerSerialNumber: String = "",
@@ -270,6 +273,7 @@ class SettingsViewModel(
                 stalkerDeviceId2 = stalkerDeviceId2.trim().takeIf { it.isNotBlank() },
                 stalkerSignature = stalkerSignature.trim().takeIf { it.isNotBlank() },
                 userAgent = userAgent.trim().takeIf { it.isNotBlank() },
+                httpReferer = httpReferer.trim().takeIf { it.isNotEmpty() },
                 syncLive = syncLive,
                 syncMovies = syncMovies,
                 syncSeries = syncSeries,
@@ -467,6 +471,17 @@ class SettingsViewModel(
 
     fun clearVodEnginePins() { viewModelScope.launch { vodEngineStore.clearAll() } }
 
+    /** N15 — how many channels are pinned to one engine (either direction), for the live reset row. */
+    val livePinCount: StateFlow<Int> =
+        combine(forceMpvStore.urls, forceMpvStore.exoUrls) { mpv, exo -> mpv.size + exo.size }
+            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    /** N15 — every channel follows the Live TV player setting again; films' pins are kept. */
+    fun clearLivePins() { viewModelScope.launch { forceMpvStore.clearAll() } }
+
+    /** N15 — forget the stream lessons of this session and the stored catch-up decode list. */
+    fun forgetStreamFixes() { viewModelScope.launch { tv.own.owntv.player.LiveStreamQuirks.forgetLearned(archiveDecodeStore) } }
+
     fun clearSavedZoom() { viewModelScope.launch { playbackPrefs.clearZoom() } }
 
     fun clearSavedVolume() { viewModelScope.launch { playbackPrefs.clearVolume() } }
@@ -488,6 +503,21 @@ class SettingsViewModel(
     /** `-1` follows the global "Pre-buffer". */
     fun setSourcePreroll(sourceId: Long, secs: Int) {
         viewModelScope.launch { sourceDao.updateLivePreroll(sourceId, secs) }
+    }
+
+    /** `null` follows the global "Movies & Series player". */
+    fun setSourceVodEngine(sourceId: Long, preference: String?) {
+        viewModelScope.launch { sourceDao.updateVodEnginePreference(sourceId, preference) }
+    }
+
+    /** `null` follows the global "Give up after"; 0 is never. */
+    fun setSourceTuneTimeout(sourceId: Long, secs: Int?) {
+        viewModelScope.launch { sourceDao.updateLiveTuneTimeout(sourceId, secs) }
+    }
+
+    /** `null` mode follows the global catch-up time zone; [offsetMin] only matters for MANUAL. */
+    fun setSourceCatchupTimezone(sourceId: Long, mode: String?, offsetMin: Int?) {
+        viewModelScope.launch { sourceDao.updateCatchupTimezone(sourceId, mode, offsetMin) }
     }
 
     // --- Metadata: which tier is answering, what is left of the allowance, and a lookup to prove it ---

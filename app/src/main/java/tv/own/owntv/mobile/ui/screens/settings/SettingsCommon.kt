@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -92,7 +93,9 @@ fun <T> Flow<T>.pref(initial: T): T = collectAsStateWithLifecycle(initial).value
 @Composable
 fun SettingsPage(modifier: Modifier = Modifier, content: LazyListScope.() -> Unit) {
     LazyColumn(
-        modifier = modifier.fillMaxSize(),
+        modifier = modifier
+            .fillMaxSize()
+            .imePadding(),
         contentPadding = PaddingValues(
             start = MobileDimens.PagePaddingH,
             end = MobileDimens.PagePaddingH,

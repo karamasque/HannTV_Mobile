@@ -57,12 +57,6 @@ val QUICK_TOGGLES: List<QuickToggle> = listOf(
         default = true,
     ),
     QuickToggle(
-        "vp_deinterlace",
-        R.string.settings_deinterlace,
-        { it.deinterlace },
-        { setDeinterlace(it) },
-    ),
-    QuickToggle(
         "vp_hdr",
         R.string.settings_quick_hdr,
         { it.hdrEnabled },

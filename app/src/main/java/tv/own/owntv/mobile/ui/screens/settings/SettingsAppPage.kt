@@ -82,7 +82,17 @@ fun SettingsAppPage(
     var startupSheet by remember { mutableStateOf(false) }
     var channelSheet by remember { mutableStateOf(false) }
     var updateSheet by remember { mutableStateOf(false) }
+    val appIcon = vm.settings.appIcon.pref(tv.own.owntv.core.brand.AppIcon.DEFAULT)
+    var showAppIcon by remember { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
+
+    if (showAppIcon) {
+        tv.own.owntv.mobile.ui.components.AppIconSettingsDialog(
+            chosen = appIcon,
+            onPick = { vm.edit { setAppIcon(it) } },
+            onDismiss = { showAppIcon = false },
+        )
+    }
 
     SettingsPage(modifier) {
         settingsSection(R.string.settings_app_group) {
@@ -92,6 +102,13 @@ fun SettingsAppPage(
                 value = localeLabel(tag),
                 showChevron = true,
                 onClick = onOpenLanguage,
+            )
+
+            SettingRow(
+                title = stringResource(R.string.settings_app_icon),
+                subtitle = stringResource(R.string.settings_app_icon_summary),
+                value = stringResource(appIcon.label),
+                onClick = { showAppIcon = true },
             )
 
             SettingRow(
@@ -166,6 +183,12 @@ fun AboutPage(modifier: Modifier = Modifier) {
                     vertical = MobileDimens.GapSmall,
                 ),
             ) {
+                // The logo in the colour the launcher shows, as on the mockup's About row.
+                tv.own.owntv.mobile.ui.components.BrandLockup(
+                    markSize = 40,
+                    textSize = 26,
+                    modifier = Modifier.padding(bottom = MobileDimens.GapSmall),
+                )
                 Text(
                     text = stringResource(R.string.settings_about_version, BuildConfig.VERSION_NAME),
                     style = MaterialTheme.typography.bodyLarge,

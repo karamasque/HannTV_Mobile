@@ -42,14 +42,6 @@ class EpgSourcesViewModel(
         store.sources.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     /** Per-source EPG auto-refresh selection (Off / Startup / staleness threshold). */
-    /** How many days of upcoming guide to store — one value for every EPG source (guide plan R1). */
-    val guideDaysToKeep: StateFlow<Int> = settings.guideDaysToKeep
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), tv.own.owntv.core.settings.GuideRetention.DEFAULT_DAYS)
-
-    fun setGuideDaysToKeep(days: Int) {
-        viewModelScope.launch { settings.setGuideDaysToKeep(days) }
-    }
-
     val autoRefresh: StateFlow<Map<Long, EpgRefresh>> = settings.epgAutoRefresh
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyMap())
 

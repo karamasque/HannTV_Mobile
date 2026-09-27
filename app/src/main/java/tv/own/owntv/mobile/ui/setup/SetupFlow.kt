@@ -12,9 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
@@ -34,6 +34,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import kotlinx.coroutines.launch
@@ -117,6 +118,8 @@ fun SetupFlow(
     // expressible here.
     var restoreFile by remember { mutableStateOf<java.io.File?>(null) }
     var restoreSections by remember { mutableStateOf<Set<BackupManager.Section>?>(null) }
+    // "Hardware settings from the other device" — answered with the sections, carried like them.
+    var restoreDeviceSettings by remember { mutableStateOf(false) }
 
     // The name field is optional, and the television has always filled a blank one in rather than
     // storing an empty string. Without this the playlist has no name anywhere it is shown — the top
@@ -221,24 +224,27 @@ fun SetupFlow(
                 onBack = { step = Step.ADD_CONTENT },
             )
             Step.FORM -> AddSourceForm(
-                onStartXtream = { name, server, user, pass, ua, refresh, live, movies, series, hls ->
+                onStartXtream = { name, server, user, pass, ua, referer, refresh, live, movies, series, hls ->
                     vm.startXtream(
                         name.ifBlank { defaultIptvName },
-                        server, user, pass, ua, refresh, live, movies, series, hls,
+                        server, user, pass, ua, referer, refresh, live, movies, series, hls,
                     )
                     step = Step.IMPORTING
                 },
-                onStartM3u = { name, url, ua, refresh ->
-                    vm.startM3u(name.ifBlank { defaultPlaylistName }, url, ua, refresh)
+                onStartM3u = { name, url, ua, referer, refresh ->
+                    vm.startM3u(name.ifBlank { defaultPlaylistName }, url, ua, referer, refresh)
                     step = Step.IMPORTING
                 },
-                onStartStalker = { name, portal, mac, serial, dev1, dev2, sig, ua, refresh, live, movies, series ->
+                onStartStalker = { name, portal, mac, serial, dev1, dev2, sig, ua, referer, refresh, live, movies, series ->
                     vm.startStalker(
                         name.ifBlank { defaultPortalName },
-                        portal, mac, serial, dev1, dev2, sig, ua, refresh, live, movies, series,
+                        portal, mac, serial, dev1, dev2, sig, ua, referer, refresh, live, movies, series,
                     )
                     step = Step.IMPORTING
                 },
+                // Every other step gets its insets from [SetupPage]; the form has its own scrolling
+                // column, and without this its first line sat under the status bar's clock.
+                modifier = Modifier.statusBarsPadding(),
             )
             Step.IMPORTING -> ImportProgress(
                 state = state,
@@ -254,7 +260,7 @@ fun SetupFlow(
                     // The same choice the sheet took, carried across the password question: a sealed
                     // file is chosen from before it can be opened, so the answer has to outlive it.
                     onPassword = { file, password ->
-                        vm.restoreWithPassword(file, password)
+                        vm.restoreWithPassword(file, password, restoreSections ?: allSections, restoreDeviceSettings)
                     },
                     onContinue = { vm.finish(onDone) },
                     onPickAgain = { vm.reset(); restoreFile = null; restoreSections = null; pickBackup() },
@@ -264,9 +270,10 @@ fun SetupFlow(
                 val picked = restoreFile
                 if (picked != null && restoreSections == null) {
                     RestoreSectionsSheet(
-                        onConfirm = { sections ->
+                        onConfirm = { sections, deviceSettings ->
                             restoreSections = sections
-                            vm.importBackup(picked)
+                            restoreDeviceSettings = deviceSettings
+                            vm.importBackup(picked, sections, deviceSettings)
                         },
                         onDismiss = {
                             vm.reset()
@@ -423,10 +430,13 @@ private val allSections: Set<BackupManager.Section> get() = BackupManager.Sectio
  */
 @Composable
 private fun RestoreSectionsSheet(
-    onConfirm: (Set<BackupManager.Section>) -> Unit,
+    onConfirm: (Set<BackupManager.Section>, Boolean) -> Unit,
     onDismiss: () -> Unit,
 ) {
     var sections by remember { mutableStateOf(allSections) }
+    // Offered whatever the file is — it has not been opened yet — and unticked. A backup of this very
+    // phone gets its hardware settings back regardless; this is only about another device's.
+    var deviceSettings by remember { mutableStateOf(false) }
     MobileBottomSheet(
         onDismissRequest = onDismiss,
         title = stringResource(R.string.settings_backup_restore_title),
@@ -447,11 +457,19 @@ private fun RestoreSectionsSheet(
                     onToggle = { on -> sections = if (on) sections + section else sections - section },
                 )
             }
+            if (BackupManager.Section.SETTINGS in sections) {
+                CheckRow(
+                    label = stringResource(R.string.settings_backup_device_settings),
+                    description = stringResource(R.string.settings_backup_device_settings_desc),
+                    checked = deviceSettings,
+                    onToggle = { deviceSettings = it },
+                )
+            }
         }
         SheetButtons(
             confirm = stringResource(R.string.settings_backup_restore_action),
             confirmEnabled = sections.isNotEmpty(),
-            onConfirm = { onConfirm(sections) },
+            onConfirm = { onConfirm(sections, deviceSettings) },
             onDismiss = onDismiss,
         )
     }
@@ -493,6 +511,8 @@ private fun RestoreBackup(
                     onValueChange = { password = it },
                     label = stringResource(R.string.setup_backup_password),
                     isPassword = true,
+                    imeAction = ImeAction.Done,
+                    onImeDone = { if (password.isNotBlank()) onPassword(state.file, password) },
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Row(horizontalArrangement = Arrangement.spacedBy(MobileDimens.GapSmall)) {
@@ -586,10 +606,11 @@ fun SetupPage(content: @Composable () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            // safeDrawing already holds status + navigation room; imePadding holds the keyboard.
+            // Do not add navigationBarsPadding on top: it double-counts the gesture bar.
             .safeDrawingPadding()
             .verticalScroll(rememberScrollState())
             .imePadding()
-            .navigationBarsPadding()
             .padding(horizontal = MobileDimens.ScreenPaddingH, vertical = MobileDimens.GapLarge),
         verticalArrangement = Arrangement.spacedBy(MobileDimens.GapMedium, Alignment.CenterVertically),
         horizontalAlignment = Alignment.CenterHorizontally,

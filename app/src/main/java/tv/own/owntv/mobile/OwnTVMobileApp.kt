@@ -58,6 +58,9 @@ class HanTVMobileApp : Application(), androidx.work.Configuration.Provider {
 
     override fun onCreate() {
         super.onCreate()
+        // "Restart now" after an icon change runs a few milliseconds in a process of its own; nothing
+        // below may start there (core's AppRestartActivity).
+        if (tv.own.owntv.core.brand.AppIconSwitcher.isRestartProcess(this)) return
         // Zero-point for the OwnTVPerf startup timeline (adb logcat -s OwnTVPerf), matching the TV
         // app. Without it every Perf.stamp in core is a silent no-op — which mattered more than a
         // missing timeline: core's database-open stamp is the only thing that proves Room's onOpen
@@ -96,6 +99,8 @@ class HanTVMobileApp : Application(), androidx.work.Configuration.Provider {
         // res/font files. The result was a Subtitle font setting that reached the app's own subtitle
         // layer and nothing else.
         tv.own.owntv.player.SubtitleFontAssets.resourceOf = { it.subtitleFontResource }
+        // The eight icon colours are MainActivity + a suffix (see MainActivityColours.kt); core switches them.
+        tv.own.owntv.core.brand.AppIconSwitcher.mainActivityClass = MainActivity::class.java.name
         startKoin {
             androidLogger(if (BuildConfig.DEBUG) Level.ERROR else Level.NONE)
             androidContext(this@HanTVMobileApp)
@@ -104,6 +109,37 @@ class HanTVMobileApp : Application(), androidx.work.Configuration.Provider {
                 liveModule, libraryModule, guideModule, homeModule, searchModule,
                 downloadsModule, settingsModule,
             )
+        }
+        // A chosen icon colour ("Later", the first-run pick, a restore) reaches the launcher when the app
+        // is next in the background, never while it is on screen.
+        tv.own.owntv.core.brand.AppIconSwitcher.start(this, org.koin.core.context.GlobalContext.get().get())
+        // Diagnostics switch, the persisted archive-decode quirk and the one-shot settings migrations.
+        tv.own.owntv.player.PlaybackStartup.start(
+            context = this,
+            scope = appScope,
+            settings = org.koin.core.context.GlobalContext.get().get(),
+            archiveStore = org.koin.core.context.GlobalContext.get().get(),
+        )
+        // "Use this guide's logos": never started on the phone before, so the toggle did nothing here.
+        // Reads no EPG data at all while no guide source has it on.
+        tv.own.owntv.core.epg.EpgLogoStore.start(
+            scope = appScope,
+            settings = org.koin.core.context.GlobalContext.get().get(),
+            epgDao = org.koin.core.context.GlobalContext.get().get(),
+            customize = org.koin.core.context.GlobalContext.get().get(),
+        )
+    }
+
+    /** Process-long scope for [tv.own.owntv.player.PlaybackStartup]; never cancelled. */
+    private val appScope = kotlinx.coroutines.CoroutineScope(
+        kotlinx.coroutines.SupervisorJob() + kotlinx.coroutines.Dispatchers.IO,
+    )
+
+    /** Memory pressure reaches every engine; which levels count is core's call (see PlaybackEngines). */
+    override fun onTrimMemory(level: Int) {
+        super.onTrimMemory(level)
+        runCatching {
+            org.koin.core.context.GlobalContext.getOrNull()?.getOrNull<tv.own.owntv.player.PlaybackEngines>()?.onTrimMemory(level)
         }
     }
 }

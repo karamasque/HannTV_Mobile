@@ -294,6 +294,16 @@ private fun StorageHeader(
                     .fillMaxWidth()
                     .padding(end = MobileDimens.GapSmall, bottom = MobileDimens.GapSmall),
             )
+            // The chosen folder is missing (card or stick out, permission withdrawn): the bar above
+            // is the app's own folder, and new downloads go there until it is back.
+            if (it.usingFallback) {
+                Text(
+                    text = stringResource(R.string.content_storage_folder_fallback),
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(end = MobileDimens.GapSmall, bottom = MobileDimens.GapSmall),
+                )
+            }
         }
         // The folder everything lands in, read at a glance. It is a fact about the whole screen
         // rather than a control, so it sits with the free-space line instead of behind the button

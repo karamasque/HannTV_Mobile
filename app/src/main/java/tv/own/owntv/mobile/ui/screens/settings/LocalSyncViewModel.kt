@@ -220,11 +220,12 @@ class LocalSyncViewModel(
     }
 
     /** The user has seen what will change and said yes. */
-    fun confirm() {
+    fun confirm(deviceSettings: Boolean = false) {
         val current = step as? Step.Confirm ?: return
         busy = true
         viewModelScope.launch {
-            sync.apply(current.file, current.sections, current.password)
+            // [deviceSettings]: the other device's hardware settings were ticked on the confirm sheet.
+            sync.apply(current.file, current.sections, current.password, deviceSettings)
                 .onSuccess { summary ->
                     // A merge sends this device's own data back once the incoming half has landed,
                     // so both ends finish holding the same thing rather than one being a round behind.

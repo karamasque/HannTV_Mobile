@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -31,6 +32,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
@@ -74,6 +76,7 @@ data class SourceFormValues(
     val deviceId2: String = "",
     val signature: String = "",
     val userAgent: String = "",
+    val httpReferer: String = "",
     val autoRefresh: PlaylistRefresh = PlaylistRefresh(),
     val live: SyncScopeChoice = SyncScopeChoice.Now,
     val movies: SyncScopeChoice = SyncScopeChoice.Now,
@@ -97,13 +100,13 @@ data class SourceFormValues(
 fun AddSourceForm(
     onStartXtream: (
         name: String, server: String, username: String, password: String, userAgent: String,
-        autoRefresh: PlaylistRefresh, live: SyncScopeChoice, movies: SyncScopeChoice,
+        httpReferer: String, autoRefresh: PlaylistRefresh, live: SyncScopeChoice, movies: SyncScopeChoice,
         series: SyncScopeChoice, preferHls: Boolean,
     ) -> Unit,
-    onStartM3u: (name: String, url: String, userAgent: String, autoRefresh: PlaylistRefresh) -> Unit,
+    onStartM3u: (name: String, url: String, userAgent: String, httpReferer: String, autoRefresh: PlaylistRefresh) -> Unit,
     onStartStalker: (
         name: String, portalUrl: String, mac: String, serialNumber: String, deviceId: String,
-        deviceId2: String, signature: String, userAgent: String, autoRefresh: PlaylistRefresh,
+        deviceId2: String, signature: String, userAgent: String, httpReferer: String, autoRefresh: PlaylistRefresh,
         live: SyncScopeChoice, movies: SyncScopeChoice, series: SyncScopeChoice,
     ) -> Unit,
     modifier: Modifier = Modifier,
@@ -130,6 +133,7 @@ fun AddSourceForm(
     var deviceId2 by rememberSaveable { mutableStateOf(initial?.deviceId2.orEmpty()) }
     var signature by rememberSaveable { mutableStateOf(initial?.signature.orEmpty()) }
     var userAgent by rememberSaveable { mutableStateOf(initial?.userAgent.orEmpty()) }
+    var httpReferer by rememberSaveable { mutableStateOf(initial?.httpReferer.orEmpty()) }
     var preferHls by rememberSaveable { mutableStateOf(initial?.preferHls ?: false) }
     var refreshMode by rememberSaveable { mutableStateOf(initial?.autoRefresh?.mode ?: PlaylistAutoRefresh.OFF) }
     var manualDays by rememberSaveable {
@@ -183,6 +187,7 @@ fun AddSourceForm(
         deviceId2 = deviceId2,
         signature = signature,
         userAgent = userAgent,
+        httpReferer = httpReferer,
         autoRefresh = autoRefresh,
         live = syncLive,
         movies = syncMovies,
@@ -203,6 +208,7 @@ fun AddSourceForm(
     Column(
         modifier = modifier
             .fillMaxSize()
+            .statusBarsPadding()
             .verticalScroll(rememberScrollState())
             .imePadding()
             .navigationBarsPadding()
@@ -285,13 +291,13 @@ fun AddSourceForm(
                 },
             )
         }
-
         if (kind != SourceKind.AUTO) {
             MobileTextField(
                 value = name,
                 onValueChange = { name = it },
                 label = stringResource(R.string.setup_source_name_optional),
                 placeholder = stringResource(R.string.setup_default_iptv),
+                imeAction = ImeAction.Next,
                 modifier = Modifier.fillMaxWidth(),
             )
         }
@@ -497,12 +503,14 @@ fun AddSourceForm(
                     label = stringResource(R.string.setup_server_url),
                     placeholder = stringResource(R.string.setup_server_example),
                     keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileTextField(
                     value = username,
                     onValueChange = { username = it },
                     label = stringResource(R.string.setup_username),
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileTextField(
@@ -512,6 +520,7 @@ fun AddSourceForm(
                         if (editing) R.string.setup_password_keep else R.string.setup_password,
                     ),
                     isPassword = true,
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 SwitchRow(
@@ -540,6 +549,7 @@ fun AddSourceForm(
                     label = stringResource(R.string.setup_playlist_url_local_file),
                     placeholder = stringResource(R.string.setup_playlist_example),
                     keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileButton(
@@ -556,6 +566,7 @@ fun AddSourceForm(
                     label = stringResource(R.string.setup_portal_url),
                     placeholder = stringResource(R.string.setup_portal_example),
                     keyboardType = KeyboardType.Uri,
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileTextField(
@@ -563,6 +574,7 @@ fun AddSourceForm(
                     onValueChange = { mac = it },
                     label = stringResource(R.string.setup_mac_address),
                     placeholder = stringResource(R.string.setup_mac_example),
+                    imeAction = ImeAction.Next,
                     isError = mac.isNotBlank() && !macValid,
                     supportingText = stringResource(R.string.setup_mac_invalid).takeIf { mac.isNotBlank() && !macValid },
                     modifier = Modifier.fillMaxWidth(),
@@ -576,24 +588,28 @@ fun AddSourceForm(
                     value = serialNumber,
                     onValueChange = { serialNumber = it },
                     label = stringResource(R.string.setup_stalker_serial_number_optional),
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileTextField(
                     value = deviceId,
                     onValueChange = { deviceId = it },
                     label = stringResource(R.string.setup_stalker_device_id_optional),
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileTextField(
                     value = deviceId2,
                     onValueChange = { deviceId2 = it },
                     label = stringResource(R.string.setup_stalker_device_id2_optional),
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileTextField(
                     value = signature,
                     onValueChange = { signature = it },
                     label = stringResource(R.string.setup_stalker_signature_optional),
+                    imeAction = ImeAction.Next,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 MobileListRow(
@@ -613,6 +629,14 @@ fun AddSourceForm(
                 onValueChange = { userAgent = it },
                 label = stringResource(R.string.setup_user_agent_optional),
                 placeholder = stringResource(R.string.setup_user_agent_example),
+                imeAction = ImeAction.Next,
+                modifier = Modifier.fillMaxWidth(),
+            )
+            MobileTextField(
+                value = httpReferer,
+                onValueChange = { httpReferer = it },
+                label = stringResource(R.string.setup_referer_optional),
+                placeholder = stringResource(R.string.setup_referer_example),
                 modifier = Modifier.fillMaxWidth(),
             )
             MobileListRow(
@@ -627,6 +651,7 @@ fun AddSourceForm(
                     label = stringResource(R.string.settings_sources_refresh_days_title),
                     supportingText = stringResource(R.string.settings_sources_refresh_days_hint),
                     keyboardType = KeyboardType.Number,
+                    imeAction = ImeAction.Done,
                     modifier = Modifier.fillMaxWidth(),
                 )
             }
@@ -668,13 +693,13 @@ fun AddSourceForm(
                     onSave?.let { save -> save(values()); return@MobileButton }
                     when (kind) {
                         SourceKind.XTREAM -> onStartXtream(
-                            name, server, username, password, userAgent, autoRefresh,
+                            name, server, username, password, userAgent, httpReferer, autoRefresh,
                             syncLive, syncMovies, syncSeries, preferHls,
                         )
-                        SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, autoRefresh)
+                        SourceKind.M3U -> onStartM3u(name, m3uUrl, userAgent, httpReferer, autoRefresh)
                         SourceKind.STALKER -> onStartStalker(
                             name, portalUrl, mac, serialNumber, deviceId, deviceId2, signature,
-                            userAgent, autoRefresh, syncLive, syncMovies, syncSeries,
+                            userAgent, httpReferer, autoRefresh, syncLive, syncMovies, syncSeries,
                         )
                         SourceKind.AUTO -> {}
                     }

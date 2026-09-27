@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
@@ -28,10 +29,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextAlign
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import kotlinx.coroutines.delay
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.core.content.SearchIntent
 import tv.own.owntv.core.database.entity.MovieEntity
@@ -88,7 +91,15 @@ fun SearchScreen(
     val seriesLabel = stringResource(R.string.search_series)
 
     val focus = remember { FocusRequester() }
-    LaunchedEffect(Unit) { runCatching { focus.requestFocus() } }
+    val keyboard = LocalSoftwareKeyboardController.current
+    // Focus alone does not reliably raise the IME across Android versions, keyboard apps and
+    // navigation states. Request focus, then explicitly show the keyboard once the field is
+    // attached. Delayed: requesting in the same frame as composition is dropped on some builds.
+    LaunchedEffect(Unit) {
+        runCatching { focus.requestFocus() }
+        delay(150)
+        runCatching { keyboard?.show() }
+    }
     LaunchedEffect(query, intent) { listState.scrollToItem(0) }
 
     // Reaching the bottom asks for the next page. Without it a search stops at the first 40 of each
@@ -103,12 +114,13 @@ fun SearchScreen(
         }
     }
 
-    Column(modifier.fillMaxSize()) {
+    Column(modifier.fillMaxSize().imePadding()) {
         MobileTextField(
             value = query,
             onValueChange = vm::setQuery,
             label = stringResource(R.string.search_hint),
             imeAction = ImeAction.Search,
+            onSearch = { vm.rememberQuery(); keyboard?.hide() },
             modifier = Modifier
                 .padding(horizontal = MobileDimens.ScreenPaddingH, vertical = MobileDimens.GapSmall)
                 .focusRequester(focus),

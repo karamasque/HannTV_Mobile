@@ -25,6 +25,7 @@ import tv.own.owntv.mobile.ui.components.MobileBottomSheet
 import tv.own.owntv.mobile.ui.components.MobileButton
 import tv.own.owntv.mobile.ui.components.MobileButtonStyle
 import tv.own.owntv.mobile.ui.components.MobileListRow
+import tv.own.owntv.mobile.ui.components.SettingRow
 import tv.own.owntv.mobile.ui.components.sheetListHeight
 import tv.own.owntv.mobile.ui.screens.live.EpgMatchSheet
 import tv.own.owntv.mobile.ui.screens.live.EpgOffsetDialog
@@ -44,6 +45,8 @@ private enum class GuideChannelDialog { MATCH_EPG, EPG_OFFSET }
 @Composable
 fun EpgReviewSheet(
     suggestions: List<EpgMatchSuggestion>,
+    includeLogos: Boolean,
+    onIncludeLogos: (Boolean) -> Unit,
     onAccept: (EpgMatchSuggestion) -> Unit,
     onSkip: (EpgMatchSuggestion) -> Unit,
     onAcceptAll: () -> Unit,
@@ -58,6 +61,13 @@ fun EpgReviewSheet(
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
+        )
+        // Above the list rather than beside the buttons: it applies to every row, accepted one by one
+        // or all at once.
+        SettingRow(
+            title = stringResource(R.string.content_epg_include_logos),
+            checked = includeLogos,
+            onCheckedChange = onIncludeLogos,
         )
         LazyColumn(Modifier.heightIn(max = sheetListHeight())) {
             items(suggestions, key = { it.channel.id }) { suggestion ->

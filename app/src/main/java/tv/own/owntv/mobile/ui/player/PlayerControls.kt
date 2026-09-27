@@ -22,6 +22,7 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -52,11 +53,13 @@ import tv.own.owntv.mobile.ui.theme.SquircleShape
 import tv.own.owntv.player.LiveProgramme
 import tv.own.owntv.player.PlaybackEngine
 import tv.own.owntv.player.OwnTVPlayer
+import tv.own.owntv.player.SleepTimer
+import org.koin.compose.koinInject
 import java.text.NumberFormat
 
 /** The pickers the tool bar opens. Each one is a sheet; each one also has a gesture. */
 enum class PlayerSheet {
-    VOLUME, BRIGHTNESS, SUBTITLES, SUBTITLE_SEARCH, AUDIO, ASPECT, SPEED, INFO, CHANNELS, HISTORY, CATCHUP,
+    VOLUME, BRIGHTNESS, SUBTITLES, SUBTITLE_SEARCH, AUDIO, ASPECT, QUALITY, SPEED, INFO, CHANNELS, HISTORY, CATCHUP, SLEEP_TIMER,
 }
 
 /**
@@ -109,6 +112,10 @@ fun PlayerControls(
     onBack: () -> Unit,
     onGoLive: () -> Unit,
     onScrubLive: (deltaSec: Int) -> Unit,
+    /** N4 — the saved copy's holes, for the live bar. */
+    liveGaps: () -> List<LongRange> = { emptyList() },
+    /** One Live-rewind-step back (false) or forward (true); null on a channel that cannot be rewound. */
+    onSkipLive: ((forward: Boolean) -> Unit)? = null,
     onOpenSheet: (PlayerSheet) -> Unit,
     /** Shrink into the app's own mini player, still playing. */
     onMini: () -> Unit,
@@ -119,6 +126,8 @@ fun PlayerControls(
     onToggleFavorite: () -> Unit,
     /** Opens "Go back to…", or null when this channel's provider keeps no archive. */
     onCatchup: (() -> Unit)?,
+    /** N2 — back to the channel watched before this one; null hides the button. */
+    onPreviousChannel: (() -> Unit)? = null,
     // Live only, and only once Multiview is switched on in Settings. Null hides the button.
     onMultiview: (() -> Unit)? = null,
     /** Files a diagnostic report about the stream on screen. */
@@ -173,7 +182,14 @@ fun PlayerControls(
                 }
             }
 
-            TransportRow(player = engine, isLive = isLive, modifier = Modifier.align(Alignment.Center))
+            TransportRow(
+                player = engine,
+                isLive = isLive,
+                onSkipLive = onSkipLive,
+                // Forward only while behind live, as on the television: at the edge there is nothing ahead.
+                behindLive = (offsetSec ?: 0) > 1,
+                modifier = Modifier.align(Alignment.Center),
+            )
 
             Column(
                 Modifier
@@ -190,6 +206,7 @@ fun PlayerControls(
                             archiveWindowSec = archiveWindowSec,
                             programmes = timelineProgrammes,
                             onScrubLive = onScrubLive,
+                            gaps = liveGaps,
                         )
                     } else {
                         SeekBar(player, gestureScrubMs)
@@ -206,6 +223,7 @@ fun PlayerControls(
                         favorite = favorite,
                         onToggleFavorite = onToggleFavorite,
                         onCatchup = onCatchup,
+                        onPreviousChannel = onPreviousChannel,
                         onMultiview = onMultiview,
                         onReport = onReport,
                         onToast = onToast,
@@ -273,7 +291,13 @@ private fun TopRow(
 }
 
 @Composable
-private fun TransportRow(player: PlaybackEngine, isLive: Boolean, modifier: Modifier = Modifier) {
+private fun TransportRow(
+    player: PlaybackEngine,
+    isLive: Boolean,
+    onSkipLive: ((forward: Boolean) -> Unit)?,
+    behindLive: Boolean,
+    modifier: Modifier = Modifier,
+) {
     val playing by player.isPlaying.collectAsStateWithLifecycle()
     val step by player.seekStepMs.collectAsStateWithLifecycle()
     // Whether there is an episode either side of this one. The engine answers "no" for a film and for
@@ -290,6 +314,9 @@ private fun TransportRow(player: PlaybackEngine, isLive: Boolean, modifier: Modi
         }
         if (!isLive) {
             RoundControl(MobileIcons.FastRewind, R.string.player_skip_back) { player.seekBy(-step) }
+        } else if (onSkipLive != null) {
+            // Live, on a channel that can be rewound (catch-up, or its saved copy): the television's buttons.
+            RoundControl(MobileIcons.FastRewind, R.string.player_skip_back) { onSkipLive(false) }
         }
         RoundControl(
             icon = if (playing) MobileIcons.Pause else MobileIcons.PlayArrow,
@@ -299,6 +326,8 @@ private fun TransportRow(player: PlaybackEngine, isLive: Boolean, modifier: Modi
         )
         if (!isLive) {
             RoundControl(MobileIcons.FastForward, R.string.player_skip_forward) { player.seekBy(step) }
+        } else if (onSkipLive != null && behindLive) {
+            RoundControl(MobileIcons.FastForward, R.string.player_skip_forward) { onSkipLive(true) }
         }
         if (nav.hasNext) {
             RoundControl(MobileIcons.SkipNext, R.string.settings_remote_button_next) { player.next() }
@@ -381,6 +410,7 @@ private fun LiveBar(
     archiveWindowSec: Int,
     programmes: List<LiveProgramme>,
     onScrubLive: (Int) -> Unit,
+    gaps: () -> List<LongRange>,
 ) {
     val liveEdgeMs by rememberClockTick()
     Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
@@ -395,6 +425,7 @@ private fun LiveBar(
                 accent = LocalAccentOnVideo.current,
                 onScrub = onScrubLive,
                 modifier = Modifier.weight(1f).padding(end = MobileDimens.GapSmall),
+                gaps = gaps,
             )
         } else {
             Spacer(Modifier.weight(1f))
@@ -429,6 +460,7 @@ private fun ToolBar(
     favorite: Boolean,
     onToggleFavorite: () -> Unit,
     onCatchup: (() -> Unit)?,
+    onPreviousChannel: (() -> Unit)? = null,
     // Live only, and only once Multiview is switched on in Settings. Null hides the button.
     onMultiview: (() -> Unit)? = null,
     onReport: () -> Unit,
@@ -444,9 +476,15 @@ private fun ToolBar(
     recordingThis: Boolean = false,
     liveOnExo: Boolean = false,
     onToggleLiveEngine: (() -> Unit)? = null,
+    sleepTimer: SleepTimer = koinInject(),
 ) {
     val speed by engine.speed.collectAsStateWithLifecycle()
+    // Only whether one runs: the countdown ticks every second, and the bar must not redraw with it.
+    val sleepLeft = sleepTimer.remainingMs.collectAsStateWithLifecycle()
+    val sleepRunning by remember { derivedStateOf { sleepLeft.value != null } }
     val engineName by engine.engineChip.collectAsStateWithLifecycle()
+    val qualities by engine.videoQualities.collectAsStateWithLifecycle()
+    val qualityPick by engine.videoQualityPick.collectAsStateWithLifecycle()
     // The engine chip in the title line is small and easy to miss, so the swap says which engine it
     // landed on — otherwise the only feedback for the button is a picture that blinks.
     val switchedToExo = stringResource(R.string.player_switch_exo)
@@ -512,6 +550,10 @@ private fun ToolBar(
             PlayerControl.CATCH_UP -> if (onCatchup != null) {
                 CtrlButton(MobileIcons.Catchup, stringResource(R.string.content_catchup_jump), onCatchup)
             }
+            // N2 — the television's glyph for it, History; present only once there is a channel to go back to.
+            PlayerControl.PREVIOUS_CHANNEL -> if (onPreviousChannel != null) {
+                CtrlButton(MobileIcons.History, stringResource(R.string.player_previous_channel), onPreviousChannel)
+            }
             // L3 - live has two engines now, so the button is real there too. It is NOT the VOD
             // toggle: on live it is the television's "compatibility mode", pinned per channel, so a
             // channel only mpv can play opens on mpv next time without being asked again. Null means
@@ -554,6 +596,15 @@ private fun ToolBar(
                 label = stringResource(R.string.player_tool_aspect),
                 onClick = { onOpenSheet(PlayerSheet.ASPECT) },
             )
+            // N11 — only when this stream offers several; tinted while a pick overrides Auto.
+            PlayerControl.QUALITY -> if (qualities.isNotEmpty()) {
+                CtrlButton(
+                    icon = MobileIcons.VideoLibrary,
+                    label = stringResource(R.string.player_tool_quality),
+                    onClick = { onOpenSheet(PlayerSheet.QUALITY) },
+                    active = qualityPick != null,
+                )
+            }
             // Phone-only today; the television reaches the same list with Left.
             PlayerControl.CHANNEL_LIST -> if (isLive) {
                 CtrlButton(MobileIcons.FormatListBulleted, stringResource(R.string.content_channel_overlay_title), {
@@ -589,6 +640,14 @@ private fun ToolBar(
                     active = recordingThis,
                 )
             }
+            // N17 / M14 — the full-screen way to the sleep timer; the sound-only screen and the
+            // floating window already had one. Coloured while a countdown is running.
+            PlayerControl.SLEEP_TIMER -> CtrlButton(
+                icon = MobileIcons.Bedtime,
+                label = stringResource(R.string.player_sleep_timer),
+                onClick = { onOpenSheet(PlayerSheet.SLEEP_TIMER) },
+                active = sleepRunning,
+            )
             PlayerControl.INFO -> CtrlButton(MobileIcons.Info, stringResource(R.string.player_tool_info), {
                 onOpenSheet(PlayerSheet.INFO)
             })
