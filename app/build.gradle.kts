@@ -53,8 +53,8 @@ android {
         // CI injects these from the git tag, exactly as in the TV app. The fallbacks are only used
         // by local/debug builds and are pinned HIGH so a dev APK is always "newer" than a published
         // release and installs straight over it.
-        versionCode = (System.getenv("VERSION_CODE") ?: "121").toInt()
-        versionName = System.getenv("VERSION_NAME") ?: "1.2.1"
+        versionCode = (System.getenv("VERSION_CODE") ?: "122").toInt()
+        versionName = System.getenv("VERSION_NAME") ?: "1.2.2"
 
         // The three switches core reads through CoreBuildInfo. Same resolution order as the TV app:
         // env var (CI) > Gradle property > the out-of-repo properties file.
@@ -117,6 +117,8 @@ android {
                 storePassword = signingValue("KEYSTORE_PASSWORD", "owntv.keystorePassword")
                 keyAlias = signingValue("KEY_ALIAS", "owntv.keyAlias")
                 keyPassword = signingValue("KEY_PASSWORD", "owntv.keyPassword")
+                enableV1Signing = true
+                enableV2Signing = true
             }
         }
     }
