@@ -35,7 +35,6 @@ fun SettingsGroupPage(group: SettingsGroup, onOpenRoute: (String) -> Unit) {
 @Composable
 fun SettingsLeafPage(leaf: SettingsLeaf, onOpenRoute: (String) -> Unit, onAddSource: () -> Unit) {
     when (leaf) {
-        SettingsLeaf.ACCOUNT -> SettingsAccountPage()
         SettingsLeaf.PLAYLISTS -> SettingsPlaylistsPage(onAddSource = onAddSource)
         SettingsLeaf.EPG_SOURCES -> SettingsEpgSourcesPage()
         SettingsLeaf.GLASS -> SettingsGlassPage()

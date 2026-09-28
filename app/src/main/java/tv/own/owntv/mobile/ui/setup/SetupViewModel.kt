@@ -36,6 +36,7 @@ class SetupViewModel(
     private val settings: SettingsRepository,
     private val appScope: CoroutineScope,
     private val context: Context,
+    private val cloudSyncEngine: tv.own.owntv.core.account.CloudSyncEngine? = null,
 ) : ViewModel() {
 
     val state = importer.state
@@ -134,6 +135,7 @@ class SetupViewModel(
     fun finish(onDone: (Long?) -> Unit) {
         appScope.launch {
             val profileId = importer.finish()
+            runCatching { cloudSyncEngine?.syncAll() }
             onMain { onDone(profileId) }
         }
     }
@@ -181,6 +183,7 @@ class SetupViewModel(
         val job = appScope.launch {
             attachToProfile()
             block()
+            runCatching { cloudSyncEngine?.syncAll() }
         }
         importJob = job
         job.invokeOnCompletion { if (importJob == job) importJob = null }

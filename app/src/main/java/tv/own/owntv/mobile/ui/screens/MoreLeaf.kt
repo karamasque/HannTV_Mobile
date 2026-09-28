@@ -22,6 +22,12 @@ enum class MoreLeaf(
     @param:StringRes val summaryRes: Int?,
     val icon: ImageVector,
 ) {
+    ACCOUNT(
+        "account",
+        R.string.settings_account_title,
+        R.string.settings_account_description,
+        MobileIcons.Person,
+    ),
     PROFILES("profiles", R.string.profiles_title, null, MobileIcons.People),
     FAVORITES("favorites", R.string.content_category_favorites, null, MobileIcons.Favorite),
     HISTORY("history", R.string.content_category_history, null, MobileIcons.History),

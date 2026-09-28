@@ -243,8 +243,8 @@
     <string name="settings_home_root">Ana ekran</string>
     <string name="settings_home_root_description">Ana ekrandaki satırları seçin, yeniden sıralayın ve filtreleyin</string>
     <string name="settings_metadata_root_description">Filmler ve Diziler için afişler, özetler, oyuncu kadroları ve puanlar</string>
-    <string name="settings_account_title">Bulut Üyeliği ve Cihazlar</string>
-    <string name="settings_account_description">Bulut hesabınızla giriş yapın, bağlı 3 cihazınızı ve senkronizasyon ayarlarınızı yönetin</string>
+    <string name="settings_account_title">Üyelik &amp; Bulut Hesabı</string>
+    <string name="settings_account_description">Üyelik durumunuzu, bağlı 3 cihazınızı ve bulut senkronizasyon ayarlarınızı yönetin.</string>
     <string name="settings_search_keywords_account">üye giriş kayıt cihaz senkronizasyon bulut hesap</string>
     <string name="settings_download_folder">İndirme klasörü</string>
     <string name="settings_app_storage">Uygulama depolama alanı</string>
@@ -306,8 +306,8 @@
     <string name="settings_check_updates_description">En son sürümü GitHub Releases üzerinden alın</string>
     <string name="settings_update_startup">Başlangıçta güncellemeleri denetle</string>
     <string name="settings_update_startup_description">Uygulama açıldığında yeni sürüm olup olmadığını denetleyin</string>
-    <string name="settings_about">Hakkında</string>
-    <string name="settings_about_description">Sürüm, lisans ve proje bilgileri</string>
+    <string name="settings_about">Üyelik</string>
+    <string name="settings_about_description">Üyelik paketi, bağlı cihazlar ve bulut senkronizasyonu</string>
     <string name="settings_live_latency">Canlı yayın gecikmesi</string>
     <string name="settings_no_settings_match">“<xliff:g id="query">%1$s</xliff:g>” ile eşleşen ayar yok</string>
     <string name="settings_breadcrumb"><xliff:g id="group">%1$s</xliff:g> › <xliff:g id="title">%2$s</xliff:g></string>

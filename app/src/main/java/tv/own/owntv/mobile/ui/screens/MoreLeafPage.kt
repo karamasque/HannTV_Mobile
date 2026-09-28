@@ -3,6 +3,7 @@ package tv.own.owntv.mobile.ui.screens
 import androidx.compose.runtime.Composable
 import tv.own.owntv.mobile.ui.screens.library.LibraryTab
 import tv.own.owntv.mobile.ui.screens.settings.AboutPage
+import tv.own.owntv.mobile.ui.screens.settings.SettingsAccountPage
 import tv.own.owntv.mobile.ui.screens.settings.SettingsBackupPage
 import tv.own.owntv.mobile.ui.screens.settings.SettingsErrorLogPage
 import tv.own.owntv.mobile.ui.screens.settings.SettingsLocalSyncPage
@@ -23,6 +24,7 @@ fun MoreLeafPage(
     onOpenPlayer: () -> Unit,
 ) {
     when (leaf) {
+        MoreLeaf.ACCOUNT -> SettingsAccountPage()
         MoreLeaf.PROFILES -> SettingsProfilePage()
         MoreLeaf.FAVORITES -> FavoritesScreen(onOpenChannel, onOpenItem, onOpenPlayer)
         MoreLeaf.HISTORY -> WatchHistoryScreen(onOpenChannel, onOpenItem, onOpenPlayer)

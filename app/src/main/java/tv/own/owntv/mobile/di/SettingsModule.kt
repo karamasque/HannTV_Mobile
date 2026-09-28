@@ -49,6 +49,7 @@ val settingsModule = module {
             player = get(),
             livePreview = get(),
             enginePool = get(),
+            cloudSyncEngine = getOrNull(),
         )
     }
     viewModel {

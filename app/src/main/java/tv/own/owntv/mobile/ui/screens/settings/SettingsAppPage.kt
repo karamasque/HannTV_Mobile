@@ -5,10 +5,13 @@ import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +24,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -28,6 +32,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.Dispatchers
@@ -174,7 +179,11 @@ fun SettingsAppPage(
  */
 @Composable
 fun AboutPage(modifier: Modifier = Modifier) {
-    val context = LocalContext.current
+    val accountManager: tv.own.owntv.core.account.CloudAccountManager = org.koin.compose.koinInject()
+    val user by accountManager.currentUser.collectAsStateWithLifecycle()
+    val activeDevices by accountManager.activeDevices.collectAsStateWithLifecycle()
+    val isPremium = user?.isPremium == true
+
     SettingsPage(modifier) {
         settingsSection(R.string.settings_about) {
             Column(
@@ -183,7 +192,6 @@ fun AboutPage(modifier: Modifier = Modifier) {
                     vertical = MobileDimens.GapSmall,
                 ),
             ) {
-                // The logo in the colour the launcher shows, as on the mockup's About row.
                 tv.own.owntv.mobile.ui.components.BrandLockup(
                     markSize = 40,
                     textSize = 26,
@@ -195,38 +203,62 @@ fun AboutPage(modifier: Modifier = Modifier) {
                     color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = stringResource(R.string.settings_about_description_full_mobile),
+                    text = "HanTV Bulut Üyelik & Cihaz Yönetim Sistemi",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(vertical = MobileDimens.GapSmall),
                 )
-                Text(
-                    text = stringResource(R.string.settings_about_license),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-                Text(
-                    text = stringResource(R.string.settings_contributions),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = MobileDimens.GapSmall),
-                )
+
+                androidx.compose.material3.Surface(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = MobileDimens.GapSmall),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                ) {
+                    Column(Modifier.padding(14.dp)) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text("Üyelik Durumunuz", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
+                            androidx.compose.material3.Surface(
+                                shape = androidx.compose.foundation.shape.RoundedCornerShape(16.dp),
+                                color = if (isPremium) androidx.compose.ui.graphics.Color(0xFFFFD700) else MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                            ) {
+                                Text(
+                                    text = if (isPremium) "⭐ Premium Üye" else if (user != null) "🆓 Ücretsiz Üye" else "Giriş Yapılmadı",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = if (isPremium) androidx.compose.ui.graphics.Color.Black else MaterialTheme.colorScheme.onSurface,
+                                    fontWeight = FontWeight.Bold,
+                                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 4.dp),
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(8.dp))
+                        Text("E-posta: ${user?.email ?: "Oturum Açılmadı"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(4.dp))
+                        Text("Bağlı Cihazlar: ${activeDevices.size} / ${if (isPremium) "3 Cihaz Sınırı" else "1 Cihaz (Yerel)"}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(4.dp))
+                        Text("Bulut Senkronizasyonu: ${if (isPremium) "Aktif (Maksimum 3 Cihaz)" else "Kapalı (Sadece Yerel Cihaz)"}", style = MaterialTheme.typography.bodyMedium, color = if (isPremium) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+
+                androidx.compose.material3.Surface(
+                    modifier = Modifier.fillMaxWidth().padding(vertical = MobileDimens.GapSmall),
+                    shape = androidx.compose.foundation.shape.RoundedCornerShape(12.dp),
+                    color = MaterialTheme.colorScheme.surface.copy(alpha = 0.8f),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.2f)),
+                ) {
+                    Column(Modifier.padding(14.dp)) {
+                        Text("📋 Üyelik Paket Bilgileri & Kuralları", style = MaterialTheme.typography.titleSmall, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(6.dp))
+                        Text("• Ücretsiz Üyelik: Maksimum 1 Cihaz sınırı. Sadece yerel cihazınızda kullanım imkanı sağlar (Bulut senkronizasyonu kapalıdır).", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Spacer(Modifier.height(4.dp))
+                        Text("• Premium Üyelik: Maksimum 3 Cihaz bağlama hakkı. Web paneli üzerinden otomatik bulut IPTV ve tüm cihazlarda izlemeye devam et senkronizasyonu sunar.", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
             }
-
-            SettingRow(
-                title = stringResource(R.string.settings_about),
-                subtitle = GITHUB_REPO,
-                onClick = { openLink(context, "https://$GITHUB_REPO") },
-            )
-
-            // The link is what a phone user taps; the QR is for the person sitting next to them, and
-            // it is drawn from the address rather than shipped as an image so the two cannot drift.
-            SettingRow(
-                title = stringResource(R.string.settings_join_telegram),
-                subtitle = TELEGRAM_LINK,
-                onClick = { openLink(context, "https://$TELEGRAM_LINK") },
-            )
-            TelegramQr()
         }
     }
 }

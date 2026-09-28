@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import tv.own.owntv.core.content.AdultCategoryClassifier
 import tv.own.owntv.core.database.dao.CategoryDao
@@ -36,7 +37,19 @@ class ShellViewModel(
     private val categoryDao: CategoryDao,
     private val profileDao: ProfileDao,
     private val settings: SettingsRepository,
+    private val cloudSyncEngine: tv.own.owntv.core.account.CloudSyncEngine? = null,
+    private val epgMigration: tv.own.owntv.core.epg.EpgMigration? = null,
 ) : ViewModel() {
+
+    init {
+        viewModelScope.launch {
+            runCatching { epgMigration?.run() }
+            while (true) {
+                runCatching { cloudSyncEngine?.syncAll() }
+                kotlinx.coroutines.delay(5_000L)
+            }
+        }
+    }
 
     /** Core's rule, unchanged — the same set the TV app's rail is built from. */
     val visibleSections: StateFlow<Set<MainSection>> = navVisibility.visibleSections()

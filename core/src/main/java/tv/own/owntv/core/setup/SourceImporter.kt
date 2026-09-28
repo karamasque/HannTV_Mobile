@@ -426,7 +426,17 @@ class SourceImporter(
 
     private suspend fun ensureFallbackProfile(): Long {
         if (createdProfileId > 0) return createdProfileId
-        createdProfileId = profileDao.insert(ProfileEntity(name = createdProfileName, avatarColor = 0, avatarId = 0))
+        val activePid = settings.activeProfileId.first()
+        if (activePid > 0) {
+            createdProfileId = activePid
+            return createdProfileId
+        }
+        val firstExisting = profileDao.getAllOnce().firstOrNull()
+        if (firstExisting != null) {
+            createdProfileId = firstExisting.id
+            return createdProfileId
+        }
+        createdProfileId = profileDao.insert(ProfileEntity(name = createdProfileName.ifBlank { "Ana Profil" }, avatarColor = 0, avatarId = 0))
         return createdProfileId
     }
 

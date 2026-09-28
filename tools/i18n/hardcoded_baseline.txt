@@ -4,10 +4,27 @@
 # Phase 1 deletes occurrences until this file is empty; the CI guard then becomes absolute.
 # Format: <count>\t<relative path>\t<content with \t/\n escaped>
 
+3	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	\0
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	E-posta Adresi
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Giriş Yap
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	HanTV Hesabınıza Giriş Yapın
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	HanTV Üyeliği Oluşturun
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Hesabınız yok mu? Üye Olun
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Hoş geldiniz!
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Kayıt Ol
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Lütfen e-posta ve şifrenizi girin.
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Uygulamayı kullanabilmek için lütfen giriş yapın veya ücretsiz üyelik oluşturun. En fazla 3 cihaz bağlayabilirsiniz.
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Zaten hesabınız var mı? Giriş Yapın
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	ör. ahmet@gmail.com
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	İşlem Yapılıyor...
+1	app/src/main/java/tv/own/owntv/mobile/ui/account/MandatoryAuthGate.kt	Şifre
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/MoreLeaf.kt	account
 3	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	\0
-1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	${activeDevices.size} / 3 Aktif Cihaz
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	${activeDevices.size} / ${if (user.isPremium) "3 Cihaz" else "1 Cihaz"}
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	(Bu Cihaz)
-1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Aktif Bağlı Cihazlarınız
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	1 Cihaz
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	3 Cihaz
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Aktif Bağlı Cihazlarınız (${activeDevices.size}/3)
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bağlı Cihazlar Sınırı
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bekleyin...
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bu cihazdaki bulut üyelik oturumunu sonlandırır
@@ -18,6 +35,8 @@
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Giriş Engellendi
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Giriş Yap
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	HanTV Bulut Hesabına Giriş Yap
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	HanTV Bulut Web Paneli
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Henüz bağlı mobil veya TV cihazı yok.
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Hesabınız yok mu? Kayıt Ol
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	IPTV kaynaklarını ve izleme sürelerini senkronize eder
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Kayıt Ol
@@ -27,19 +46,45 @@
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Senkronizasyon hatası oluştu
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Tamam
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Tür: ${dev.platform.uppercase()} — Cihaz ID: ${dev.id.take(12)}...
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Web Adresi: https://www.hantv.com.tr
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Yeni Bulut Hesabı Oluştur
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Zaten hesabınız var mı? Giriş Yap
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	actions
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	auth
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	devices-list
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	https://www.hantv.com.tr
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	https://www.hantv.com.tr (Tarayıcıda Aç)
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	membership-info
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	tv
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	user-profile
-1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Üyeliğiniz ile en fazla 3 cihaz bağlayabilir, IPTV listelerinizi ve kaldığınız yerden devam et sürelerini senkronize edebilirsiniz.
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	web-panel
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Üyelik Paketi
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Üyeliğiniz ile en fazla 1 cihaz bağlayabilir (Premium'da 3 Cihaz), IPTV listelerinizi ve izleme sürelerinizi senkronize edebilirsiniz.
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Şifre
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Şimdi Bulut Senkronizasyonu Yap
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	• Premium Üyelik: Maksimum 3 Cihaz bağlama hakkı. Web paneli (https://www.hantv.com.tr) üzerinden otomatik bulut IPTV ve izlemeye devam et senkronizasyonu sunar.
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	• Ücretsiz Üyelik: Maksimum 1 Cihaz sınırı. Sadece yerel cihazınızda kullanım imkanı sağlar.
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	⭐ Premium Üyelik
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	🆓 Ücretsiz Üyelik
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	📋 Üyelik Paket Bilgileri & Kuralları
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	1 Cihaz (Yerel)
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	3 Cihaz Sınırı
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	Aktif (Maksimum 3 Cihaz)
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	Bağlı Cihazlar: ${activeDevices.size} / ${if (isPremium) "3 Cihaz Sınırı" else "1 Cihaz (Yerel)"}
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	Bulut Senkronizasyonu: ${if (isPremium) "Aktif (Maksimum 3 Cihaz)" else "Kapalı (Sadece Yerel Cihaz)"}
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	E-posta: ${user?.email ?: "Oturum Açılmadı"}
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	Giriş Yapılmadı
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	HanTV Bulut Üyelik & Cihaz Yönetim Sistemi
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	Kapalı (Sadece Yerel Cihaz)
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	Oturum Açılmadı
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	Üyelik Durumunuz
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	• Premium Üyelik: Maksimum 3 Cihaz bağlama hakkı. Web paneli üzerinden otomatik bulut IPTV ve tüm cihazlarda izlemeye devam et senkronizasyonu sunar.
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	• Ücretsiz Üyelik: Maksimum 1 Cihaz sınırı. Sadece yerel cihazınızda kullanım imkanı sağlar (Bulut senkronizasyonu kapalıdır).
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	⭐ Premium Üye
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	🆓 Ücretsiz Üye
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppPage.kt	📋 Üyelik Paket Bilgileri & Kuralları
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	theme_preset
-1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	account
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	glass
 3	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Forum taranıyor...

@@ -16,6 +16,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,6 +60,13 @@ fun SettingsAccountPage(
     var errorMessage by remember { mutableStateOf<String?>(null) }
     var isSyncing by remember { mutableStateOf(false) }
 
+    LaunchedEffect(currentUser) {
+        currentUser?.let { u ->
+            accountManager.fetchDevices(u.uid)
+            syncEngine.syncAll()
+        }
+    }
+
     SettingsPage(modifier) {
         settingsNote(R.string.settings_account_description)
 
@@ -76,7 +84,7 @@ fun SettingsAccountPage(
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
-                        text = "Üyeliğiniz ile en fazla 3 cihaz bağlayabilir, IPTV listelerinizi ve kaldığınız yerden devam et sürelerini senkronize edebilirsiniz.",
+                        text = "Üyeliğiniz ile en fazla 1 cihaz bağlayabilir (Premium'da 3 Cihaz), IPTV listelerinizi ve izleme sürelerinizi senkronize edebilirsiniz.",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -139,34 +147,87 @@ fun SettingsAccountPage(
             }
         } else {
             val user = currentUser!!
+            settingsGroup(key = "web-panel") {
+                SettingRow(
+                    title = "HanTV Bulut Web Paneli",
+                    subtitle = "https://www.hantv.com.tr (Tarayıcıda Aç)",
+                    onClick = {
+                        try {
+                            val intent = android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse("https://www.hantv.com.tr"))
+                            context.startActivity(intent)
+                        } catch (e: Exception) {
+                            Toast.makeText(context, "Web Adresi: https://www.hantv.com.tr", Toast.LENGTH_LONG).show()
+                        }
+                    },
+                )
+            }
+
             settingsGroup(key = "user-profile") {
                 SettingRow(
                     title = "Bulut Hesabı",
                     value = user.email,
                 )
                 SettingRow(
+                    title = "Üyelik Paketi",
+                    value = if (user.isPremium) "⭐ Premium Üyelik" else "🆓 Ücretsiz Üyelik",
+                )
+                SettingRow(
                     title = "Bağlı Cihazlar Sınırı",
-                    value = "${activeDevices.size} / 3 Aktif Cihaz",
+                    value = "${activeDevices.size} / ${if (user.isPremium) "3 Cihaz" else "1 Cihaz"}",
                 )
             }
 
             settingsGroup(key = "devices-list") {
                 Text(
-                    text = "Aktif Bağlı Cihazlarınız",
+                    text = "Aktif Bağlı Cihazlarınız (${activeDevices.size}/3)",
                     style = MaterialTheme.typography.titleSmall,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
                 )
-                activeDevices.forEach { dev ->
-                    MobileListRow(
-                        title = dev.name + if (dev.id == accountManager.deviceId) " (Bu Cihaz)" else "",
-                        subtitle = "Tür: ${dev.platform.uppercase()} — Cihaz ID: ${dev.id.take(12)}...",
-                        leading = {
-                            Icon(
-                                imageVector = if (dev.platform == "tv") MobileIcons.Tv else MobileIcons.Person,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.primary,
-                            )
-                        }
+                if (activeDevices.isEmpty()) {
+                    Text(
+                        text = "Henüz bağlı mobil veya TV cihazı yok.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp),
+                    )
+                } else {
+                    activeDevices.forEach { dev ->
+                        MobileListRow(
+                            title = dev.name + if (dev.id == accountManager.deviceId) " (Bu Cihaz)" else "",
+                            subtitle = "Tür: ${dev.platform.uppercase()} — Cihaz ID: ${dev.id.take(12)}...",
+                            leading = {
+                                Icon(
+                                    imageVector = if (dev.platform == "tv") MobileIcons.Tv else MobileIcons.Person,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary,
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+
+            settingsGroup(key = "membership-info") {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp),
+                ) {
+                    Text(
+                        text = "📋 Üyelik Paket Bilgileri & Kuralları",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Text(
+                        text = "• Ücretsiz Üyelik: Maksimum 1 Cihaz sınırı. Sadece yerel cihazınızda kullanım imkanı sağlar.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Text(
+                        text = "• Premium Üyelik: Maksimum 3 Cihaz bağlama hakkı. Web paneli (https://www.hantv.com.tr) üzerinden otomatik bulut IPTV ve izlemeye devam et senkronizasyonu sunar.",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
             }

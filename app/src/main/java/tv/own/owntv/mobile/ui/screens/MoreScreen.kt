@@ -78,6 +78,7 @@ fun MoreScreen(
         // groups its rows.
         item {
             MobileGroup {
+                LeafRow(MoreLeaf.ACCOUNT, onOpenLeaf)
                 MoreRow(R.string.common_nav_downloads, MobileIcons.Download) {
                     onNavigate(MobileDestination.DOWNLOADS)
                 }
@@ -95,7 +96,6 @@ fun MoreScreen(
             }
             MobileGroup {
                 LeafRow(MoreLeaf.ERROR_LOG, onOpenLeaf)
-                LeafRow(MoreLeaf.ABOUT, onOpenLeaf)
             }
 
             // Dev-only, and English-only by the same rule the harness itself lives under: R8 removes

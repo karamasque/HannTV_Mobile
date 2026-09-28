@@ -153,6 +153,35 @@ class HttpClient(private val client: OkHttpClient) {
         }.getOrNull()
     }
 
+    suspend fun delete(
+        url: String,
+        headers: Map<String, String> = emptyMap(),
+    ): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            val requestBuilder = Request.Builder().url(url).delete()
+            headers.forEach { (k, v) -> requestBuilder.header(k, v) }
+            client.newCall(requestBuilder.build()).execute().use { response ->
+                response.body?.string()
+            }
+        }.getOrNull()
+    }
+
+    suspend fun postForm(
+        url: String,
+        params: Map<String, String>,
+        headers: Map<String, String> = emptyMap(),
+    ): String? = withContext(Dispatchers.IO) {
+        runCatching {
+            val formBuilder = okhttp3.FormBody.Builder()
+            params.forEach { (k, v) -> formBuilder.add(k, v) }
+            val requestBuilder = Request.Builder().url(url).post(formBuilder.build())
+            headers.forEach { (k, v) -> requestBuilder.header(k, v) }
+            client.newCall(requestBuilder.build()).execute().use { response ->
+                response.body?.string()
+            }
+        }.getOrNull()
+    }
+
     companion object {
         private const val TAG = "HttpClient"
 

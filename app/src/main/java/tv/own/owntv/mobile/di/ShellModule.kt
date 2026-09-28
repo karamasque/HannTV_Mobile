@@ -34,5 +34,5 @@ val shellModule = module {
     // An import has to outlive the wizard screen that started it — "Run in background" is exactly
     // that promise — so it runs here rather than in a ViewModel that dies with its navigation entry.
     single<CoroutineScope> { CoroutineScope(SupervisorJob() + Dispatchers.Default) }
-    viewModel { SetupViewModel(get(), get(), get(), get(), androidContext()) }
+    viewModel { SetupViewModel(get(), get(), get(), get(), androidContext(), getOrNull()) }
 }

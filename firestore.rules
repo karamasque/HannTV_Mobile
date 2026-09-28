@@ -1,0 +1,46 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Admin yetkisi kontrol fonksiyonu (admin@hantv.com ve kilicemre3437@gmail.com tam yetkilidir)
+    function isAdmin() {
+      return request.auth != null && (
+        request.auth.token.email == 'admin@hantv.com' ||
+        request.auth.token.email == 'kilicemre3437@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin')
+      );
+    }
+
+    // Kullanıcı profil ve cihaz kuralları
+    match /users/{userId} {
+      // Okuma: Admin tüm kullanıcıları okuyabilir, normal kullanıcı sadece kendini
+      allow read: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      
+      // Oluşturma: Admin veya ilk üyelik
+      allow create: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      
+      // Güncelleme: Admin her alanı güncelleyebilir.
+      // Normal kullanıcı 'plan' ve 'role' alanını değiştiremez.
+      allow update: if request.auth != null && (
+        isAdmin() || 
+        (request.auth.uid == userId && 
+         (!request.resource.data.keys().hasAny(['plan', 'role']) || 
+          (request.resource.data.plan == resource.data.plan && request.resource.data.role == resource.data.role)))
+      );
+
+      // Silme: Admin veya kullanıcının kendisi
+      allow delete: if request.auth != null && (request.auth.uid == userId || isAdmin());
+
+      // IPTV Kaynakları: Admin veya ilgili kullanıcı (Premium üyeler)
+      match /sources/{sourceId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      }
+
+      // İlerleme Durumları: Admin veya ilgili kullanıcı
+      match /progress/{progressId} {
+        allow read, write: if request.auth != null && (request.auth.uid == userId || isAdmin());
+      }
+    }
+  }
+}

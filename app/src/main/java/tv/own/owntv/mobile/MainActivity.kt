@@ -24,6 +24,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.lifecycleScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.collectLatest
@@ -131,16 +132,28 @@ open class MainActivity : FragmentActivity() {
         setContent {
             MobileTheme {
                 var showSplashIntro by androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(true) }
-                // The wallpaper and its blurred copy sit outside the shell, so the frost every glass
-                // panel samples is one image for the whole app rather than one per panel.
-                GlassBackdropRoot {
-                    // Inside the backdrop, because a sheet's whole reason for living in this window
-                    // is that it can frost the same wallpaper everything else frosts.
-                    MobileSheetHost {
-                        // Width, not device type: a phone in landscape and a tablet in split-screen
-                        // are the same problem, and the configuration re-reads itself on every
-                        // rotation and resize.
-                        MobileShell(windowWidthDp = LocalConfiguration.current.screenWidthDp)
+
+                val accountManager: tv.own.owntv.core.account.CloudAccountManager = org.koin.compose.koinInject()
+                val cloudUser by accountManager.currentUser.collectAsStateWithLifecycle()
+
+                androidx.compose.runtime.LaunchedEffect(Unit) {
+                    accountManager.restoreSession()
+                }
+
+                if (cloudUser == null) {
+                    tv.own.owntv.mobile.ui.account.MandatoryAuthGate()
+                } else {
+                    // The wallpaper and its blurred copy sit outside the shell, so the frost every glass
+                    // panel samples is one image for the whole app rather than one per panel.
+                    GlassBackdropRoot {
+                        // Inside the backdrop, because a sheet's whole reason for living in this window
+                        // is that it can frost the same wallpaper everything else frosts.
+                        MobileSheetHost {
+                            // Width, not device type: a phone in landscape and a tablet in split-screen
+                            // are the same problem, and the configuration re-reads itself on every
+                            // rotation and resize.
+                            MobileShell(windowWidthDp = LocalConfiguration.current.screenWidthDp)
+                        }
                     }
                 }
 

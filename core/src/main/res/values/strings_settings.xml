@@ -528,8 +528,8 @@
     <string name="settings_category_display_mode_tabs">Top Tab Strip Mode</string>
     <string name="settings_category_display_mode_list">Folder / List Mode</string>
     <string name="settings_category_display_mode_description">Choose whether categories are displayed as top tabs or vertical folder list.</string>
-    <string name="settings_account_title">Cloud Membership &amp; Devices</string>
-    <string name="settings_account_description">Log in with your cloud account, manage 3 active devices and cloud sync</string>
+    <string name="settings_account_title">Membership &amp; Cloud Account</string>
+    <string name="settings_account_description">Manage your membership status, 3 connected devices, and cloud sync settings.</string>
     <string name="settings_search_keywords_account">account login register devices sync cloud</string>
     <!-- Translators: Settings navigation label for the Theme setting. -->
     <string name="settings_theme">Theme</string>

@@ -34,12 +34,6 @@ enum class SettingsLeaf(
      */
     val listedInGroup: Boolean = true,
 ) {
-    ACCOUNT(
-        SettingsGroup.SOURCES, "account",
-        R.string.settings_account_title, R.string.settings_search_keywords_account,
-        R.string.settings_account_description,
-        MobileIcons.Person,
-    ),
     PLAYLISTS(
         SettingsGroup.SOURCES, "playlists",
         R.string.settings_playlists, R.string.settings_search_keywords_playlists,

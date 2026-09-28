@@ -780,8 +780,11 @@ class SettingsRepository(private val context: Context, private val localeStore: 
     val cloudUserId: Flow<String> = prefsFlow { it[Keys.CLOUD_USER_ID].orEmpty() }
     suspend fun setCloudUserId(uid: String) { context.dataStore.edit { it[Keys.CLOUD_USER_ID] = uid } }
 
-    val cloudIdToken: Flow<String> = prefsFlow { it[Keys.CLOUD_ID_TOKEN].orEmpty() }
-    suspend fun setCloudIdToken(token: String) { context.dataStore.edit { it[Keys.CLOUD_ID_TOKEN] = token } }
+    val cloudIdToken: Flow<String> = prefsFlow { it[stringPreferencesKey("cloud_id_token")].orEmpty() }
+    suspend fun setCloudIdToken(token: String) { context.dataStore.edit { it[stringPreferencesKey("cloud_id_token")] = token } }
+
+    val cloudRefreshToken: Flow<String> = prefsFlow { it[stringPreferencesKey("cloud_refresh_token")].orEmpty() }
+    suspend fun setCloudRefreshToken(token: String) { context.dataStore.edit { it[stringPreferencesKey("cloud_refresh_token")] = token } }
 
     // --- Per-section "remember last ITEM per category" (default OFF each).
     //     OFF = switching category resets the browse list to the top; ON = each category keeps its own

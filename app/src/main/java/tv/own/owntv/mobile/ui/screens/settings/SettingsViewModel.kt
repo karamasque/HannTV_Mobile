@@ -108,6 +108,7 @@ class SettingsViewModel(
     private val player: tv.own.owntv.player.OwnTVPlayer,
     private val livePreview: tv.own.owntv.player.LivePreviewEngine,
     private val enginePool: tv.own.owntv.player.LiveEnginePool,
+    private val cloudSyncEngine: tv.own.owntv.core.account.CloudSyncEngine? = null,
 ) : ViewModel() {
 
     /** Run a setter on a scope that survives the row being scrolled off the screen. */
@@ -314,6 +315,8 @@ class SettingsViewModel(
                 withContext(NonCancellable) {
                     sourceRepository.deleteSource(source)
                     if (defaultSourceId.value == source.id) settings.setDefaultSource(-1L)
+                    runCatching { cloudSyncEngine?.deleteSourceFromCloud(source) }
+                    runCatching { cloudSyncEngine?.syncAll() }
                 }
             } finally {
                 _deletingSourceIds.value = _deletingSourceIds.value - source.id
