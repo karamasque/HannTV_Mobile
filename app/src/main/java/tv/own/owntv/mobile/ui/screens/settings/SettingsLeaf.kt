@@ -34,6 +34,12 @@ enum class SettingsLeaf(
      */
     val listedInGroup: Boolean = true,
 ) {
+    ACCOUNT(
+        SettingsGroup.SOURCES, "account",
+        R.string.settings_account_title, R.string.settings_search_keywords_account,
+        R.string.settings_account_description,
+        MobileIcons.Person,
+    ),
     PLAYLISTS(
         SettingsGroup.SOURCES, "playlists",
         R.string.settings_playlists, R.string.settings_search_keywords_playlists,
@@ -206,6 +212,10 @@ enum class SettingsLeaf(
 
     /** `settings/content/customize` — the group's own route with the leaf hung off it. */
     val route: String = "${group.route}/$slug"
+
+    companion object {
+        val GLASS_EFFECT: SettingsLeaf get() = GLASS
+    }
 }
 
 /** The leaf a route names, or null when the route is a group page or not settings at all. */

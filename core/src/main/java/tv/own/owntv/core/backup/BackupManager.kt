@@ -515,7 +515,12 @@ class BackupManager(
      * afterwards — and may skip it. A sealed container reveals nothing at all until it is decrypted,
      * so the password comes FIRST and cannot be skipped.
      */
-    data class Inspection(val sections: Set<Section>, val encrypted: Boolean, val sealed: Boolean = false)
+    data class Inspection(
+        val sections: Set<Section>,
+        val encrypted: Boolean,
+        val sealed: Boolean = false,
+        val fromOtherDevice: Boolean = false,
+    )
 
     /** True when [file] is a container that cannot be inspected at all without the backup password. */
     suspend fun isSealed(file: File): Boolean = withContext(Dispatchers.IO) {
@@ -592,6 +597,7 @@ class BackupManager(
         val newReorder: Int = 0,
         val changedSettings: Int = 0,
         val hasCustomizations: Boolean = false,
+        val hasDeviceSettings: Boolean = false,
         /** Rows this device would LOSE, because the other device deleted them more recently. */
         val deletions: Int = 0,
     ) {
@@ -727,6 +733,7 @@ class BackupManager(
         file: File,
         sections: Set<Section> = Section.entries.toSet(),
         backupPassword: String? = null,
+        deviceSettings: Boolean = false,
     ): Result<ImportSummary> = withContext(Dispatchers.IO) {
         runCatching {
             val (root, payload) = readBackup(file, backupPassword)

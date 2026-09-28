@@ -290,6 +290,8 @@ val dataModule = module {
     single { UpdateManager(androidContext(), get()) }
     single { CatalogSyncScheduler(androidContext()) }
     single { EpgSyncScheduler(androidContext()) }
+    single { tv.own.owntv.core.account.CloudAccountManager(androidContext(), get(), get()) }
+    single { tv.own.owntv.core.account.CloudSyncEngine(get(), get(), get(), get(), get(), get()) }
     // profileDao, sourceDao, sourceRepository, backup, settings, connectivity, importFinalizer,
     // launcherIntegration, catalogSyncScheduler, stalkerAuth — onboarding: add a source, sync it,
     // undo it when it fails. Factory, not single: each wizard run owns its own state machine.

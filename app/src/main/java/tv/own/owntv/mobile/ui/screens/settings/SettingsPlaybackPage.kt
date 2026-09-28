@@ -26,7 +26,7 @@ import tv.own.owntv.core.player.SurroundMode
 import tv.own.owntv.core.player.TrackLanguages
 import tv.own.owntv.core.settings.LiveBuffer
 import tv.own.owntv.core.settings.LiveLatency
-import tv.own.owntv.core.timeshift.TimeshiftRules
+import tv.own.owntv.core.settings.TimeshiftRules
 import tv.own.owntv.core.settings.SeekSteps
 import tv.own.owntv.core.live.DEFAULT_MULTIVIEW_TILES
 import tv.own.owntv.core.live.MAX_MULTIVIEW_TILES

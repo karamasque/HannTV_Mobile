@@ -110,23 +110,19 @@ class HanTVMobileApp : Application(), androidx.work.Configuration.Provider {
                 downloadsModule, settingsModule,
             )
         }
-        // A chosen icon colour ("Later", the first-run pick, a restore) reaches the launcher when the app
-        // is next in the background, never while it is on screen.
-        tv.own.owntv.core.brand.AppIconSwitcher.start(this, org.koin.core.context.GlobalContext.get().get())
-        // Diagnostics switch, the persisted archive-decode quirk and the one-shot settings migrations.
+        val settingsRepo: tv.own.owntv.core.settings.SettingsRepository = org.koin.core.context.GlobalContext.get().get()
+        val epgDaoRepo: tv.own.owntv.core.database.dao.EpgDao = org.koin.core.context.GlobalContext.get().get()
+
+        tv.own.owntv.core.brand.AppIconSwitcher.start(this, settingsRepo)
         tv.own.owntv.player.PlaybackStartup.start(
             context = this,
             scope = appScope,
-            settings = org.koin.core.context.GlobalContext.get().get(),
-            archiveStore = org.koin.core.context.GlobalContext.get().get(),
+            settings = settingsRepo,
         )
-        // "Use this guide's logos": never started on the phone before, so the toggle did nothing here.
-        // Reads no EPG data at all while no guide source has it on.
         tv.own.owntv.core.epg.EpgLogoStore.start(
             scope = appScope,
-            settings = org.koin.core.context.GlobalContext.get().get(),
-            epgDao = org.koin.core.context.GlobalContext.get().get(),
-            customize = org.koin.core.context.GlobalContext.get().get(),
+            settings = settingsRepo,
+            epgDao = epgDaoRepo,
         )
     }
 
@@ -138,9 +134,9 @@ class HanTVMobileApp : Application(), androidx.work.Configuration.Provider {
     /** Memory pressure reaches every engine; which levels count is core's call (see PlaybackEngines). */
     override fun onTrimMemory(level: Int) {
         super.onTrimMemory(level)
-        runCatching {
-            org.koin.core.context.GlobalContext.getOrNull()?.getOrNull<tv.own.owntv.player.PlaybackEngines>()?.onTrimMemory(level)
-        }
+        try {
+            org.koin.core.context.GlobalContext.get().get<tv.own.owntv.player.PlaybackEngines>().onTrimMemory(level)
+        } catch (_: Throwable) {}
     }
 }
 

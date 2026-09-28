@@ -84,11 +84,11 @@ data class MediaMeta(
      *  [tv.own.owntv.core.player.enginePinKey]). Null falls back to the stream URL, which is what
      *  every pin used to be keyed on and is still correct for M3U/Xtream. */
     val contentKey: String? = null,
-    /** Optional semantic season/episode numbers; localized at the UI boundary. */
     val seasonNumber: Int? = null,
     val episodeNumber: Int? = null,
     /** Semantic live-rewind start; formatted by the current HUD locale, never in the ViewModel. */
     val rewindStartMs: Long? = null,
+    val trackKey: String? = null,
 )
 
 /** An item in a play queue (e.g. a season's episodes), for prev/next.
@@ -1125,6 +1125,8 @@ class HanTVPlayer(
     // var isn't observed, so the "now watching" card showed the previous channel's name.
     private val _currentMeta = MutableStateFlow(MediaMeta())
     val currentMeta: StateFlow<MediaMeta> = _currentMeta.asStateFlow()
+    val exoSubtitleOn: StateFlow<Boolean> = MutableStateFlow(false)
+    val stopsAtItemEnd: StateFlow<Boolean> = MutableStateFlow(false)
 
     private var preMuteVolume = 100
 
@@ -2385,6 +2387,7 @@ class HanTVPlayer(
         liveBufferOverride: LiveBuffer.Override? = null,
         /** Expiring-URL provider for THIS item (Stalker VOD). See [reconnectUrlProvider]. */
         reconnectProvider: tv.own.owntv.core.stalker.ReconnectUrlProvider? = null,
+        vodEngineOverride: String? = null,
     ) {
         // F12 — the provider belongs to the load. A VOD load with none clears whatever the previous
         // item left behind; live keeps the field as-is when none is passed, because LiveViewModel
@@ -2417,7 +2420,7 @@ class HanTVPlayer(
 
     /** Play a queue (a season's episodes) starting at [startIndex] — enables prev/next.
      *  [userAgent] is the per-source custom UA from source settings; null means use the default. */
-    fun playEpisodes(items: List<PlaylistItem>, startIndex: Int, startPositionMs: Long = 0, userAgent: String? = null) {
+    fun playEpisodes(items: List<PlaylistItem>, startIndex: Int, startPositionMs: Long = 0, userAgent: String? = null, vodEngineOverride: String? = null) {
         // Headers are a per-ITEM property in a queue (an M3U episode line can carry its own
         // #EXTVLCOPT), so they're applied in loadItem, not once for the whole queue.
         queueUserAgent = userAgent?.takeIf { it.isNotBlank() }

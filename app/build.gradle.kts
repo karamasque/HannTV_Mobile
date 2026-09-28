@@ -53,8 +53,8 @@ android {
         // CI injects these from the git tag, exactly as in the TV app. The fallbacks are only used
         // by local/debug builds and are pinned HIGH so a dev APK is always "newer" than a published
         // release and installs straight over it.
-        versionCode = (System.getenv("VERSION_CODE") ?: "122").toInt()
-        versionName = System.getenv("VERSION_NAME") ?: "1.2.2"
+        versionCode = (System.getenv("VERSION_CODE") ?: "123").toInt()
+        versionName = System.getenv("VERSION_NAME") ?: "1.2.3"
 
         // The three switches core reads through CoreBuildInfo. Same resolution order as the TV app:
         // env var (CI) > Gradle property > the out-of-repo properties file.
@@ -82,6 +82,12 @@ android {
         buildConfigField("String", "TMDB_EDGE_KEY", "\"${edgeKey.replace("\\", "\\\\").replace("\"", "\\\"")}\"")
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    sourceSets {
+        getByName("main") {
+            res.srcDirs("src/main/res", "../core/src/main/res")
+        }
     }
 
     // ABI split via product flavors, mirroring the TV app: `standard` is what real phones and tablets

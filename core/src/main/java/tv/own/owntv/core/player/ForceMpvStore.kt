@@ -96,4 +96,11 @@ class ForceMpvStore(private val context: Context) {
             prefs[exoKey] = (prefs[exoKey] ?: emptySet()) + exoClean
         }
     }
+
+    suspend fun clearAll() {
+        context.forceMpvStore.edit { prefs ->
+            prefs.remove(key)
+            prefs.remove(exoKey)
+        }
+    }
 }

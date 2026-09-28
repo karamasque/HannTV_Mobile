@@ -107,6 +107,9 @@ enum class PlayerControl(
      * nothing to report without it, and the great majority of users never file one — so keeping it
      * out of the bar keeps the bar short. The phone changes to match.
      */
+    PREVIOUS_CHANNEL(ControlCluster.MEDIA, ControlHost.BOTH, R.string.player_previous_channel),
+    QUALITY(ControlCluster.TOOLS, ControlHost.BOTH, R.string.player_tool_quality),
+    SLEEP_TIMER(ControlCluster.TOOLS, ControlHost.BOTH, R.string.player_sleep_timer),
     REPORT(ControlCluster.TOOLS, ControlHost.BOTH, R.string.player_tool_report),
     ;
 

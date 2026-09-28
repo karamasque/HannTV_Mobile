@@ -24,6 +24,7 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import tv.own.owntv.core.CoreBuildInfo
+import tv.own.owntv.core.database.entity.SourceEntity
 import tv.own.owntv.core.R
 import tv.own.owntv.core.i18n.LocaleStore
 import tv.own.owntv.core.live.DEFAULT_MULTIVIEW_TILES
@@ -439,6 +440,12 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         val RESUME_LAST_CHANNEL = booleanPreferencesKey("resume_last_channel")
         val LAST_LIVE_CATEGORY = stringPreferencesKey("last_live_category")
         val CATEGORY_DISPLAY_MODE = stringPreferencesKey("category_display_mode")
+        val CATEGORY_DISPLAY_MODE_LIVE = stringPreferencesKey("category_display_mode_live")
+        val CATEGORY_DISPLAY_MODE_MOVIES = stringPreferencesKey("category_display_mode_movies")
+        val CATEGORY_DISPLAY_MODE_SERIES = stringPreferencesKey("category_display_mode_series")
+        val CLOUD_USER_EMAIL = stringPreferencesKey("cloud_user_email")
+        val CLOUD_USER_ID = stringPreferencesKey("cloud_user_id")
+        val CLOUD_ID_TOKEN = stringPreferencesKey("cloud_id_token")
         val RECENT_SEARCHES = stringPreferencesKey("recent_searches")
         val LAST_LIVE_CHANNEL = androidx.datastore.preferences.core.longPreferencesKey("last_live_channel")
         val VOD_GRID_COLUMNS = intPreferencesKey("vod_grid_columns")
@@ -475,6 +482,8 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         val DNS_HOST = stringPreferencesKey("dns_host")
         val DNS_PORT = intPreferencesKey("dns_port")
         val DNS_DOH_URL = stringPreferencesKey("dns_doh_url")
+        val APP_ICON = stringPreferencesKey("app_icon")
+        val CATCHUP_OFFSET_STEP_MINUTES = intPreferencesKey("catchup_offset_step_minutes")
         // Weather chip: show/hide + manual location override (blank = auto-detect from public IP).
         val WEATHER_ENABLED = booleanPreferencesKey("weather_enabled")
         val WEATHER_LOCATION = stringPreferencesKey("weather_location")
@@ -565,6 +574,13 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         val LAST_BACKUP_BYTES = longPreferencesKey("last_backup_bytes")
         val LAST_BACKUP_ENCRYPTED = booleanPreferencesKey("last_backup_encrypted")
         val LAST_BACKUP_PATH = stringPreferencesKey("last_backup_path")
+        val VOD_BUFFER_SECS = intPreferencesKey("vod_buffer_secs")
+        val VOD_NETWORK_TIMEOUT_SECS = intPreferencesKey("vod_network_timeout_secs")
+        val VOD_RECONNECTS = intPreferencesKey("vod_reconnects")
+        val AUDIO_PASSTHROUGH = booleanPreferencesKey("audio_passthrough")
+        val NIGHT_MODE = booleanPreferencesKey("night_mode")
+        val TIMESHIFT_ENABLED = booleanPreferencesKey("timeshift_enabled")
+        val TIMESHIFT_WINDOW_MINUTES = intPreferencesKey("timeshift_window_minutes")
     }
 
     /**
@@ -714,17 +730,58 @@ class SettingsRepository(private val context: Context, private val localeStore: 
         LIST(R.string.settings_category_display_mode_list),
     }
 
-    val categoryDisplayMode: Flow<CategoryDisplayMode> = prefsFlow { prefs ->
-        val raw = prefs[Keys.CATEGORY_DISPLAY_MODE]
+    val categoryDisplayModeLive: Flow<CategoryDisplayMode> = prefsFlow { prefs ->
+        val raw = prefs[Keys.CATEGORY_DISPLAY_MODE_LIVE] ?: prefs[Keys.CATEGORY_DISPLAY_MODE]
         if (raw != null) {
             runCatching { CategoryDisplayMode.valueOf(raw) }.getOrDefault(CategoryDisplayMode.TABS)
         } else {
             CategoryDisplayMode.TABS
         }
     }
-    suspend fun setCategoryDisplayMode(mode: CategoryDisplayMode) {
-        context.dataStore.edit { it[Keys.CATEGORY_DISPLAY_MODE] = mode.name }
+    val categoryDisplayMode: Flow<CategoryDisplayMode> get() = categoryDisplayModeLive
+
+    val categoryDisplayModeMovies: Flow<CategoryDisplayMode> = prefsFlow { prefs ->
+        val raw = prefs[Keys.CATEGORY_DISPLAY_MODE_MOVIES]
+        if (raw != null) {
+            runCatching { CategoryDisplayMode.valueOf(raw) }.getOrDefault(CategoryDisplayMode.TABS)
+        } else {
+            CategoryDisplayMode.TABS
+        }
     }
+
+    val categoryDisplayModeSeries: Flow<CategoryDisplayMode> = prefsFlow { prefs ->
+        val raw = prefs[Keys.CATEGORY_DISPLAY_MODE_SERIES]
+        if (raw != null) {
+            runCatching { CategoryDisplayMode.valueOf(raw) }.getOrDefault(CategoryDisplayMode.TABS)
+        } else {
+            CategoryDisplayMode.TABS
+        }
+    }
+
+    suspend fun setCategoryDisplayModeLive(mode: CategoryDisplayMode) {
+        context.dataStore.edit {
+            it[Keys.CATEGORY_DISPLAY_MODE_LIVE] = mode.name
+            it[Keys.CATEGORY_DISPLAY_MODE] = mode.name
+        }
+    }
+    suspend fun setCategoryDisplayMode(mode: CategoryDisplayMode) = setCategoryDisplayModeLive(mode)
+
+    suspend fun setCategoryDisplayModeMovies(mode: CategoryDisplayMode) {
+        context.dataStore.edit { it[Keys.CATEGORY_DISPLAY_MODE_MOVIES] = mode.name }
+    }
+
+    suspend fun setCategoryDisplayModeSeries(mode: CategoryDisplayMode) {
+        context.dataStore.edit { it[Keys.CATEGORY_DISPLAY_MODE_SERIES] = mode.name }
+    }
+
+    val cloudUserEmail: Flow<String> = prefsFlow { it[Keys.CLOUD_USER_EMAIL].orEmpty() }
+    suspend fun setCloudUserEmail(email: String) { context.dataStore.edit { it[Keys.CLOUD_USER_EMAIL] = email } }
+
+    val cloudUserId: Flow<String> = prefsFlow { it[Keys.CLOUD_USER_ID].orEmpty() }
+    suspend fun setCloudUserId(uid: String) { context.dataStore.edit { it[Keys.CLOUD_USER_ID] = uid } }
+
+    val cloudIdToken: Flow<String> = prefsFlow { it[Keys.CLOUD_ID_TOKEN].orEmpty() }
+    suspend fun setCloudIdToken(token: String) { context.dataStore.edit { it[Keys.CLOUD_ID_TOKEN] = token } }
 
     // --- Per-section "remember last ITEM per category" (default OFF each).
     //     OFF = switching category resets the browse list to the top; ON = each category keeps its own
@@ -926,6 +983,8 @@ class SettingsRepository(private val context: Context, private val localeStore: 
 
     /** Manual UTC offset bounds (whole hours), in minutes. */
     val catchupOffsetRangeMinutes: IntRange = -12 * 60..14 * 60
+    val catchupOffsetChoicesMinutes: List<Int> = (-12..14).map { it * 60 }
+    val catchupOffsetStepMinutes: Int = 60
 
     val catchupTimezone: Flow<CatchupTimezone> = prefsFlow { prefs ->
         prefs[Keys.CATCHUP_TZ]?.let { runCatching { CatchupTimezone.valueOf(it) }.getOrNull() } ?: CatchupTimezone.DEVICE
@@ -994,9 +1053,21 @@ class SettingsRepository(private val context: Context, private val localeStore: 
     }
 
     /** The timezone catch-up/timeshift URLs are formatted in — device tz, or a manual UTC offset. */
-    suspend fun resolveCatchupTimeZone(): java.util.TimeZone = when (catchupTimezone.first()) {
-        CatchupTimezone.DEVICE -> java.util.TimeZone.getDefault()
-        CatchupTimezone.MANUAL -> java.util.SimpleTimeZone(catchupOffsetMinutes.first() * 60_000, "catchup")
+    suspend fun resolveCatchupTimeZone(source: SourceEntity? = null): java.util.TimeZone {
+        if (source != null) {
+            val tzName = source.catchupTimezone
+            if (!tzName.isNullOrBlank()) {
+                if (tzName == CatchupTimezone.DEVICE.name) return java.util.TimeZone.getDefault()
+                if (tzName == CatchupTimezone.MANUAL.name) {
+                    val offsetMin = source.catchupOffsetMin ?: 0
+                    return java.util.SimpleTimeZone(offsetMin * 60_000, "catchup_source")
+                }
+            }
+        }
+        return when (catchupTimezone.first()) {
+            CatchupTimezone.DEVICE -> java.util.TimeZone.getDefault()
+            CatchupTimezone.MANUAL -> java.util.SimpleTimeZone(catchupOffsetMinutes.first() * 60_000, "catchup")
+        }
     }
 
     /** Automatically check GitHub Releases for a newer version shortly after launch. */
@@ -2911,4 +2982,68 @@ class SettingsRepository(private val context: Context, private val localeStore: 
             it[Keys.DNS_DOH_URL] = dohUrl.trim()
         }
     }
+
+    val appIcon: Flow<tv.own.owntv.core.brand.AppIcon> = prefsFlow { prefs ->
+        val raw = prefs[Keys.APP_ICON]
+        if (raw != null) {
+            runCatching { tv.own.owntv.core.brand.AppIcon.valueOf(raw) }.getOrDefault(tv.own.owntv.core.brand.AppIcon.DEFAULT)
+        } else {
+            tv.own.owntv.core.brand.AppIcon.DEFAULT
+        }
+    }
+
+    suspend fun setAppIcon(icon: tv.own.owntv.core.brand.AppIcon) {
+        context.dataStore.edit { it[Keys.APP_ICON] = icon.name }
+    }
+
+    val catchupOffsetStepMinutesFlow: Flow<Int> = prefsFlow { it[Keys.CATCHUP_OFFSET_STEP_MINUTES] ?: 60 }
+
+    suspend fun setCatchupOffsetStepMinutes(minutes: Int) {
+        context.dataStore.edit { it[Keys.CATCHUP_OFFSET_STEP_MINUTES] = minutes }
+    }
+
+    val vodBufferChoicesSecs: List<Int> = listOf(0, 5, 10, 15, 30, 60)
+    val vodNetworkTimeoutChoicesSecs: List<Int> = listOf(0, 5, 10, 15, 30, 60)
+    val vodReconnectChoices: List<Int> = listOf(0, 1, 2, 3, 5, 10)
+
+    val vodBufferSecs: Flow<Int> = prefsFlow { it[intPreferencesKey("vod_buffer_secs")] ?: 0 }
+    suspend fun setVodBufferSecs(secs: Int) {
+        context.dataStore.edit { it[intPreferencesKey("vod_buffer_secs")] = secs }
+    }
+
+    val vodNetworkTimeoutSecs: Flow<Int> = prefsFlow { it[intPreferencesKey("vod_network_timeout_secs")] ?: 0 }
+    suspend fun setVodNetworkTimeoutSecs(secs: Int) {
+        context.dataStore.edit { it[intPreferencesKey("vod_network_timeout_secs")] = secs }
+    }
+
+    val vodReconnects: Flow<Int> = prefsFlow { it[intPreferencesKey("vod_reconnects")] ?: 1 }
+    suspend fun setVodReconnects(count: Int) {
+        context.dataStore.edit { it[intPreferencesKey("vod_reconnects")] = count }
+    }
+
+    val volumeLevelling: Flow<Boolean> = prefsFlow { it[booleanPreferencesKey("volume_levelling")] ?: false }
+    suspend fun setVolumeLevelling(enabled: Boolean) { context.dataStore.edit { it[booleanPreferencesKey("volume_levelling")] = enabled } }
+
+    val maxVideoHeight: Flow<Int> = prefsFlow { it[intPreferencesKey("max_video_height")] ?: 0 }
+    val maxVideoHeightChoices: List<Int> = listOf(0, 2160, 1080, 720, 576, 480)
+    suspend fun setMaxVideoHeight(height: Int) { context.dataStore.edit { it[intPreferencesKey("max_video_height")] = height } }
+
+    val mobileDataMaxVideoHeight: Flow<Int> = prefsFlow { it[intPreferencesKey("mobile_data_max_video_height")] ?: 0 }
+    val mobileDataMaxVideoHeightChoices: List<Int> = listOf(0, 2160, 1080, 720, 576, 480)
+    suspend fun setMobileDataMaxVideoHeight(height: Int) { context.dataStore.edit { it[intPreferencesKey("mobile_data_max_video_height")] = height } }
+
+    val tunneledPlayback: Flow<Boolean> = prefsFlow { it[booleanPreferencesKey("tunneled_playback")] ?: false }
+    val tunnelingFailed: Flow<Boolean> = prefsFlow { false }
+    val failedThisSession: Boolean = false
+    suspend fun setTunneledPlayback(enabled: Boolean) { context.dataStore.edit { it[booleanPreferencesKey("tunneled_playback")] = enabled } }
+
+    val timeshiftEnabled: Flow<Boolean> = prefsFlow { it[booleanPreferencesKey("timeshift_enabled")] ?: true }
+    val timeshiftWindowMinutes: Flow<Int> = prefsFlow { it[intPreferencesKey("timeshift_window_minutes")] ?: 120 }
+    suspend fun setTimeshiftEnabled(enabled: Boolean) { context.dataStore.edit { it[booleanPreferencesKey("timeshift_enabled")] = enabled } }
+    suspend fun setTimeshiftWindowMinutes(minutes: Int) { context.dataStore.edit { it[intPreferencesKey("timeshift_window_minutes")] = minutes } }
+
+    val audioPassthrough: Flow<Boolean> = prefsFlow { it[booleanPreferencesKey("audio_passthrough")] ?: true }
+    suspend fun setAudioPassthrough(enabled: Boolean) { context.dataStore.edit { it[booleanPreferencesKey("audio_passthrough")] = enabled } }
+    val nightMode: Flow<Boolean> = prefsFlow { it[booleanPreferencesKey("night_mode")] ?: false }
+    suspend fun setNightMode(enabled: Boolean) { context.dataStore.edit { it[booleanPreferencesKey("night_mode")] = enabled } }
 }

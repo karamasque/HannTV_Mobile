@@ -5,6 +5,7 @@ import android.content.Context
 import android.content.ContextWrapper
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -55,14 +56,46 @@ fun rememberAppliedIcon(): AppIcon {
     return remember(context) { AppIconSwitcher.applied(context) }
 }
 
-/** The flat flip-card mark (no shadow, no next card). At 32 dp and below the simpler small drawing. */
+/** HanTV icon mark derived for each AppIcon variant with its accent color background. */
 @Composable
 fun BrandMark(icon: AppIcon, size: Dp, modifier: Modifier = Modifier) {
-    Image(
-        painter = painterResource(if (size <= 32.dp) icon.markSmall else icon.mark),
-        contentDescription = null,
-        modifier = modifier.size(size),
-    )
+    val accentColor = Color(icon.accent)
+    val containerBg = when (icon) {
+        AppIcon.PETROL -> Color(0xFF0F383E)
+        AppIcon.SUNFLOWER -> Color(0xFF3B2F04)
+        AppIcon.COBALT -> Color(0xFF0F264A)
+        AppIcon.TOMATO -> Color(0xFF3F0F0F)
+        AppIcon.BOARD -> Color(0xFF1E293B)
+        AppIcon.EGGSHELL -> Color(0xFF162032)
+        AppIcon.OLIVE -> Color(0xFF1E3306)
+        AppIcon.OLIVE_CREAM -> Color(0xFF382305)
+    }
+    Box(
+        modifier = modifier
+            .size(size)
+            .clip(RoundedCornerShape(size * 0.28f))
+            .background(
+                androidx.compose.ui.graphics.Brush.linearGradient(
+                    colors = listOf(
+                        containerBg,
+                        accentColor.copy(alpha = 0.45f),
+                    ),
+                ),
+            )
+            .border(
+                width = 1.dp,
+                color = accentColor.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(size * 0.28f),
+            ),
+        contentAlignment = Alignment.Center,
+    ) {
+        Image(
+            painter = painterResource(R.drawable.hantv_splash_logo),
+            contentDescription = null,
+            modifier = Modifier.size(size * 0.75f),
+            colorFilter = androidx.compose.ui.graphics.ColorFilter.tint(accentColor),
+        )
+    }
 }
 
 /**

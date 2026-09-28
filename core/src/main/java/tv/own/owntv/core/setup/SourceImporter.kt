@@ -132,6 +132,7 @@ class SourceImporter(
         username: String,
         password: String,
         userAgent: String = "",
+        httpReferer: String = "",
         epgUrl: String = "",
         autoRefresh: PlaylistRefresh = PlaylistRefresh.OFF,
         live: SyncScopeChoice = SyncScopeChoice.Now,
@@ -153,6 +154,7 @@ class SourceImporter(
                 username = username.trim(),
                 password = password,
                 userAgent = userAgent.trim().takeIf { it.isNotBlank() },
+                httpReferer = httpReferer.trim().takeIf { it.isNotBlank() },
                 epgUrl = epgUrl.trim().takeIf { it.isNotBlank() },
                 syncLive = enabled.live, syncMovies = enabled.movies, syncSeries = enabled.series,
                 preferHls = preferHls,
@@ -172,6 +174,7 @@ class SourceImporter(
         deviceId2: String = "",
         signature: String = "",
         userAgent: String = "",
+        httpReferer: String = "",
         autoRefresh: PlaylistRefresh = PlaylistRefresh.OFF,
         live: SyncScopeChoice = SyncScopeChoice.Now,
         movies: SyncScopeChoice = SyncScopeChoice.Later,
@@ -210,6 +213,7 @@ class SourceImporter(
                 deviceId2.trim().takeIf { it.isNotBlank() },
                 signature.trim().takeIf { it.isNotBlank() },
                 userAgent.trim().takeIf { it.isNotBlank() },
+                httpReferer.trim().takeIf { it.isNotBlank() },
                 syncLive = enabled.live, syncMovies = enabled.movies, syncSeries = enabled.series,
             )
         }
@@ -219,6 +223,7 @@ class SourceImporter(
         name: String,
         url: String,
         userAgent: String = "",
+        httpReferer: String = "",
         epgUrl: String = "",
         autoRefresh: PlaylistRefresh = PlaylistRefresh.OFF,
         makeDefault: Boolean = false,
@@ -228,6 +233,7 @@ class SourceImporter(
             name = name.trim(),
             url = url.trim(),
             userAgent = userAgent.trim().takeIf { it.isNotBlank() },
+            httpReferer = httpReferer.trim().takeIf { it.isNotBlank() },
             epgUrl = epgUrl.trim().takeIf { it.isNotBlank() },
         )
     }
@@ -359,7 +365,11 @@ class SourceImporter(
      * Restore everything from a backup file. Encrypted backups first ask for the backup password via
      * [ImportState.NeedPassword]; returns true only when data was actually restored.
      */
-    suspend fun importBackup(file: File): Boolean {
+    suspend fun importBackup(
+        file: File,
+        sections: Set<BackupManager.Section> = BackupManager.Section.entries.toSet(),
+        deviceSettings: Boolean = false,
+    ): Boolean {
         _state.value = ImportState.Running
         // A sealed .own reveals nothing before it is decrypted — ask for the password first.
         if (backup.isSealed(file)) {
@@ -374,17 +384,27 @@ class SourceImporter(
             _state.value = ImportState.NeedPassword(file)
             return false
         }
-        return doRestore(file, null)
+        return doRestore(file, null, sections, deviceSettings)
     }
 
     /** Continue an encrypted restore once the user provides (or skips, password = null) the passphrase. */
-    suspend fun restoreWithPassword(file: File, password: String?): Boolean {
+    suspend fun restoreWithPassword(
+        file: File,
+        password: String?,
+        sections: Set<BackupManager.Section> = BackupManager.Section.entries.toSet(),
+        deviceSettings: Boolean = false,
+    ): Boolean {
         _state.value = ImportState.Running
-        return doRestore(file, password)
+        return doRestore(file, password, sections, deviceSettings)
     }
 
-    private suspend fun doRestore(file: File, password: String?): Boolean =
-        backup.import(file, backupPassword = password).fold(
+    private suspend fun doRestore(
+        file: File,
+        password: String?,
+        sections: Set<BackupManager.Section> = BackupManager.Section.entries.toSet(),
+        deviceSettings: Boolean = false,
+    ): Boolean =
+        backup.import(file, sections = sections, backupPassword = password, deviceSettings = deviceSettings).fold(
             onSuccess = { summary ->
                 _state.value = ImportState.Success(
                     restoredItems = summary.items,

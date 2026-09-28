@@ -4,8 +4,42 @@
 # Phase 1 deletes occurrences until this file is empty; the CI guard then becomes absolute.
 # Format: <count>\t<relative path>\t<content with \t/\n escaped>
 
+3	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	\0
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	${activeDevices.size} / 3 Aktif Cihaz
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	(Bu Cihaz)
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Aktif Bağlı Cihazlarınız
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bağlı Cihazlar Sınırı
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bekleyin...
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bu cihazdaki bulut üyelik oturumunu sonlandırır
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bulut Hesabı
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Bulut senkronizasyonu tamamlandı!
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	E-posta Adresi
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Giriş Başarılı!
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Giriş Engellendi
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Giriş Yap
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	HanTV Bulut Hesabına Giriş Yap
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Hesabınız yok mu? Kayıt Ol
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	IPTV kaynaklarını ve izleme sürelerini senkronize eder
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Kayıt Ol
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Lütfen e-posta ve şifre girin
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Oturum kapatıldı
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Oturumu Kapat
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Senkronizasyon hatası oluştu
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Tamam
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Tür: ${dev.platform.uppercase()} — Cihaz ID: ${dev.id.take(12)}...
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Yeni Bulut Hesabı Oluştur
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Zaten hesabınız var mı? Giriş Yap
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	actions
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	auth
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	devices-list
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	tv
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	user-profile
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Üyeliğiniz ile en fazla 3 cihaz bağlayabilir, IPTV listelerinizi ve kaldığınız yerden devam et sürelerini senkronize edebilirsiniz.
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Şifre
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAccountPage.kt	Şimdi Bulut Senkronizasyonu Yap
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsAppearancePage.kt	theme_preset
+1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	account
 1	app/src/main/java/tv/own/owntv/mobile/ui/screens/settings/SettingsLeaf.kt	glass
 3	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	\0
 1	app/src/main/java/tv/own/owntv/mobile/ui/setup/AddSourceForm.kt	Forum taranıyor...

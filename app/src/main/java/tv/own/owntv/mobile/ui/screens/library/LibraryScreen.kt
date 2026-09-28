@@ -17,9 +17,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyGridState
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.background
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -43,7 +49,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.paging.LoadState
@@ -53,7 +61,9 @@ import androidx.paging.compose.itemKey
 import kotlinx.coroutines.flow.SharedFlow
 import org.koin.androidx.compose.koinViewModel
 import tv.own.owntv.core.live.LiveKey
+import tv.own.owntv.core.live.serialize
 import tv.own.owntv.core.settings.SettingsRepository
+import tv.own.owntv.mobile.ui.theme.glassClickable
 import tv.own.owntv.mobile.R
 import tv.own.owntv.mobile.ui.components.MobileSlider
 import tv.own.owntv.mobile.ui.components.CategoryPickerSheet
@@ -119,6 +129,16 @@ fun LibraryScreen(
     val favorites by vm.favoriteIds.collectAsStateWithLifecycle()
     val progress by vm.movieProgress.collectAsStateWithLifecycle()
 
+    val categoryDisplayMode by vm.categoryDisplayMode.collectAsStateWithLifecycle()
+    var activeCategoryInListMode by rememberSaveable { mutableStateOf<String?>(null) }
+    val isListMode = categoryDisplayMode == SettingsRepository.CategoryDisplayMode.LIST && lockedKey == null
+
+    if (isListMode && activeCategoryInListMode != null) {
+        BackHandler(enabled = true) {
+            activeCategoryInListMode = null
+        }
+    }
+
     val items = when (tab) {
         LibraryTab.MOVIES -> vm.movies
         LibraryTab.SERIES -> vm.series
@@ -149,6 +169,12 @@ fun LibraryScreen(
         tappedItem = null
     }
 
+    LaunchedEffect(isListMode, tab) {
+        if (!isListMode) {
+            activeCategoryInListMode = null
+        }
+    }
+
     val categoryHeader = @Composable {
         Column(Modifier.fillMaxWidth()) {
             if (fixedTab == null) {
@@ -159,13 +185,16 @@ fun LibraryScreen(
                     LibraryTab.entries.forEach { entry ->
                         Tab(
                             selected = entry == tab,
-                            onClick = { vm.select(entry) },
+                            onClick = {
+                                activeCategoryInListMode = null
+                                vm.select(entry)
+                            },
                             text = { Text(stringResource(entry.labelRes())) },
                         )
                     }
                 }
             }
-            if (lockedKey == null) Box(Modifier.fillMaxWidth()) {
+            if (lockedKey == null && !isListMode) Box(Modifier.fillMaxWidth()) {
                 FilterChipRow(
                     labels = categories.map { it.label(tab) },
                     selectedIndex = categories.indexOfFirst { it.key == selected },
@@ -184,72 +213,123 @@ fun LibraryScreen(
                         Icon(MobileIcons.Tune, stringResource(R.string.content_sorting))
                     }
                 }
+            } else if (isListMode && activeCategoryInListMode != null) {
+                Row(
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    IconButton(onClick = { activeCategoryInListMode = null }) {
+                        Icon(MobileIcons.ArrowBack, stringResource(R.string.common_back))
+                    }
+                    val categoryLabel = categories.firstOrNull { it.key == selected }?.label(tab).orEmpty()
+                    Text(
+                        text = categoryLabel,
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    IconButton(onClick = { categoryPicker = true }) {
+                        Icon(MobileIcons.Search, stringResource(R.string.content_search_categories))
+                    }
+                    IconButton(onClick = { sheetOpen = true }) {
+                        Icon(MobileIcons.Tune, stringResource(R.string.content_sorting))
+                    }
+                }
             }
-            val categoryLabel = categories.firstOrNull { it.key == selected }?.label(tab).orEmpty()
-            Text(
-                text = pluralStringResource(
-                    if (tab == LibraryTab.MOVIES) R.plurals.content_count_movies else R.plurals.content_count_series,
-                    count,
-                    categoryLabel,
-                    count,
-                ),
-                style = MaterialTheme.typography.labelMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
-            )
+            if (!isListMode || activeCategoryInListMode != null) {
+                val categoryLabel = categories.firstOrNull { it.key == selected }?.label(tab).orEmpty()
+                Text(
+                    text = pluralStringResource(
+                        if (tab == LibraryTab.MOVIES) R.plurals.content_count_movies else R.plurals.content_count_series,
+                        count,
+                        categoryLabel,
+                        count,
+                    ),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = MobileDimens.ScreenPaddingH),
+                )
+            }
         }
     }
 
     val gridContent = @Composable {
-        BoxWithConstraints(Modifier.fillMaxSize()) {
-            val width = maxWidth.value.toInt()
-            val columns = chosenColumns.takeIf { it > 0 } ?: (width / COLUMN_WIDTH_DP).coerceIn(MIN_COLUMNS, MAX_COLUMNS)
-            val gaps = MobileDimens.GridGap.value.toInt() * (columns - 1)
-            val posterWidth = ((width - GRID_PADDING_DP * 2 - gaps) / columns).dp
-
-            if (items.itemCount == 0 && items.loadState.refresh !is LoadState.Loading) {
-                EmptyLibrary(tab)
-            } else if (viewMode == SettingsRepository.VodViewMode.LIST) {
-                LazyColumn(state = listState, modifier = Modifier.fillMaxSize().mobileGroupPlate()) {
-                    items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
-                        items[index]?.let { item ->
-                            MobileListRow(
-                                title = item.name,
-                                subtitle = item.details(),
-                                onClick = {
-                                    if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
-                                },
-                                onLongClick = { menuFor = item },
-                            )
+        if (isListMode && activeCategoryInListMode == null) {
+            LazyColumn(
+                state = listState,
+                modifier = Modifier.fillMaxSize().mobileGroupPlate(),
+            ) {
+                items(count = categories.size, key = { categories[it].key.serialize() }) { index ->
+                    val cat = categories[index]
+                    CategoryFolderRow(
+                        title = cat.label(tab),
+                        onClick = {
+                            activeCategoryInListMode = cat.key.serialize()
+                            vm.select(cat.key)
+                        },
+                        onLongClick = {
+                            if (cat.builtIn == null) categoryMenuFor = cat
                         }
+                    )
+                    if (index < categories.size - 1) {
+                        HorizontalDivider(
+                            color = Color.White.copy(alpha = 0.08f),
+                            thickness = 1.dp,
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                        )
                     }
                 }
-            } else {
-                LazyVerticalGrid(
-                    columns = GridCells.Fixed(columns),
-                    state = gridState,
-                    contentPadding = PaddingValues(MobileDimens.GapSmall),
-                    horizontalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
-                    verticalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .pinchToResize(columns) { vm.setGridColumns(it) },
-                ) {
-                    items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
-                        items[index]?.let { item ->
-                            PosterCard(
-                                title = item.name,
-                                imageUrl = item.posterUrl,
-                                subtitle = item.details(),
-                                progress = progress[item.id]?.takeIf { tab == LibraryTab.MOVIES }
-                                    ?.let { it.positionMs.toFloat() / it.durationMs.coerceAtLeast(1) },
-                                width = posterWidth,
-                                sharedKey = posterKey(tab.name, item.id),
-                                onClick = {
-                                    if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
-                                },
-                                onLongClick = { menuFor = item },
-                            )
+            }
+        } else {
+            BoxWithConstraints(Modifier.fillMaxSize()) {
+                val width = maxWidth.value.toInt()
+                val columns = chosenColumns.takeIf { it > 0 } ?: (width / COLUMN_WIDTH_DP).coerceIn(MIN_COLUMNS, MAX_COLUMNS)
+                val gaps = MobileDimens.GridGap.value.toInt() * (columns - 1)
+                val posterWidth = ((width - GRID_PADDING_DP * 2 - gaps) / columns).dp
+
+                if (items.itemCount == 0 && items.loadState.refresh !is LoadState.Loading) {
+                    EmptyLibrary(tab)
+                } else if (viewMode == SettingsRepository.VodViewMode.LIST) {
+                    LazyColumn(state = listState, modifier = Modifier.fillMaxSize().mobileGroupPlate()) {
+                        items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
+                            items[index]?.let { item ->
+                                MobileListRow(
+                                    title = item.name,
+                                    subtitle = item.details(),
+                                    onClick = {
+                                        if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
+                                    },
+                                    onLongClick = { menuFor = item },
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    LazyVerticalGrid(
+                        columns = GridCells.Fixed(columns),
+                        state = gridState,
+                        contentPadding = PaddingValues(MobileDimens.GapSmall),
+                        horizontalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
+                        verticalArrangement = Arrangement.spacedBy(MobileDimens.GridGap),
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .pinchToResize(columns) { vm.setGridColumns(it) },
+                    ) {
+                        items(count = items.itemCount, key = items.itemKey { it.id }) { index ->
+                            items[index]?.let { item ->
+                                PosterCard(
+                                    title = item.name,
+                                    imageUrl = item.posterUrl,
+                                    subtitle = item.details(),
+                                    progress = progress[item.id]?.takeIf { tab == LibraryTab.MOVIES }
+                                        ?.let { it.positionMs.toFloat() / it.durationMs.coerceAtLeast(1) },
+                                    width = posterWidth,
+                                    sharedKey = posterKey(tab.name, item.id),
+                                    onClick = {
+                                        if (twoPane) tappedItem = item.id else onOpenItem(tab, item.id)
+                                    },
+                                    onLongClick = { menuFor = item },
+                                )
+                            }
                         }
                     }
                 }
@@ -481,3 +561,49 @@ private const val MIN_COLUMNS = 2
 private const val MAX_COLUMNS = 8
 private const val PINCH_OUT = 1.25f
 private const val PINCH_IN = 0.8f
+
+@Composable
+private fun CategoryFolderRow(
+    title: String,
+    onClick: () -> Unit,
+    onLongClick: () -> Unit = {},
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .defaultMinSize(minHeight = 48.dp)
+            .glassClickable(interactionSource = interactionSource, onClick = onClick, onLongClick = onLongClick)
+            .padding(horizontal = 12.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Box(
+            modifier = Modifier
+                .size(36.dp)
+                .background(MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f), RoundedCornerShape(8.dp)),
+            contentAlignment = Alignment.Center,
+        ) {
+            Icon(
+                imageVector = MobileIcons.Folder,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(20.dp),
+            )
+        }
+        Text(
+            text = title,
+            style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.SemiBold),
+            color = MaterialTheme.colorScheme.onSurface,
+            modifier = Modifier.weight(1f),
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+        Icon(
+            imageVector = MobileIcons.KeyboardArrowRight,
+            contentDescription = null,
+            tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+            modifier = Modifier.size(18.dp),
+        )
+    }
+}

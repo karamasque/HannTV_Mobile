@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?><!--
    Android auto-backup rules (API 30 and below; API 31+ uses data_extraction_rules.xml).
 
-   OwnTV opts OUT of Android's automatic backup entirely — `android:allowBackup="false"` in the
+   HanTV opts OUT of Android's automatic backup entirely — `android:allowBackup="false"` in the
    manifest — and these rules are the belt-and-braces second layer.
 
    WHY: the Room database, the `owntv_settings` DataStore and the `opensub_auth` preferences hold
@@ -12,7 +12,7 @@
    given). Automatic backup silently bypassed that policy: it would copy the raw stores to Google
    Drive or to a new phone/TV with no passphrase involved at all.
 
-   Settings → Backup & Restore is therefore the ONLY way OwnTV data moves between devices, and it is
+   Settings → Backup & Restore is therefore the ONLY way HanTV data moves between devices, and it is
    always an explicit, user-driven, optionally encrypted `.own` file.
 -->
 <full-backup-content>

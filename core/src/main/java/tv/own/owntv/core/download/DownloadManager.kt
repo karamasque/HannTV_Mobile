@@ -20,7 +20,7 @@ import tv.own.owntv.core.storage.StorageAccess
 import tv.own.owntv.core.settings.SettingsRepository
 
 /** Free/total bytes of the volume backing the download root. */
-data class DownloadStorageInfo(val freeBytes: Long, val totalBytes: Long) {
+data class DownloadStorageInfo(val freeBytes: Long, val totalBytes: Long, val usingFallback: Boolean = false) {
     val usedBytes: Long get() = (totalBytes - freeBytes).coerceAtLeast(0L)
     val usedFraction: Float get() = if (totalBytes > 0) (usedBytes.toFloat() / totalBytes).coerceIn(0f, 1f) else 0f
 }

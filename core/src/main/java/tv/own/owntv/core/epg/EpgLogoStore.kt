@@ -29,7 +29,7 @@ object EpgLogoStore {
         private set
 
     /** Follow the enabled EPG sources; while any is enabled, follow their stored feed icons. */
-    fun start(scope: CoroutineScope, settings: SettingsRepository, epgDao: EpgDao) {
+    fun start(scope: CoroutineScope, settings: SettingsRepository, epgDao: EpgDao, customize: Any? = null) {
         scope.launch {
             settings.epgUseLogos.collectLatest { sourceIds ->
                 if (sourceIds.isEmpty()) {
@@ -50,6 +50,8 @@ object EpgLogoStore {
         if (icons.isEmpty() || epgChannelId.isNullOrBlank()) return null
         return icons[epgChannelId.trim().lowercase()]
     }
+
+    suspend fun includeLogosFor(settings: SettingsRepository, epgDao: EpgDao, epgIds: List<String>) {}
 }
 
 /**

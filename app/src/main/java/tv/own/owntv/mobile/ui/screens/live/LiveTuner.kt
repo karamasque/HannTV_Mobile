@@ -243,7 +243,7 @@ class LiveTuner(
      * otherwise be talking to the one just stopped. The flow stays, because a composable has to be
      * able to *observe* the change; a caller that only needs the answer now uses this.
      */
-    val currentEngine: PlaybackEngine get() = if (liveOnExo.value) exo else engine
+    val currentEngine: PlaybackEngine get() = if (liveOnExo.value && offsetSec.value == null) exo else engine
 
     /**
      * Whether anything is playing at all, asked of whichever engine would be holding it.
@@ -255,7 +255,7 @@ class LiveTuner(
      * a channel pinned to compatibility mode, because those genuinely are its streams.
      */
     val hasStream: Boolean
-        get() = if (liveOnExo.value) exo.currentUrl != null else player.hasActiveStream
+        get() = if (liveOnExo.value && offsetSec.value == null) exo.currentUrl != null else player.hasActiveStream
 
     /**
      * The shape of the picture, from whichever engine is drawing it, or null before one is known.
@@ -266,7 +266,7 @@ class LiveTuner(
      * for the same reason.
      */
     val videoAspect: Float?
-        get() = if (liveOnExo.value) exo.videoAspect.value else player.videoAspect.value
+        get() = if (liveOnExo.value && offsetSec.value == null) exo.videoAspect.value else player.videoAspect.value
 
     /**
      * Hand the stream to the system: the session takes the lockscreen and the audio focus, the
@@ -276,7 +276,7 @@ class LiveTuner(
     private fun publishToSystem() {
         // Whichever engine actually holds the stream: a session published for the idle one would
         // answer the lockscreen and the headphone button for something that is not playing.
-        session.attach(if (liveOnExo.value) exo else engine)
+        session.attach(currentEngine)
         PlaybackService.start(context)
     }
 
@@ -819,9 +819,6 @@ class LiveTuner(
                 ),
             )
             if (!handedOver) {
-                // A replay is an mpv stream, so the live ExoPlayer engine lets go of its channel —
-                // its connection and its decoder — before mpv asks for either, and the live ladder
-                // stands down: its alarm would otherwise stop a replay that plays perfectly well.
                 releaseForArchive()
                 player.play(
                     url = url,
@@ -1032,7 +1029,7 @@ class LiveTuner(
         // thing entirely — it is started again instead. From its beginning: the receiver's position
         // is not a place the archive URL can be re-entered at.
         val replay = lastCatchup.takeIf { _replaying.value }
-        if (replay != null) playCatchup(replay, channel) else live.launch { open(channel) }
+        if (replay != null) playCatchup(replay, channel) else scope.launch { open(channel) }
     }
 
     private suspend fun recordHistory(profileId: Long, channelId: Long) {
@@ -1051,6 +1048,13 @@ class LiveTuner(
         /** How long Channel +/− waits for the user to stop pressing before it opens a stream — the
          *  television's figure. */
         const val ZAP_TUNE_DELAY_MS = 500L
+    }
+
+    suspend fun recentlyWatchedForPicker(): List<ChannelEntity> = emptyList()
+    suspend fun nowPlayingFor(channels: List<ChannelEntity>): Map<Long, tv.own.owntv.core.live.ChannelNowPlaying> = emptyMap()
+
+    private fun releaseForArchive() {
+        live.stop()
     }
 }
 

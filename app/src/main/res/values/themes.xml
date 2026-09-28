@@ -4,33 +4,34 @@
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <style name="Theme.OwnTVMobile.Starting" parent="Theme.SplashScreen">
-        <item name="windowSplashScreenBackground">@color/owntv_window_bg</item>
-        <item name="postSplashScreenTheme">@style/Theme.OwnTVMobile</item>
+    <style name="Theme.HanTVMobile.Starting" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">#070B10</item>
+        <item name="postSplashScreenTheme">@style/Theme.HanTVMobile</item>
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Petrol">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_petrol</item>
+    <style name="Theme.HanTVMobile.Starting.Petrol" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Sunflower">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_sunflower</item>
+    <style name="Theme.HanTVMobile.Starting.Sunflower" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Cobalt">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_cobalt</item>
+    <style name="Theme.HanTVMobile.Starting.Cobalt" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Tomato">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_tomato</item>
+    <style name="Theme.HanTVMobile.Starting.Tomato" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Board">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_board</item>
+    <style name="Theme.HanTVMobile.Starting.Board" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Eggshell">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_eggshell</item>
+    <style name="Theme.HanTVMobile.Starting.Eggshell" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.Olive">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_olive</item>
+    <style name="Theme.HanTVMobile.Starting.Olive" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
-    <style name="Theme.OwnTVMobile.Starting.OliveCream">
-        <item name="windowSplashScreenAnimatedIcon">@drawable/owntv_splash_static_olive_cream</item>
+    <style name="Theme.HanTVMobile.Starting.OliveCream" parent="Theme.HanTVMobile.Starting">
+        <item name="windowSplashScreenAnimatedIcon">@android:color/transparent</item>
     </style>
 
     <style name="Theme.HanTVMobile.CastButton" parent="Theme.AppCompat.NoActionBar">
@@ -51,6 +52,15 @@
 
     <!-- Legacy style aliases -->
     <style name="Theme.OwnTVMobile" parent="Theme.HanTVMobile" />
+    <style name="Theme.OwnTVMobile.Starting" parent="Theme.HanTVMobile.Starting" />
+    <style name="Theme.OwnTVMobile.Starting.Petrol" parent="Theme.HanTVMobile.Starting.Petrol" />
+    <style name="Theme.OwnTVMobile.Starting.Sunflower" parent="Theme.HanTVMobile.Starting.Sunflower" />
+    <style name="Theme.OwnTVMobile.Starting.Cobalt" parent="Theme.HanTVMobile.Starting.Cobalt" />
+    <style name="Theme.OwnTVMobile.Starting.Tomato" parent="Theme.HanTVMobile.Starting.Tomato" />
+    <style name="Theme.OwnTVMobile.Starting.Board" parent="Theme.HanTVMobile.Starting.Board" />
+    <style name="Theme.OwnTVMobile.Starting.Eggshell" parent="Theme.HanTVMobile.Starting.Eggshell" />
+    <style name="Theme.OwnTVMobile.Starting.Olive" parent="Theme.HanTVMobile.Starting.Olive" />
+    <style name="Theme.OwnTVMobile.Starting.OliveCream" parent="Theme.HanTVMobile.Starting.OliveCream" />
     <style name="Theme.OwnTVMobile.CastButton" parent="Theme.HanTVMobile.CastButton" />
     <style name="Theme.OwnTVMobile.CastButton.Dark" parent="Theme.HanTVMobile.CastButton.Dark" />
 </resources>

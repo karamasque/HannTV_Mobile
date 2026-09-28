@@ -80,6 +80,15 @@ interface SourceDao {
     @Query("UPDATE sources SET liveLatencyMode = :mode, liveLatencyCustomSecs = :customSecs WHERE id = :id")
     suspend fun updateLiveLatency(id: Long, mode: String?, customSecs: Int)
 
+    @Query("UPDATE sources SET vodEnginePreference = :preference WHERE id = :id")
+    suspend fun updateVodEnginePreference(id: Long, preference: String?)
+
+    @Query("UPDATE sources SET liveTuneTimeoutSecs = :timeoutSec WHERE id = :id")
+    suspend fun updateLiveTuneTimeout(id: Long, timeoutSec: Int?)
+
+    @Query("UPDATE sources SET catchupTimezone = :tz, catchupOffsetMin = :offsetMin WHERE id = :id")
+    suspend fun updateCatchupTimezone(id: Long, tz: String?, offsetMin: Int?)
+
     // --- profile <-> source links (hybrid model) ---
 
     @Insert(onConflict = OnConflictStrategy.IGNORE)

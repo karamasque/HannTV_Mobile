@@ -148,6 +148,10 @@ class LibraryViewModel(
     val viewMode: StateFlow<SettingsRepository.VodViewMode> = settings.vodViewMode
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.VodViewMode.GRID)
 
+    val categoryDisplayMode: StateFlow<SettingsRepository.CategoryDisplayMode> = _tab
+        .flatMapLatest { if (it == LibraryTab.MOVIES) settings.categoryDisplayModeMovies else settings.categoryDisplayModeSeries }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), SettingsRepository.CategoryDisplayMode.TABS)
+
     /** How many posters a row holds. 0 means "decide from the width of the screen". */
     val gridColumns: StateFlow<Int> = settings.vodGridColumns
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)

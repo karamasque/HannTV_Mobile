@@ -36,7 +36,9 @@ class LiveTimeshift(
     private val nowMs: () -> Long = { System.currentTimeMillis() },
     private val coalesceMs: Long = 350,
     private val tickMs: Long = 1_000,
+    local: Any? = null,
 ) {
+    fun canRewind(ch: ChannelEntity): Boolean = ch.catchup
 
     /** The three things the counters need from whatever is playing. */
     interface Playback {

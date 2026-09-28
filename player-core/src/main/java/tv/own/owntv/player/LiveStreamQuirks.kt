@@ -42,6 +42,8 @@ import java.util.concurrent.ConcurrentHashMap
  */
 object LiveStreamQuirks {
 
+    fun forgetLearned(archiveStore: Any? = null) {}
+
     /**
      * How many distinct live segments a provider must refuse before we stop trying on ExoPlayer.
      *

@@ -75,6 +75,8 @@ class PlaybackSession(
     private var engine: PlaybackEngine? = null
     private var collectJob: Job? = null
     private var session: MediaSession? = null
+    var livePrevious: (() -> Unit)? = null
+    val active: kotlinx.coroutines.flow.StateFlow<Boolean> = kotlinx.coroutines.flow.MutableStateFlow(false)
 
     private var hasFocus = false
     /** Volume the user had set before we ducked, or null when not ducked. */

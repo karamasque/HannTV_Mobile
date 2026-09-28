@@ -31,6 +31,9 @@ interface PlaybackEngine {
      *  Null = don't show one. */
     val engineChip: StateFlow<String?> get() = NULL_STRING
     val volume: StateFlow<Int>
+    val videoQualities: StateFlow<List<Int>> get() = MutableStateFlow(emptyList())
+    val videoQualityPick: StateFlow<Int> get() = MutableStateFlow(0)
+    fun selectVideoQuality(height: Int?) {}
     val zoomMode: StateFlow<ZoomMode>
     val audioCount: StateFlow<Int>
     val subCount: StateFlow<Int>

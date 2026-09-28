@@ -1,5 +1,6 @@
 package tv.own.owntv.mobile.ui.player
 
+import tv.own.owntv.mobile.ui.screens.library.VodTuner
 import android.content.Context
 import android.view.SurfaceHolder
 import android.view.SurfaceView
@@ -88,8 +89,11 @@ fun VideoStage(
     // surface at all — sound, no picture — and the watchdog dutifully handed every channel back to
     // mpv within seconds. A parameter that three of four callers forget is the wrong shape.
     val tuner: LiveTuner = koinInject()
+    val vodTuner: VodTuner = koinInject()
     val liveOnExo by tuner.liveOnExo.collectAsStateWithLifecycle()
-    val liveExo = tuner.exoEngine.takeIf { liveOnExo }
+    val film by vodTuner.playing.collectAsStateWithLifecycle()
+    val offsetSec by tuner.offsetSec.collectAsStateWithLifecycle()
+    val liveExo = tuner.exoEngine.takeIf { liveOnExo && film == null && offsetSec == null }
 
     // Shape comes from whichever engine actually holds the video, or the frame is laid out against
     // numbers the idle one last reported.

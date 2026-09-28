@@ -86,9 +86,20 @@ class RecordingsViewModel(
 
     fun play(recording: RecordingEntity) {
         if (recording.status != RecordingStatus.COMPLETED) return
-        val path = recording.filePath ?: return
+        val localFile = recording.filePath?.let { java.io.File(it) }
+        val path = if (localFile != null && localFile.exists() && localFile.length() > 0) {
+            recording.filePath
+        } else {
+            recording.streamUrl
+        } ?: return
         viewModelScope.launch {
-            _playing.value = vodTuner.playRecording(path, recording.title, recording.channelIconUrl)
+            _playing.value = vodTuner.playRecording(
+                filePath = path,
+                title = recording.title,
+                posterUrl = recording.channelIconUrl,
+                sourceId = recording.sourceId,
+                httpHeaders = recording.httpHeaders,
+            )
         }
     }
 

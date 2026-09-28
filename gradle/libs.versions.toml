@@ -52,9 +52,11 @@ orgJson = "20260814"
 junitExt = "1.3.0"
 espressoCore = "3.7.0"
 
-owntvCore = "1.0.60"
+owntvCore = "1.0.61"
 
 [libraries]
+owntv-core = { group = "tv.own.owntv", name = "core", version.ref = "owntvCore" }
+owntv-player-core = { group = "tv.own.owntv", name = "player-core", version.ref = "owntvCore" }
 # Core
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
 androidx-core-splashscreen = { group = "androidx.core", name = "core-splashscreen", version.ref = "splashscreen" }

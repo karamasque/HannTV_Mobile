@@ -140,6 +140,11 @@ data class SourceEntity(
      * that publishes its own limit is never measured and leaves this at 0.
      */
     val maxConnectionsProbedAt: Long = 0,
+    val httpReferer: String? = null,
+    val catchupTimezone: String? = null,
+    val catchupOffsetMin: Int? = null,
+    val vodEnginePreference: String? = null,
+    val liveTuneTimeoutSecs: Int? = null,
     val createdAt: Long = System.currentTimeMillis(),
     val lastSyncAt: Long? = null,
 )

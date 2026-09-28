@@ -113,27 +113,23 @@ fun PlayerScreen(
 ) {
     val player = tuner.player
 
-    // L2 - live now has two engines. `liveOnExo` says which one holds the picture, so the stage knows
-    // whose surface to draw and the HUD's engine button knows which way it flips.
     val liveOnExo by tuner.liveOnExo.collectAsStateWithLifecycle()
-
-    // The engine actually holding the stream. For VOD and for live-on-mpv this is a thin delegate
-    // over `player`, so nothing changes there; on live-on-ExoPlayer it is the other engine.
-    val activeEngine by tuner.activeEngine.collectAsStateWithLifecycle()
+    val film by vodTuner.playing.collectAsStateWithLifecycle()
+    val offsetSec by tuner.offsetSec.collectAsStateWithLifecycle()
+    val liveActiveEngine by tuner.activeEngine.collectAsStateWithLifecycle()
+    val vodEngine = remember(player) { tv.own.owntv.player.MpvPlaybackEngine(player) }
+    val activeEngine = if (film != null || offsetSec != null) vodEngine else liveActiveEngine
     val castEngine by cast.engine.collectAsStateWithLifecycle()
     val castDevice by cast.deviceName.collectAsStateWithLifecycle()
     val activity = LocalActivity.current
     val inPip by pip.inPip.collectAsStateWithLifecycle()
     val res = LocalResources.current
     val landscape = LocalConfiguration.current.orientation == Configuration.ORIENTATION_LANDSCAPE
-
     val channel by tuner.channel.collectAsStateWithLifecycle()
     val autoFrameRate by settings.autoFrameRate.collectAsStateWithLifecycle(initialValue = false)
     val previousChannel by tuner.previousChannel.collectAsStateWithLifecycle()
-    val film by vodTuner.playing.collectAsStateWithLifecycle()
     val nowNext by tuner.nowNext.collectAsStateWithLifecycle()
     val siblings by tuner.siblings.collectAsStateWithLifecycle()
-    val offsetSec by tuner.offsetSec.collectAsStateWithLifecycle()
     val watchingWallMs by tuner.watchingWallMs.collectAsStateWithLifecycle()
     val timelineProgrammes by tuner.timelineProgrammes.collectAsStateWithLifecycle()
     // The same switch the Live TV list reads: off hides every number in the app, this one included.

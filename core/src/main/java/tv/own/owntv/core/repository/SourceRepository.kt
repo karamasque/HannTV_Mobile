@@ -33,37 +33,37 @@ class SourceRepository(
 
     suspend fun addXtreamSource(
         profileId: Long, name: String, serverUrl: String, username: String, password: String,
-        userAgent: String? = null, epgUrl: String? = null,
+        userAgent: String? = null, httpReferer: String? = null, epgUrl: String? = null,
         syncLive: Boolean = true, syncMovies: Boolean = true, syncSeries: Boolean = true,
         preferHls: Boolean = false,
     ): SourceEntity = addAndLink(
         profileId,
         SourceEntity(
             name = name, type = SourceType.XTREAM, url = serverUrl,
-            username = username, password = password, userAgent = userAgent, epgUrl = epgUrl,
+            username = username, password = password, userAgent = userAgent, httpReferer = httpReferer, epgUrl = epgUrl,
             syncLive = syncLive, syncMovies = syncMovies, syncSeries = syncSeries,
             preferHls = preferHls,
         ),
     )
 
     suspend fun addM3uSource(
-        profileId: Long, name: String, url: String, userAgent: String? = null, epgUrl: String? = null,
+        profileId: Long, name: String, url: String, userAgent: String? = null, httpReferer: String? = null, epgUrl: String? = null,
     ): SourceEntity = addAndLink(
         profileId,
-        SourceEntity(name = name, type = SourceType.M3U, url = url, userAgent = userAgent, epgUrl = epgUrl),
+        SourceEntity(name = name, type = SourceType.M3U, url = url, userAgent = userAgent, httpReferer = httpReferer, epgUrl = epgUrl),
     )
 
     suspend fun addStalkerSource(
         profileId: Long, name: String, portalUrl: String, mac: String,
         serialNumber: String? = null, deviceId: String? = null, deviceId2: String? = null,
-        signature: String? = null, userAgent: String? = null,
+        signature: String? = null, userAgent: String? = null, httpReferer: String? = null,
         syncLive: Boolean = true, syncMovies: Boolean = true, syncSeries: Boolean = true,
     ): SourceEntity = addAndLink(
         profileId,
         SourceEntity(
             name = name, type = SourceType.STALKER, url = portalUrl, mac = mac,
             stalkerSerialNumber = serialNumber, stalkerDeviceId = deviceId,
-            stalkerDeviceId2 = deviceId2, stalkerSignature = signature, userAgent = userAgent,
+            stalkerDeviceId2 = deviceId2, stalkerSignature = signature, userAgent = userAgent, httpReferer = httpReferer,
             syncLive = syncLive, syncMovies = syncMovies, syncSeries = syncSeries,
         ),
     )

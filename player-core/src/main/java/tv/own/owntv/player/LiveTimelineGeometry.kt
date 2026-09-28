@@ -9,6 +9,8 @@ data class LiveProgramme(val startMs: Long, val stopMs: Long, val title: String)
 /** A programme's span on the bar, 0 = the far (oldest) end, 1 = the live edge. */
 data class LiveTick(val title: String, val startFrac: Float, val endFrac: Float)
 
+data class LiveGapSpan(val startFrac: Float, val endFrac: Float)
+
 /** Where a watched point sitting [offsetSec] behind live falls on the bar. */
 fun offsetFrac(offsetSec: Int): Float =
     (1f - offsetSec.toFloat() / LIVE_WINDOW_SEC).coerceIn(0f, 1f)
@@ -22,6 +24,14 @@ fun liveTicks(programmes: List<LiveProgramme>, liveEdgeMs: Long): List<LiveTick>
     return programmes.mapNotNull { p ->
         if (p.stopMs <= windowStart || p.startMs >= liveEdgeMs) return@mapNotNull null
         LiveTick(p.title, frac(p.startMs, liveEdgeMs), frac(p.stopMs, liveEdgeMs))
+    }
+}
+
+fun liveGapSpans(gaps: List<LongRange>, liveEdgeMs: Long): List<LiveGapSpan> {
+    val windowStart = liveEdgeMs - LIVE_WINDOW_SEC * 1000L
+    return gaps.mapNotNull { gap ->
+        if (gap.last <= windowStart || gap.first >= liveEdgeMs) return@mapNotNull null
+        LiveGapSpan(frac(gap.first, liveEdgeMs), frac(gap.last, liveEdgeMs))
     }
 }
 

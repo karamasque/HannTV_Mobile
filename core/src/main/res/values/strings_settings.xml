@@ -482,9 +482,9 @@
     <string name="settings_epg_sources">EPG Sources</string>
     <!-- Translators: Description of the EPG Sources settings. 'XMLTV' is a technical format name. -->
     <string name="settings_epg_sources_nav_description">Add XMLTV guide feeds for the TV Guide</string>
-    <!-- Translators: Settings navigation label for Customize Categories & Items. -->
+    <!-- Translators: Settings navigation label for Customize Categories &amp; Items. -->
     <string name="settings_customize">Customize Categories &amp; Items</string>
-    <!-- Translators: Description of the Customize Categories & Items settings. -->
+    <!-- Translators: Description of the Customize Categories &amp; Items settings. -->
     <string name="settings_customize_nav_description">Hide &amp; unhide items, rename &amp; reorder categories</string>
     <!-- Translators: Description of the Sidebar Menu Customization settings. -->
     <string name="settings_sidebar_description_root">Auto-adapt side icons to your playlist, or hide specific ones</string>
@@ -498,9 +498,9 @@
     <string name="settings_content_menus_description">Rearrange the actions in the channel, movie, series &amp; episode menus</string>
     <!-- Translators: Hint shown above the list when arranging a long-press menu. -->
     <string name="settings_content_menus_hint">Hold OK on an action to pick it up, then Up and Down to move it. Press OK again to drop it.</string>
-    <!-- Translators: Settings navigation label for Browsing & lists. -->
+    <!-- Translators: Settings navigation label for Browsing &amp; lists. -->
     <string name="settings_browsing_lists">Browsing &amp; lists</string>
-    <!-- Translators: Description of the Browsing & lists settings. -->
+    <!-- Translators: Description of the Browsing &amp; lists settings. -->
     <string name="settings_browsing_description">Remember the last category and the last item in Live TV, Movies &amp; Series</string>
     <!-- Translators: Settings navigation label for Home screen settings. -->
     <string name="settings_home_root">Home screen</string>
@@ -512,9 +512,9 @@
     <string name="settings_download_folder">Download folder</string>
     <!-- Translators: Settings navigation label for app storage information. -->
     <string name="settings_app_storage">App storage</string>
-    <!-- Translators: Settings navigation label for Backup & Restore. -->
+    <!-- Translators: Settings navigation label for Backup &amp; Restore. -->
     <string name="settings_backup_restore">Backup &amp; Restore</string>
-    <!-- Translators: Description of the Backup & Restore settings. -->
+    <!-- Translators: Description of the Backup &amp; Restore settings. -->
     <string name="settings_backup_restore_description">Export or restore profiles &amp; sources</string>
     <!-- Translators: Settings navigation label to clear watch history. -->
     <string name="settings_clear_history">Clear watch history</string>
@@ -522,9 +522,15 @@
     <!-- Translators: Settings navigation group label for Appearance settings. -->
     <string name="settings_appearance_group">Appearance</string>
     <string name="settings_category_display_mode">Category Display Mode</string>
+    <string name="settings_category_display_mode_live">Live TV Category Mode</string>
+    <string name="settings_category_display_mode_movies">Movies Category Mode</string>
+    <string name="settings_category_display_mode_series">Series Category Mode</string>
     <string name="settings_category_display_mode_tabs">Top Tab Strip Mode</string>
     <string name="settings_category_display_mode_list">Folder / List Mode</string>
-    <string name="settings_category_display_mode_description">Choose whether Live TV categories are displayed as top tabs or vertical folder list.</string>
+    <string name="settings_category_display_mode_description">Choose whether categories are displayed as top tabs or vertical folder list.</string>
+    <string name="settings_account_title">Cloud Membership &amp; Devices</string>
+    <string name="settings_account_description">Log in with your cloud account, manage 3 active devices and cloud sync</string>
+    <string name="settings_search_keywords_account">account login register devices sync cloud</string>
     <!-- Translators: Settings navigation label for the Theme setting. -->
     <string name="settings_theme">Theme</string>
     <!-- Translators: Description of the Theme setting. -->
@@ -743,9 +749,9 @@
     <string name="settings_vod">VOD</string>
     <!-- Translators: Button to clear the playback error log. -->
     <string name="settings_clear_log">Clear log</string>
-    <!-- Translators: Screen title for the Browsing & lists settings. -->
+    <!-- Translators: Screen title for the Browsing &amp; lists settings. -->
     <string name="settings_browsing_title">Browsing &amp; lists</string>
-    <!-- Translators: Description of the Browsing & lists settings. -->
+    <!-- Translators: Description of the Browsing &amp; lists settings. -->
     <string name="settings_browsing_description_full">What Live TV, Movies and Series return to when you come back.</string>
     <!-- Translators: Section toggle display. 'section' is the section name, 'state' is On/Off. -->
     <string name="settings_section_toggle"><xliff:g id="section">%1$s</xliff:g>: <xliff:g id="state">%2$s</xliff:g></string>
@@ -856,14 +862,14 @@
     <string name="settings_search_keywords_sidebar">side rail icons dynamic static hide show adapt playlist</string>
     <!-- Translators: Hidden keyword bag for the CH+ Key Paging settings. Translate as individual search terms. -->
     <string name="settings_search_keywords_ch">channel up down skip page list category channel</string>
-    <!-- Translators: Hidden keyword bag for the Browsing & lists settings. Translate as individual search terms. -->
+    <!-- Translators: Hidden keyword bag for the Browsing &amp; lists settings. Translate as individual search terms. -->
     <string name="settings_search_keywords_browsing">remember position scroll category last item live movies series reset top</string>
     <!-- Translators: Hidden keyword bag for the Home screen settings. Translate as individual search terms. -->
     <string name="settings_search_keywords_home">rows hero reorder filter</string>
     <!-- Translators: Hidden keyword bag for the Metadata (TMDB) settings. Translate as individual search terms. -->
     <string name="settings_search_keywords_metadata">posters plots cast ratings</string>
     <!-- Translators: Hidden keyword bag for the Download folder settings. Translate as individual search terms. -->
-    <!-- Translators: Hidden keyword bag for the Backup & Restore settings. Translate as individual search terms. -->
+    <!-- Translators: Hidden keyword bag for the Backup &amp; Restore settings. Translate as individual search terms. -->
     <!-- Translators: Hidden keyword bag for the Clear watch history settings. Translate as individual search terms. -->
     <!-- Translators: Hidden keyword bag for the Theme settings. Translate as individual search terms. -->
     <string name="settings_search_keywords_theme">light dark system</string>
@@ -1013,7 +1019,7 @@
     <string name="settings_deinterlace">Deinterlacing</string>
     <!-- Translators: Description of the deinterlacing setting. -->
     <string name="settings_deinterlace_description">Smooth out the comb-like lines some old SD channels show on movement. Applies to the mpv engine while it renders the picture itself, so turn hardware decoding off if it makes no difference.</string>
-    <!-- Translators: Video Player settings-row title for Movies & Series. -->
+    <!-- Translators: Video Player settings-row title for Movies &amp; Series. -->
     <string name="settings_movies_series_player">Movies &amp; Series player</string>
     <!-- Translators: Video Player settings-row title for Live TV. -->
     <string name="settings_live_tv_player">Live TV player</string>
@@ -1157,7 +1163,7 @@ Choose Balanced if a channel becomes unreliable.</string>
     <string name="settings_external_player_description">Pick which sections open in an external app.</string>
     <!-- Translators: Formatted audio delay value in the settings. 'delay' is the delay in milliseconds. -->
     <string name="settings_audio_delay_value"><xliff:g id="delay">%1$d</xliff:g> ms</string>
-    <!-- Translators: Description of the Movies & Series player engine choice. 'mpv' and 'ExoPlayer' are engine brand names. -->
+    <!-- Translators: Description of the Movies &amp; Series player engine choice. 'mpv' and 'ExoPlayer' are engine brand names. -->
     <string name="settings_movies_player_description">mpv (recommended) has the widest format support — DTS/TrueHD audio, unusual files — plus the A/V sync fix. ExoPlayer plays some streams mpv can\'t on certain TVs, but can\'t decode DTS/TrueHD audio and has no A/V sync fix. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your TV.</string>
     <!-- Translators: Description of the Live TV player engine choice. 'mpv' and 'ExoPlayer' are engine brand names. -->
     <string name="settings_live_player_description">ExoPlayer (recommended) opens channels much faster and is the only one with live subtitles. mpv plays channels ExoPlayer can\'t, including some with unusual audio. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your TV. A channel you switch by hand in the player keeps your choice either way.</string>
@@ -1363,7 +1369,7 @@ Choose Balanced if a channel becomes unreliable.</string>
     <string name="settings_catchup_player">Play catch-up in</string>
 
 
-    <!-- Translators: Screen title for the Customize Categories & Items settings. -->
+    <!-- Translators: Screen title for the Customize Categories &amp; Items settings. -->
     <string name="settings_customize_title">Customize Categories &amp; Items</string>
     <!-- Translators: Status text when the Customize screen is PIN-locked. -->
     <string name="settings_customize_pin_locked">This screen is PIN-locked.</string>
@@ -1377,7 +1383,7 @@ Choose Balanced if a channel becomes unreliable.</string>
     <string name="settings_customize_change_pin">🔒 Change PIN</string>
     <!-- Translators: Button to remove the PIN lock from the Customize screen. -->
     <string name="settings_customize_remove_lock">Remove lock</string>
-    <!-- Translators: Description of the Customize Categories & Items feature. -->
+    <!-- Translators: Description of the Customize Categories &amp; Items feature. -->
     <string name="settings_customize_description">Hide &amp; unhide channels, movies and series, and rename or reorder categories for this profile. Survives re-syncs.</string>
     <!-- Translators: Setting label for new-category visibility behavior. -->
     <string name="settings_customize_new_category_behavior">New category behavior</string>
@@ -1709,7 +1715,7 @@ Resync and remove missing titles also allows removing titles the provider no lon
     <!-- Translators: EPG sync completion with catch-up info. 'catchup' is a complete sentence. -->
     <string name="settings_epg_sources_status_synced_with_catchup"><xliff:g id="catchup">%1$s</xliff:g></string>
 
-    <!-- Translators: Screen title for the Backup & Restore screen. -->
+    <!-- Translators: Screen title for the Backup &amp; Restore screen. -->
     <string name="settings_backup_title">Backup &amp; Restore</string>
     <!-- Translators: Loading status while a backup operation is in progress. -->
     <string name="settings_backup_working">Working…</string>
@@ -2431,7 +2437,7 @@ Resync and remove missing titles also allows removing titles the provider no lon
     <string name="more_spine_favorites_summary">Channels, films, shows</string>
     <!-- Translators: One-line summary of the History row in the More spine: the list remembers where you stopped. -->
     <string name="more_spine_history_summary">With resume points</string>
-    <!-- Translators: Short summary of the Backup & Restore row in the More spine. A shorter form of settings_backup_restore_description. -->
+    <!-- Translators: Short summary of the Backup &amp; Restore row in the More spine. A shorter form of settings_backup_restore_description. -->
     <string name="more_spine_backup_summary">Export or restore</string>
     <!-- Translators: Short summary of the Local sync row in the More spine. A shorter form of local_sync_description. -->
     <string name="more_spine_local_sync_summary">Swap with your phone</string>
@@ -2514,4 +2520,142 @@ Resync and remove missing titles also allows removing titles the provider no lon
     <string name="theme_dark_flat_desc">Charcoal surface, cyan accent</string>
     <string name="theme_acik_cam">Light Glass</string>
     <string name="theme_acik_cam_desc">Light frosted glass panels</string>
+
+    <string name="app_icon_board">Station Board</string>
+    <string name="app_icon_cobalt">Cobalt</string>
+    <string name="app_icon_eggshell">Eggshell</string>
+    <string name="app_icon_olive">Olive</string>
+    <string name="app_icon_olive_cream">Olive on Cream</string>
+    <string name="app_icon_petrol">Petrol</string>
+    <string name="app_icon_restart_message">You chose a new icon and logo. They take effect after HanTV restarts.</string>
+    <string name="app_icon_restart_now">Restart now</string>
+    <string name="app_icon_restart_title">Restart HanTV?</string>
+    <string name="app_icon_sunflower">Sunflower</string>
+    <string name="app_icon_tomato">Tomato</string>
+
+    <string name="common_own_tv_user">HanTV User</string>
+    <string name="content_epg_include_logos">Include guide logos</string>
+    <string name="content_epg_include_logos_short">Logos</string>
+    <string name="content_storage_folder_fallback">Your download folder isn\'t available right now, so downloads are being saved to HanTV\'s own folder until it\'s back.</string>
+    <string name="multiview_decoder_exhausted_mobile">This device can\'t decode another channel at the same time.</string>
+    <string name="player_previous_channel">Previous channel</string>
+    <string name="player_sleep_timer_end_of_episode">End of episode</string>
+    <string name="player_sleep_timer_end_of_movie">End of movie</string>
+    <string name="player_sleep_timer_screen_off">Also turn off the screen</string>
+    <string name="player_sleep_timer_screen_off_explanation">Used only to turn the screen off when the sleep timer ends, never at any other time.</string>
+    <string name="player_sleep_timer_screen_off_unavailable">This device does not let apps turn the screen off.</string>
+    <string name="player_stream_deinterlaced_by_device">Interlaced · deinterlaced by the device</string>
+    <string name="player_stream_deinterlaced_by_player">Interlaced · deinterlaced by the player</string>
+    <string name="player_stream_interlacing">Interlacing</string>
+    <string name="player_stream_not_deinterlaced">Interlaced · not deinterlaced</string>
+    <string name="player_stream_progressive">None (progressive)</string>
+    <string name="player_timeshift_resume_message">This channel was saved while you were away.</string>
+    <string name="player_timeshift_resume_title">Continue where you left off?</string>
+    <string name="player_tool_quality">Quality</string>
+    <string name="recording_failed_drm">This channel is DRM-protected, so it can be watched but not recorded. The protection comes from your provider, not from HanTV.</string>
+    <string name="settings_afr_pause">Pause during the display switch</string>
+    <string name="settings_afr_pause_description">Films only. When the TV has to re-sync to a new display mode, the film waits this long so its opening is not lost to the black screen. A seamless switch never pauses.</string>
+    <string name="settings_afr_resolution">Match resolution</string>
+    <string name="settings_afr_resolution_description">Films only. When the display mode changes for a film, the TV also switches to its resolution — 1080p for an HD film on a 4K TV — never above the resolution it started on. Off leaves the resolution alone and lets the TV upscale, usually the better picture.</string>
+    <string name="settings_animations_description_mobile">Turn interface motion on or off — Off feels snappier on older phones and tablets</string>
+    <string name="settings_app_icon">App icon</string>
+    <string name="settings_app_icon_summary">Color of the HanTV icon and logo</string>
+    <string name="settings_audio_passthrough">Dolby and DTS passthrough</string>
+    <string name="settings_audio_passthrough_description">On: Dolby and DTS go undecoded to the TV, soundbar or receiver when it says it can play them (ExoPlayer). Off: the app decodes them, still as surround where Surround sound allows. mpv always decodes. Not used while Night mode or Volume leveling is on.</string>
+    <string name="settings_audio_passthrough_description_mobile">On: Dolby and DTS go undecoded to a connected TV or receiver when it says it can play them (ExoPlayer). Off: the app decodes them, still as surround where Surround sound allows. mpv always decodes. Not used while Night mode or Volume leveling is on.</string>
+    <string name="settings_auto_frame_rate_description_mobile">Match the screen\'s refresh rate to the video (24/25/50/60 fps) in full screen, for Live TV and VOD, and restore it on exit. Turn off if the screen flickers or goes dark when a video starts.</string>
+    <string name="settings_auto_frame_rate_warning_description_mobile">This device runs Android </string>
+    <string name="settings_auto_frame_rate_warning_title_mobile">Not recommended on this device</string>
+    <string name="settings_backup_device_settings">Hardware settings from the other device</string>
+    <string name="settings_backup_device_settings_desc">Player engine, hardware decoding, frame rate, HDR and surround. Only take them if both devices have the same hardware.</string>
+    <string name="settings_catchup_timezone_per_playlist">Catch-up time zone per playlist</string>
+    <string name="settings_catchup_timezone_per_playlist_description">Override the time zone above for one playlist, for a provider whose archive runs on a different clock.</string>
+    <string name="settings_channel_numbers_description_mobile">Show your provider\'s channel number beside the name in the Live TV list and the player. Off hides every number; nothing is lost, and turning it back on restores them.</string>
+    <string name="settings_forget_stream_fixes">Forget learned stream fixes</string>
+    <string name="settings_forget_stream_fixes_confirm">Forget learned stream fixes?</string>
+    <string name="settings_forget_stream_fixes_confirm_description">Channels open the standard way again, and the player relearns whatever a provider still needs. The first play of an affected channel may take a few seconds longer.</string>
+    <string name="settings_forget_stream_fixes_description">The player learns what each provider’s streams need — mpv instead of ExoPlayer, another format, software decoding for catch-up. Forget this if a provider has fixed its streams. Catch-up lessons are also forgotten on their own after 14 days.</string>
+    <string name="settings_hardware_decoding_description_mobile">Use the device\'s hardware decoder. Turn off if some streams stutter or show artifacts.</string>
+    <string name="settings_hdr_description_mobile">Use HDR output when the video &amp; screen support it. mpv only: the ExoPlayer engine does not support this setting and always passes the stream’s HDR through.</string>
+    <string name="settings_language_original">Original language</string>
+    <string name="settings_live_left_right_rewinds">Left and right rewind live TV</string>
+    <string name="settings_live_left_right_rewinds_description">With the controls hidden, Left and Right rewind and go forward on channels you can rewind (catch-up, or saved by Pause and rewind live TV), instead of opening the channel list and history.</string>
+    <string name="settings_live_player_description_mobile">ExoPlayer (recommended) opens channels much faster and is the only one with live subtitles. mpv plays channels ExoPlayer can\'t, including some with unusual audio. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your device. A channel you switch by hand in the player keeps your choice either way.</string>
+    <string name="settings_live_tune_timeout_per_playlist">Give up after, per playlist</string>
+    <string name="settings_live_tune_timeout_per_playlist_description">Override the setting above for one playlist, for a provider whose channels are slow to start or often dead.</string>
+    <string name="settings_low_zoom_warning_mobile"></string>
+    <string name="settings_max_video_quality">Maximum video quality</string>
+    <string name="settings_max_video_quality_description">The highest picture played when a channel or movie offers several. Saves bandwidth and eases the decoder.</string>
+    <string name="settings_measured_stats_description_mobile">Show live fps, bitrate and dropped frames in the stream-info overlay (measured while the overlay is open, for streams that don\'t declare these values). Turn off only if a low-end device stutters — it never affects the actual video, only the diagnostic numbers.</string>
+    <string name="settings_mobile_data_quality">Maximum quality on mobile data</string>
+    <string name="settings_mobile_data_quality_description">On a metered connection, plays at most this quality. Off: the same as on Wi-Fi.</string>
+    <string name="settings_movies_player_description_mobile">mpv (recommended) has the widest format support — DTS/TrueHD audio, unusual files. ExoPlayer plays some streams mpv can\'t on certain devices, but can\'t decode DTS/TrueHD audio. The combined options try the other player automatically when the first one fails; the single-player options never do, which saves a few seconds of black screen if the second player never works on your device.</string>
+    <string name="settings_night_mode">Night mode</string>
+    <string name="settings_night_mode_description">Turns loud scenes down and quiet dialogue up, for watching at a low volume.</string>
+    <string name="settings_panel_width_content_area">Content area</string>
+    <string name="settings_panel_width_details_height">Details height</string>
+    <string name="settings_panel_width_details_hint">Lower the details height for another row of posters; raise it for more plot and cast.</string>
+    <string name="settings_preferred_audio_language_description">Plays this audio track when the stream has it. \"Original language\" plays films and series in the language they were made in.</string>
+    <string name="settings_remote_button_last_channel">Last channel</string>
+    <string name="settings_reset_live_player_choices">Reset saved live TV player choices</string>
+    <string name="settings_reset_live_player_choices_confirm">Reset saved live TV player choices?</string>
+    <string name="settings_reset_live_player_choices_confirm_description">Every channel goes back to the “Live TV player” setting. You can always switch an individual one again from the player.</string>
+    <string name="settings_reset_live_player_choices_description">Switching a channel between ExoPlayer and mpv in the player saves that choice for the channel. Reset makes every channel follow the “Live TV player” setting again. Saved choices for movies and episodes are kept.</string>
+    <string name="settings_search_keywords_audio">volume loud quiet lip sync delay audio track language</string>
+    <string name="settings_search_keywords_vod_layout">layout cinematic backdrop artwork panels movies series poster view grid</string>
+    <string name="settings_surround_auto_description_mobile">Auto — try Dolby/DTS surround, and switch back to stereo automatically if the speaker, headphones or connected receiver do not play it. Recommended.</string>
+    <string name="settings_surround_description_mobile">Decode Dolby/DTS to surround (5.1/7.1) for a real 5.1/7.1 receiver connected to this device. Leave OFF for the built-in speaker, headphones or a stereo soundbar — multichannel can lag audio behind video. If it drifts, nudge the player\'s Audio menu → A/V sync.</string>
+    <string name="settings_surround_stereo_description_mobile">Stereo only — always decode in the app and send plain 2.0 sound. Use this for the built-in speaker, headphones or a stereo soundbar, or if audio lags behind the picture.</string>
+    <string name="settings_timeshift">Pause and rewind live TV</string>
+    <string name="settings_timeshift_description">Channels without catch-up are saved on this device while you watch them full screen, so you can pause and rewind. Writes to storage all the time; at least 1 GB always stays free.</string>
+    <string name="settings_timeshift_window">Rewind length</string>
+    <string name="settings_timeshift_window_description">How far back you can rewind a channel without catch-up.</string>
+    <string name="settings_tunneled_playback">Tunneled playback (experimental)</string>
+    <string name="settings_tunneled_playback_description">Live TV on ExoPlayer: the TV\'s own hardware keeps picture and sound together, with less work for the processor. Works on some TVs only, and turns itself off if a channel fails with it. Audio sync cannot be nudged while it is on.</string>
+    <string name="settings_tunneled_playback_description_mobile">Live TV on ExoPlayer: the device\'s own hardware keeps picture and sound together, with less work for the processor. Works on some devices only, and turns itself off if a channel fails with it. Audio sync cannot be nudged while it is on.</string>
+    <string name="settings_tunneled_playback_failed">Turned off after a channel failed with it on this device.</string>
+    <string name="settings_video_quality_lines">%1$dp</string>
+    <string name="settings_vod_buffer">Film buffer</string>
+    <string name="settings_vod_buffer_description">How far ahead films, episodes and catch-up are loaded. Auto uses what suits this device. A longer buffer rides out a bad connection better; this device’s memory still sets the limit, so a high-bitrate film may hold less than chosen.</string>
+    <string name="settings_vod_engine_per_playlist">Movies &amp; Series player per playlist</string>
+    <string name="settings_vod_engine_per_playlist_description">Override the setting above for one playlist, for a provider whose films and episodes only one of the players handles well.</string>
+    <string name="settings_vod_layout">Movies &amp; Series layout</string>
+    <string name="settings_vod_layout_cinematic">Cinematic</string>
+    <string name="settings_vod_layout_cinematic_description">The focused title’s artwork fills the screen, with its details above a poster grid. Grid only.</string>
+    <string name="settings_vod_layout_description">Separate panels, or one cinematic view with the artwork behind</string>
+    <string name="settings_vod_layout_screen_description">Choose how Movies and Series are laid out. Live TV and the episode list are unchanged.</string>
+    <string name="settings_vod_layout_separate">Separate panels</string>
+    <string name="settings_vod_layout_separate_description">Categories, the title list and a preview side by side. Includes the List and Grid views.</string>
+    <string name="settings_vod_network_auto">Auto</string>
+    <string name="settings_vod_network_timeout">Network timeout</string>
+    <string name="settings_vod_network_timeout_description">How long films, episodes and catch-up wait on a silent server before the connection counts as lost. Auto keeps each player’s own wait: 60 seconds on mpv, 20 on ExoPlayer.</string>
+    <string name="settings_vod_reconnects">Reconnect attempts</string>
+    <string name="settings_vod_reconnects_description">How many times a film or episode that loses its connection is reopened where it stopped before an error is shown. A minute of steady playback earns the attempts back.</string>
+    <string name="settings_vod_reconnects_value">%1$d×</string>
+    <string name="settings_volume_leveling">Volume leveling</string>
+    <string name="settings_volume_leveling_description">Brings every channel and movie slowly to the same loudness, so switching does not jump in volume.</string>
+    <string name="settings_vp_cat_controls">Controls</string>
+    <string name="settings_vp_cat_controls_summary">Skip and rewind steps</string>
+    <string name="settings_vp_cat_frame_rate">Frame rate</string>
+    <string name="settings_vp_cat_frame_rate_summary">Match the screen to the video</string>
+    <string name="settings_vp_cat_languages">Languages &amp; subtitles</string>
+    <string name="settings_vp_cat_languages_summary">Audio and subtitle language, subtitle style</string>
+    <string name="settings_vp_cat_live_summary">Channel numbers, pause and rewind</string>
+    <string name="settings_vp_cat_live_tuning">Live tuning</string>
+    <string name="settings_vp_cat_live_tuning_summary">Latency, pre-buffer, start time</string>
+    <string name="settings_vp_cat_multiview">Multiview &amp; mini-player</string>
+    <string name="settings_vp_cat_multiview_summary">Several channels, the small player</string>
+    <string name="settings_vp_cat_multiview_summary_mobile">Several live channels at once</string>
+    <string name="settings_vp_cat_picture">Picture</string>
+    <string name="settings_vp_cat_picture_summary">Decoder, HDR, quality, zoom</string>
+    <string name="settings_vp_cat_player">Player</string>
+    <string name="settings_vp_cat_player_summary">Which player, per playlist, external apps</string>
+    <string name="settings_vp_cat_resume">Resume &amp; auto-play</string>
+    <string name="settings_vp_cat_resume_summary">Where to start, the next episode</string>
+    <string name="settings_vp_cat_sound_summary">Volume, surround, night mode, sync</string>
+    <string name="settings_vp_cat_streaming">Streaming</string>
+    <string name="settings_vp_cat_streaming_summary">Buffer, timeout, reconnects</string>
+    <string name="setup_referer_example">e.g. https://example.com/</string>
+    <string name="setup_referer_optional">Referer (optional)</string>
+    <string name="sync_error_guide_empty">This guide is empty right now. The provider may not have published it yet \u2014 please try again later.</string>
 </resources>

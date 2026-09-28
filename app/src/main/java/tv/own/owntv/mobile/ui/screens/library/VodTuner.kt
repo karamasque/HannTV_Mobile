@@ -377,10 +377,18 @@ class VodTuner(
      *   source, and a file on disk seeks, pauses and ends — treating it as live would take away the
      *   scrub bar on the one recording a user most wants to skip through.
      */
-    suspend fun playRecording(filePath: String, title: String, posterUrl: String?): Boolean {
+    suspend fun playRecording(
+        filePath: String,
+        title: String,
+        posterUrl: String?,
+        sourceId: Long? = null,
+        httpHeaders: String? = null,
+    ): Boolean {
         val pid = currentProfileId() ?: return false
+        val source = sourceId?.let { withContext(Dispatchers.IO) { sourceDao.getById(it) } }
+        val userAgent = source?.userAgent
         if (settings.externalPlayerFor(MediaType.LIVE).first()) {
-            externalPlayerLauncher.launch(filePath, title)
+            externalPlayerLauncher.launch(filePath, title, userAgent = userAgent, httpHeaders = httpHeaders)
             return false
         }
         saveProgress()
@@ -388,7 +396,13 @@ class VodTuner(
         // A file on this phone is not reachable from a receiver, so starting one ends the cast rather
         // than leaving the television on whatever was playing before.
         cast.release(this)
-        player.play(url = filePath, title = title, isLive = false)
+        player.play(
+            url = filePath,
+            title = title,
+            isLive = false,
+            userAgent = userAgent,
+            httpHeaders = httpHeaders,
+        )
         player.exitAudioOnly()
         session.attach(engine)
         PlaybackService.start(context)

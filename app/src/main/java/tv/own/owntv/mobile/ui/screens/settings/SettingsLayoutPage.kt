@@ -89,22 +89,44 @@ fun SettingsLayoutPage(
         settingsSection(R.string.settings_browsing_title)
         settingsNote(R.string.settings_browsing_description_full)
         settingsGroup(key = "browsing") {
-            val categoryDisplayMode = vm.settings.categoryDisplayMode.pref(SettingsRepository.CategoryDisplayMode.TABS)
-            var categoryDisplaySheet by remember { mutableStateOf(false) }
+            val categoryDisplayModeLive = vm.settings.categoryDisplayModeLive.pref(SettingsRepository.CategoryDisplayMode.TABS)
+            val categoryDisplayModeMovies = vm.settings.categoryDisplayModeMovies.pref(SettingsRepository.CategoryDisplayMode.TABS)
+            val categoryDisplayModeSeries = vm.settings.categoryDisplayModeSeries.pref(SettingsRepository.CategoryDisplayMode.TABS)
+            var activeSheetSection by remember { mutableStateOf<CategorySection?>(null) }
 
             SettingRow(
-                title = stringResource(R.string.settings_category_display_mode),
-                value = stringResource(categoryDisplayMode.labelRes),
-                onClick = { categoryDisplaySheet = true },
+                title = stringResource(R.string.settings_category_display_mode_live),
+                value = stringResource(categoryDisplayModeLive.labelRes),
+                onClick = { activeSheetSection = CategorySection.LIVE },
+            )
+            SettingRow(
+                title = stringResource(R.string.settings_category_display_mode_movies),
+                value = stringResource(categoryDisplayModeMovies.labelRes),
+                onClick = { activeSheetSection = CategorySection.MOVIES },
+            )
+            SettingRow(
+                title = stringResource(R.string.settings_category_display_mode_series),
+                value = stringResource(categoryDisplayModeSeries.labelRes),
+                onClick = { activeSheetSection = CategorySection.SERIES },
             )
 
-            if (categoryDisplaySheet) {
+            if (activeSheetSection != null) {
+                val currentMode = when (activeSheetSection) {
+                    CategorySection.MOVIES -> categoryDisplayModeMovies
+                    CategorySection.SERIES -> categoryDisplayModeSeries
+                    else -> categoryDisplayModeLive
+                }
+                val titleRes = when (activeSheetSection) {
+                    CategorySection.MOVIES -> R.string.settings_category_display_mode_movies
+                    CategorySection.SERIES -> R.string.settings_category_display_mode_series
+                    else -> R.string.settings_category_display_mode_live
+                }
                 MobileBottomSheet(
-                    onDismissRequest = { categoryDisplaySheet = false },
-                    title = stringResource(R.string.settings_category_display_mode),
+                    onDismissRequest = { activeSheetSection = null },
+                    title = stringResource(titleRes),
                 ) {
                     SettingsRepository.CategoryDisplayMode.entries.forEach { mode ->
-                        val isSelected = mode == categoryDisplayMode
+                        val isSelected = mode == currentMode
                         MobileListRow(
                             title = stringResource(mode.labelRes),
                             selected = isSelected,
@@ -118,8 +140,12 @@ fun SettingsLayoutPage(
                                 }
                             } else null,
                             onClick = {
-                                vm.edit { setCategoryDisplayMode(mode) }
-                                categoryDisplaySheet = false
+                                when (activeSheetSection) {
+                                    CategorySection.MOVIES -> vm.edit { setCategoryDisplayModeMovies(mode) }
+                                    CategorySection.SERIES -> vm.edit { setCategoryDisplayModeSeries(mode) }
+                                    else -> vm.edit { setCategoryDisplayModeLive(mode) }
+                                }
+                                activeSheetSection = null
                             },
                         )
                     }
@@ -273,3 +299,5 @@ private fun ContentMenu.titleRes() = when (this) {
     ContentMenu.SERIES -> R.string.common_nav_series
     ContentMenu.EPISODE -> R.string.content_episodes
 }
+
+private enum class CategorySection { LIVE, MOVIES, SERIES }

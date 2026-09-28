@@ -1,5 +1,6 @@
 package tv.own.owntv.mobile.ui.player
 
+import tv.own.owntv.mobile.ui.screens.library.VodTuner
 import tv.own.owntv.mobile.ui.components.MobileIcons
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -127,8 +128,11 @@ fun FloatingMiniPlayer(
     // The picture's shape is the one thing [PlaybackEngine] cannot answer — neither engine publishes
     // it through the shared interface — so it is asked of the two directly, the way [VideoStage]
     // does. Widening the interface would be a core change this needs nothing else from.
+    val vodTuner: VodTuner = koinInject()
+    val film by vodTuner.playing.collectAsStateWithLifecycle()
     val liveOnExo by tuner.liveOnExo.collectAsStateWithLifecycle()
-    val videoAspect by (if (liveOnExo) tuner.exoEngine.videoAspect else player.videoAspect)
+    val offsetSec by tuner.offsetSec.collectAsStateWithLifecycle()
+    val videoAspect by (if (liveOnExo && film == null && offsetSec == null) tuner.exoEngine.videoAspect else player.videoAspect)
         .collectAsStateWithLifecycle()
     val step by engine.seekStepMs.collectAsStateWithLifecycle()
     val size by settings.pipSize.collectAsStateWithLifecycle(SettingsRepository.PipSize.MEDIUM)

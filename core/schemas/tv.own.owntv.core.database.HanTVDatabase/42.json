@@ -2,7 +2,7 @@
   "formatVersion": 1,
   "database": {
     "version": 42,
-    "identityHash": "ecdcee1e10559cfbb95586b41b3bf1d1",
+    "identityHash": "830cd74da37d61e1084f3cb9565135b7",
     "entities": [
       {
         "tableName": "profiles",
@@ -64,7 +64,7 @@
       },
       {
         "tableName": "sources",
-        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `url` TEXT NOT NULL, `username` TEXT, `password` TEXT, `mac` TEXT, `stalkerSerialNumber` TEXT, `stalkerDeviceId` TEXT, `stalkerDeviceId2` TEXT, `stalkerSignature` TEXT, `userAgent` TEXT, `epgUrl` TEXT, `syncLive` INTEGER NOT NULL, `syncMovies` INTEGER NOT NULL, `syncSeries` INTEGER NOT NULL, `importPortalEpg` INTEGER NOT NULL DEFAULT 1, `hlsSupported` INTEGER NOT NULL, `preferHls` INTEGER NOT NULL, `livePrerollSecs` INTEGER NOT NULL, `liveEnginePreference` TEXT, `liveLatencyMode` TEXT, `liveLatencyCustomSecs` INTEGER NOT NULL, `maxConnections` INTEGER NOT NULL, `maxConnectionsProbedAt` INTEGER NOT NULL, `createdAt` INTEGER NOT NULL, `lastSyncAt` INTEGER)",
+        "createSql": "CREATE TABLE IF NOT EXISTS `${TABLE_NAME}` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `name` TEXT NOT NULL, `type` TEXT NOT NULL, `url` TEXT NOT NULL, `username` TEXT, `password` TEXT, `mac` TEXT, `stalkerSerialNumber` TEXT, `stalkerDeviceId` TEXT, `stalkerDeviceId2` TEXT, `stalkerSignature` TEXT, `userAgent` TEXT, `epgUrl` TEXT, `syncLive` INTEGER NOT NULL, `syncMovies` INTEGER NOT NULL, `syncSeries` INTEGER NOT NULL, `importPortalEpg` INTEGER NOT NULL DEFAULT 1, `hlsSupported` INTEGER NOT NULL, `preferHls` INTEGER NOT NULL, `livePrerollSecs` INTEGER NOT NULL, `liveEnginePreference` TEXT, `liveLatencyMode` TEXT, `liveLatencyCustomSecs` INTEGER NOT NULL, `maxConnections` INTEGER NOT NULL, `maxConnectionsProbedAt` INTEGER NOT NULL, `httpReferer` TEXT, `catchupTimezone` TEXT, `catchupOffsetMin` INTEGER, `vodEnginePreference` TEXT, `liveTuneTimeoutSecs` INTEGER, `createdAt` INTEGER NOT NULL, `lastSyncAt` INTEGER)",
         "fields": [
           {
             "fieldPath": "id",
@@ -205,6 +205,31 @@
             "columnName": "maxConnectionsProbedAt",
             "affinity": "INTEGER",
             "notNull": true
+          },
+          {
+            "fieldPath": "httpReferer",
+            "columnName": "httpReferer",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "catchupTimezone",
+            "columnName": "catchupTimezone",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "catchupOffsetMin",
+            "columnName": "catchupOffsetMin",
+            "affinity": "INTEGER"
+          },
+          {
+            "fieldPath": "vodEnginePreference",
+            "columnName": "vodEnginePreference",
+            "affinity": "TEXT"
+          },
+          {
+            "fieldPath": "liveTuneTimeoutSecs",
+            "columnName": "liveTuneTimeoutSecs",
+            "affinity": "INTEGER"
           },
           {
             "fieldPath": "createdAt",
@@ -3904,7 +3929,7 @@
     ],
     "setupQueries": [
       "CREATE TABLE IF NOT EXISTS room_master_table (id INTEGER PRIMARY KEY,identity_hash TEXT)",
-      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, 'ecdcee1e10559cfbb95586b41b3bf1d1')"
+      "INSERT OR REPLACE INTO room_master_table (id,identity_hash) VALUES(42, '830cd74da37d61e1084f3cb9565135b7')"
     ]
   }
 }

@@ -47,16 +47,16 @@ val playerModule = module {
     // its own, and the television's stop-everything-on-Home is exactly what it must not do.
     single {
         tv.own.owntv.player.PlaybackEngines(
-            player = get(),
-            livePreview = get(),
-            pool = get(),
+            player = get<OwnTVPlayer>(),
+            livePreview = get<tv.own.owntv.player.LivePreviewEngine>(),
+            pool = get<tv.own.owntv.player.LiveEnginePool>(),
         )
     }
     // Shared between the activity (which enters PiP) and the player screen (which knows whether the
     // picture is on screen at all).
     single { PipController() }
     // Asked by both tuners before a stream opens, so Data saver refuses in one place rather than two.
-    single { DataSaverGate(context = androidContext(), settings = get(), localeStore = get()) }
+    single { DataSaverGate(context = androidContext(), settings = get<tv.own.owntv.core.settings.SettingsRepository>(), localeStore = get<tv.own.owntv.core.i18n.LocaleStore>()) }
     // Audio focus and the system media session. Both arguments differ from the television's defaults
     // for the same reason: this is a phone. A call PAUSES the film rather than playing it quietly
     // under the caller, and unplugging headphones stops it instead of switching to the loudspeaker.
@@ -70,7 +70,7 @@ val playerModule = module {
     // Casting. Built with the session, because a cast session takes the lock screen and the audio
     // focus exactly as the local engine does — it is another PlaybackEngine, and nothing else about
     // the media session had to learn what a Chromecast is.
-    single { CastController(context = androidContext(), session = get()) }
+    single { CastController(context = androidContext(), session = get<PlaybackSession>()) }
     single { ownTVPlayer() }
     // Bridges the playing item to the OpenSubtitles search, and owns the downloaded-subtitle cache
     // the settings page deletes from. Bound here rather than with the rest of the subtitle stack
@@ -83,7 +83,7 @@ val playerModule = module {
     // detaches (nothing playing), so a stop by hand no longer leaves it counting.
     single { ScreenOff(androidContext()) }
     single {
-        SleepTimer(active = get<PlaybackSession>().active, screenOff = get(), itemEnd = get<OwnTVPlayer>()).apply {
+        SleepTimer(active = get<PlaybackSession>().active, screenOff = get<ScreenOff>(), itemEnd = get<OwnTVPlayer>()).apply {
             stopPlayback = {
                 if (get<LiveTuner>().channel.value != null) get<LiveTuner>().stop() else get<VodTuner>().stop()
             }
